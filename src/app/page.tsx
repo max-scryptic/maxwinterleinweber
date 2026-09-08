@@ -14,8 +14,11 @@ export default function Home() {
           Max Winter-Leinweber
         </h1>
         {/* w-0 min-w-full keeps the grid from widening the fit-content wrapper,
-            so the cards match the title's width instead of the other way round. */}
-        <div className="mt-8 w-0 min-w-full md:mt-10">
+            so the cards match the title's width instead of the other way round.
+            Once the five cards are side by side that width no longer holds a
+            handle on one line, so from lg the row sizes itself and the title
+            follows it. */}
+        <div className="mt-8 w-0 min-w-full md:mt-10 lg:w-auto">
           <SocialCards />
         </div>
       </div>
