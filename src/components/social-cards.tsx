@@ -121,7 +121,8 @@ type SocialLink = {
   /**
    * Each mark is sized on its own so none reads as the bigger logo: the wide
    * SoundCloud mark is set by width, the taller YouTube and X marks by height.
-   * They all sit in the same fixed box, so the handles line up down the row.
+   * Nothing pads them out to a common width, so the gap beside a mark is the
+   * gap beside every other one.
    */
   iconClassName: string;
   cardClassName: string;
@@ -244,7 +245,12 @@ export function SocialCards() {
   return (
     <>
       <PencilDefs />
-      <ul className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-3">
+      {/* Auto tracks, so a card is exactly its own contents wide and the space
+          left of the mark and right of the handle is the same on every card
+          however long the handle is. justify-start stops the tracks absorbing
+          whatever room is left over, justify-items-start stops a card
+          stretching to the widest one in its column when they stack. */}
+      <ul className="grid grid-cols-[auto] justify-start justify-items-start gap-x-4 gap-y-2 sm:grid-cols-[repeat(2,auto)] lg:grid-cols-[repeat(5,auto)] lg:gap-x-3">
         {links.map((link) => (
           <li key={link.href} className="flex flex-col">
             <SocialCard link={link} />
@@ -270,13 +276,16 @@ function SocialCard({ link }: { link: SocialLink }) {
       <Card
         className={`flex-1 gap-0 border-transparent py-3 text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
       >
-        <CardContent className="flex items-center gap-2.5 px-4 lg:gap-2 lg:px-3">
-          {/* Fixed box so the marks share one centre whatever their own
-              proportions are, and every handle starts at the same point. */}
-          <span className="flex h-5 w-9 shrink-0 items-center justify-center">
+        {/* The mark to handle gap is 8px on every card, and the two outer gaps
+            are that plus 5 so the contents are not squeezed up against the
+            card edges. Nothing here varies by card. */}
+        <CardContent className="flex items-center gap-2 px-[13px]">
+          {/* Fixed height, free width: the row keeps one height across the
+              cards without padding the narrow marks out sideways. */}
+          <span className="flex h-5 shrink-0 items-center">
             <Icon className={link.iconClassName} />
           </span>
-          <span className="min-w-0 text-sm leading-tight font-semibold break-words lg:text-[13px]">
+          <span className="text-sm leading-tight font-semibold whitespace-nowrap lg:text-[13px]">
             {link.name}
           </span>
         </CardContent>
