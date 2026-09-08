@@ -65,7 +65,7 @@ const links: SocialLink[] = [
 
 export function SocialCards() {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {links.map((link) => (
         <li key={link.name}>
           <SocialCard link={link} />
