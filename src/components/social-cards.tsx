@@ -274,7 +274,7 @@ function SocialCard({ link }: { link: SocialLink }) {
       className="flex rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       <Card
-        className={`flex-1 gap-0 border-transparent py-3 text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
+        className={`flex-1 gap-0 border-transparent py-[7px] text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
       >
         {/* The mark to handle gap is 8px on every card, and the two outer gaps
             are that plus 5 so the contents are not squeezed up against the
