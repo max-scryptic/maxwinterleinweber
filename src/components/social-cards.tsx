@@ -7,88 +7,101 @@ import { PencilArrow, PencilDefs } from "@/components/pencil-annotation";
 const caveat = Caveat({ subsets: ["latin"] });
 
 /*
- * All three marks are the flat white knockout versions of the brand logos,
- * drawn as a single filled shape so they sit straight on the card colour with
- * no second tone. Where a mark has a counter — the YouTube play triangle — it
- * is a hole punched through the shape (fill-rule evenodd) rather than a white
- * shape stacked on top, so the card colour shows through it.
+ * The three marks are traced off the logo files committed at the repo root
+ * (YouTube.png, SoundCloud.png, X.png): each viewBox is the artwork's own
+ * bounding box, scaled, so the geometry below is the measured shape rather
+ * than an approximation of it. They are flat white knockouts drawn as a single
+ * filled shape, so they sit straight on the card colour with no second tone.
  */
 
 function YouTubeIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg viewBox="0 0 24 17" fill="currentColor" aria-hidden="true" {...props}>
-      <path
-        fillRule="evenodd"
-        d="M23.498 2.686a3.016 3.016 0 0 0-2.122-2.136C19.505.045 12 .045 12 .045S4.495.045 2.623.55A3.017 3.017 0 0 0 .502 2.686C0 4.57 0 8.5 0 8.5s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 12.43 24 8.5 24 8.5s0-3.93-.502-5.814ZM9.545 12.068V4.932L15.818 8.5l-6.273 3.568Z"
-      />
-    </svg>
-  );
-}
-
-/*
- * The SoundCloud waveform: [centre x, top, bottom] for each spindle, which is
- * drawn as a lens — two quadratic curves meeting in a point at either end —
- * the way the brand mark tapers its bars rather than capping them flat.
- */
-const waveform: [x: number, top: number, bottom: number][] = [
-  [1.8, 60, 76],
-  [12, 52, 85.5],
-  [20, 47, 89],
-  [28, 48, 91],
-  [36, 50, 92],
-  [44, 51, 93],
-  [52, 35, 93.5],
-  [60, 25, 94.5],
-  [68, 19, 96],
-  [76, 22, 96],
-  [84, 24, 96],
-  [92, 25, 97],
-  [100, 18, 97.5],
-  [108, 7, 98],
-  [116, 4, 98],
-];
-
-const spindleHalfWidth = 2.1;
-
-function spindle(x: number, top: number, bottom: number) {
-  const middle = (top + bottom) / 2;
-  const left = x - spindleHalfWidth;
-  const right = x + spindleHalfWidth;
-  return `M${x} ${top}Q${right} ${middle} ${x} ${bottom}Q${left} ${middle} ${x} ${top}Z`;
-}
-
-// Left edge, the small puff over it, then the big lobe sweeping round to the
-// flat base: the cloud is two overlapping circles with a shallow notch between.
-const soundCloudCloud =
-  "M120 100V36A33 33 0 0 1 166.5 5.9A50 50 0 1 1 190 100Z";
-
-function SoundCloudIcon(props: React.ComponentProps<"svg">) {
-  return (
     <svg
-      viewBox="0 0 240 100"
+      viewBox="0 0 235 269"
       fill="currentColor"
       aria-hidden="true"
       {...props}
     >
-      <path
-        d={
-          waveform.map(([x, top, bottom]) => spindle(x, top, bottom)).join("") +
-          soundCloudCloud
-        }
-      />
+      <path d="M0 0L235 134.5L0 269Z" />
     </svg>
   );
 }
 
 /*
- * The X mark is the two crossing strokes of the logo — a thick descending one
- * and a thin ascending one — as two subpaths wound the same way so the default
- * nonzero fill unions them into one solid glyph.
+ * The SoundCloud waveform, left to right: [centre x, top, bottom, half width]
+ * per bar. Each bar is widest at its middle and rounds off at both ends, so it
+ * is drawn as two quadratics between a pair of semicircular caps.
  */
+const waveform: [x: number, top: number, bottom: number, half: number][] = [
+  [2.3, 60.3, 87, 2.5],
+  [11, 52.3, 94.6, 3.2],
+  [20.4, 48.4, 98.2, 3.2],
+  [29.4, 47.3, 99.3, 3.2],
+  [38.6, 49.1, 99.6, 3.4],
+  [48, 33.9, 100, 3.4],
+  [57.4, 25.3, 100, 3.4],
+  [67, 20.9, 100, 3.6],
+  [76.5, 18.8, 100, 3.8],
+  [86.3, 20.2, 100, 3.8],
+  [96, 21.7, 100, 3.8],
+  [105.6, 12.3, 100, 4],
+  [115.5, 6.5, 99.6, 4.2],
+];
+
+function bar(x: number, top: number, bottom: number, half: number) {
+  const cap = half * 0.55;
+  const middle = (top + bottom) / 2;
+  // Pulling the control point out to twice the half width is what leaves the
+  // curve itself passing through it at the widest point.
+  const bulge = 2 * half - cap;
+  return (
+    `M${x - cap} ${top + cap}A${cap} ${cap} 0 0 1 ${x + cap} ${top + cap}` +
+    `Q${x + bulge} ${middle} ${x + cap} ${bottom - cap}` +
+    `A${cap} ${cap} 0 0 1 ${x - cap} ${bottom - cap}` +
+    `Q${x - bulge} ${middle} ${x - cap} ${top + cap}Z`
+  );
+}
+
+/*
+ * The cloud is two circles over a flat base: a big one whose left side is cut
+ * off square where the waveform ends, and a smaller one tucked into its right
+ * shoulder, the notch between them being where the two arcs cross.
+ */
+const soundCloudCloud =
+  "M122 100V4.4A50.3 50.3 0 0 1 192.7 45.7A28.5 28.5 0 1 1 209.4 100Z";
+
+function SoundCloudIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      viewBox="0 0 231.8 100"
+      fill="currentColor"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d={waveform.map((b) => bar(...b)).join("") + soundCloudCloud} />
+    </svg>
+  );
+}
+
+/*
+ * The X mark: the outline of the two crossing strokes, then the long slot down
+ * the thick stroke as a second subpath. Even-odd fill makes that slot a hole,
+ * and it reads through the thin stroke where the two cross, as it does in the
+ * logo itself.
+ */
+const xOutline =
+  "M1 0L96 0L167.4 104.2L257 0L293 0L183.4 127.5L301 299L207 299L130.9 188.6L36 299L0 299L114.9 165.3Z";
+const xSlot = "M47 24L85 24L257 275L219 275Z";
+
 function XIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M0 0h7.5l16.5 24h-7.5ZM20.32 0H24L3.68 24H0Z" />
+    <svg
+      viewBox="0 0 301 299"
+      fill="currentColor"
+      aria-hidden="true"
+      {...props}
+    >
+      <path fillRule="evenodd" d={xOutline + xSlot} />
     </svg>
   );
 }
@@ -120,9 +133,9 @@ const youTubeCard = "bg-[#FF0000]";
 const soundCloudCard = "bg-[#FF5500]";
 const xCard = "bg-black";
 
-const youTubeIconSize = "h-[19px] w-auto";
-const soundCloudIconSize = "w-9 h-auto";
-const xIconSize = "h-[15px] w-auto";
+const youTubeIconSize = "h-[18px] w-auto";
+const soundCloudIconSize = "h-auto w-9";
+const xIconSize = "h-[17px] w-auto";
 
 const links: SocialLink[] = [
   {
