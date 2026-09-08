@@ -5,7 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 function YouTubeIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z" />
+      <path
+        fillRule="evenodd"
+        d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z"
+      />
     </svg>
   );
 }
@@ -24,8 +27,12 @@ type SocialLink = {
   description: string;
   href: string;
   icon: React.ComponentType<React.ComponentProps<"svg">>;
-  iconClassName: string;
+  cardClassName: string;
 };
+
+// Official brand colours: YouTube red and SoundCloud orange.
+const youTubeCard = "bg-[#FF0000]";
+const soundCloudCard = "bg-[#FF5500]";
 
 const links: SocialLink[] = [
   {
@@ -34,7 +41,7 @@ const links: SocialLink[] = [
     description: "Crypto",
     href: "https://www.youtube.com/@MaxDontStack",
     icon: YouTubeIcon,
-    iconClassName: "bg-red-50 text-red-600",
+    cardClassName: youTubeCard,
   },
   {
     name: "@Scuba_Max",
@@ -42,7 +49,7 @@ const links: SocialLink[] = [
     description: "Gaming",
     href: "https://www.youtube.com/@Scuba_Max",
     icon: YouTubeIcon,
-    iconClassName: "bg-red-50 text-red-600",
+    cardClassName: youTubeCard,
   },
   {
     name: "@Max_WL",
@@ -50,7 +57,7 @@ const links: SocialLink[] = [
     description: "Random stuff",
     href: "https://www.youtube.com/@Max_WL",
     icon: YouTubeIcon,
-    iconClassName: "bg-red-50 text-red-600",
+    cardClassName: youTubeCard,
   },
   {
     name: "@eutonix",
@@ -58,7 +65,7 @@ const links: SocialLink[] = [
     description: "Music",
     href: "https://soundcloud.com/eutonix",
     icon: SoundCloudIcon,
-    iconClassName: "bg-orange-50 text-orange-500",
+    cardClassName: soundCloudCard,
   },
 ];
 
@@ -82,25 +89,19 @@ function SocialCard({ link }: { link: SocialLink }) {
       href={link.href}
       target="_blank"
       rel="noreferrer"
-      className="block h-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      aria-label={`${link.name} on ${link.platform}`}
+      className="block h-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
-      <Card className="h-full gap-0 py-5 transition-shadow hover:shadow-md">
+      <Card
+        className={`h-full gap-0 border-transparent py-5 text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
+      >
         <CardContent className="flex flex-col gap-3 px-5 lg:px-4">
-          <span
-            className={`flex size-10 items-center justify-center rounded-lg ${link.iconClassName}`}
-          >
-            <Icon className="size-5" />
-          </span>
+          <Icon className="size-8 text-white" />
           <span className="flex flex-col gap-1">
-            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              {link.platform}
-            </span>
-            <span className="leading-tight font-semibold break-words text-neutral-900 lg:text-sm">
+            <span className="leading-tight font-semibold break-words lg:text-sm">
               {link.name}
             </span>
-            <span className="text-sm text-muted-foreground">
-              {link.description}
-            </span>
+            <span className="text-sm text-white/85">{link.description}</span>
           </span>
         </CardContent>
       </Card>
