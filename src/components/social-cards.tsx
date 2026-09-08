@@ -22,42 +22,41 @@ type SocialLink = {
   name: string;
   platform: string;
   description: string;
-  /** Fill this in once the channel URL is known. */
-  href: string | null;
+  href: string;
   icon: React.ComponentType<React.ComponentProps<"svg">>;
   iconClassName: string;
 };
 
 const links: SocialLink[] = [
   {
-    name: "YouTube Channel One",
+    name: "@MaxDontStack",
     platform: "YouTube",
-    description: "Placeholder for the first channel.",
-    href: null,
+    description: "Crypto",
+    href: "https://www.youtube.com/@MaxDontStack",
     icon: YouTubeIcon,
     iconClassName: "bg-red-50 text-red-600",
   },
   {
-    name: "YouTube Channel Two",
+    name: "@Scuba_Max",
     platform: "YouTube",
-    description: "Placeholder for the second channel.",
-    href: null,
+    description: "Gaming",
+    href: "https://www.youtube.com/@Scuba_Max",
     icon: YouTubeIcon,
     iconClassName: "bg-red-50 text-red-600",
   },
   {
-    name: "YouTube Channel Three",
+    name: "@Max_WL",
     platform: "YouTube",
-    description: "Placeholder for the third channel.",
-    href: null,
+    description: "Random stuff",
+    href: "https://www.youtube.com/@Max_WL",
     icon: YouTubeIcon,
     iconClassName: "bg-red-50 text-red-600",
   },
   {
-    name: "SoundCloud",
+    name: "@eutonix",
     platform: "SoundCloud",
-    description: "Placeholder for the music.",
-    href: null,
+    description: "Music",
+    href: "https://soundcloud.com/eutonix",
     icon: SoundCloudIcon,
     iconClassName: "bg-orange-50 text-orange-500",
   },
@@ -65,7 +64,7 @@ const links: SocialLink[] = [
 
 export function SocialCards() {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
       {links.map((link) => (
         <li key={link.name}>
           <SocialCard link={link} />
@@ -78,41 +77,33 @@ export function SocialCards() {
 function SocialCard({ link }: { link: SocialLink }) {
   const Icon = link.icon;
 
-  const card = (
-    <Card className="h-full gap-0 py-5 transition-shadow hover:shadow-md">
-      <CardContent className="flex flex-col gap-3 px-5">
-        <span
-          className={`flex size-10 items-center justify-center rounded-lg ${link.iconClassName}`}
-        >
-          <Icon className="size-5" />
-        </span>
-        <span className="flex flex-col gap-1">
-          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {link.platform}
-          </span>
-          <span className="leading-none font-semibold text-neutral-900">
-            {link.name}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {link.description}
-          </span>
-        </span>
-      </CardContent>
-    </Card>
-  );
-
-  if (!link.href) {
-    return card;
-  }
-
   return (
     <a
       href={link.href}
       target="_blank"
       rel="noreferrer"
-      className="block rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="block h-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
-      {card}
+      <Card className="h-full gap-0 py-5 transition-shadow hover:shadow-md">
+        <CardContent className="flex flex-col gap-3 px-5 lg:px-4">
+          <span
+            className={`flex size-10 items-center justify-center rounded-lg ${link.iconClassName}`}
+          >
+            <Icon className="size-5" />
+          </span>
+          <span className="flex flex-col gap-1">
+            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              {link.platform}
+            </span>
+            <span className="leading-tight font-semibold break-words text-neutral-900 lg:text-sm">
+              {link.name}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {link.description}
+            </span>
+          </span>
+        </CardContent>
+      </Card>
     </a>
   );
 }
