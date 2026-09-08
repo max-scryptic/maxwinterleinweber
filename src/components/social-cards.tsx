@@ -7,42 +7,88 @@ import { PencilArrow, PencilDefs } from "@/components/pencil-annotation";
 const caveat = Caveat({ subsets: ["latin"] });
 
 /*
- * Both marks are the flat white knockout versions of the brand logos, drawn as
- * a single filled shape so they sit straight on the brand colour with no
- * second tone. The play triangle is a hole punched through the YouTube badge
- * (fill-rule evenodd) rather than a white shape stacked on top, so the card
- * colour shows through it.
+ * All three marks are the flat white knockout versions of the brand logos,
+ * drawn as a single filled shape so they sit straight on the card colour with
+ * no second tone. Where a mark has a counter — the YouTube play triangle — it
+ * is a hole punched through the shape (fill-rule evenodd) rather than a white
+ * shape stacked on top, so the card colour shows through it.
  */
 
 function YouTubeIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg viewBox="0 0 160 110" fill="currentColor" aria-hidden="true" {...props}>
+    <svg viewBox="0 0 24 17" fill="currentColor" aria-hidden="true" {...props}>
       <path
         fillRule="evenodd"
-        d="M154.3 17.5a19.4 19.4 0 0 0-13.7-13.7C128.6.5 79.9.5 79.9.5S31.2.5 19.2 3.8A19.4 19.4 0 0 0 5.5 17.5C2.2 29.5 2.2 55 2.2 55s0 25.5 3.3 37.5a19.4 19.4 0 0 0 13.7 13.7c12 3.3 60.7 3.3 60.7 3.3s48.7 0 60.7-3.3a19.4 19.4 0 0 0 13.7-13.7c3.3-12 3.3-37.5 3.3-37.5s0-25.5-3.3-37.5ZM64.3 78.4V31.6L104.8 55 64.3 78.4Z"
+        d="M23.498 2.686a3.016 3.016 0 0 0-2.122-2.136C19.505.045 12 .045 12 .045S4.495.045 2.623.55A3.017 3.017 0 0 0 .502 2.686C0 4.57 0 8.5 0 8.5s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 12.43 24 8.5 24 8.5s0-3.93-.502-5.814ZM9.545 12.068V4.932L15.818 8.5l-6.273 3.568Z"
       />
     </svg>
   );
 }
 
-// Waveform heights, left to right: the top edge of each bar above a baseline
-// at y=100.
-const waveform = [63, 47, 38, 43, 41, 26, 19, 23, 14, 17, 11, 15, 8, 4, 4];
+/*
+ * The SoundCloud waveform: [centre x, top, bottom] for each spindle, which is
+ * drawn as a lens — two quadratic curves meeting in a point at either end —
+ * the way the brand mark tapers its bars rather than capping them flat.
+ */
+const waveform: [x: number, top: number, bottom: number][] = [
+  [1.8, 60, 76],
+  [12, 52, 85.5],
+  [20, 47, 89],
+  [28, 48, 91],
+  [36, 50, 92],
+  [44, 51, 93],
+  [52, 35, 93.5],
+  [60, 25, 94.5],
+  [68, 19, 96],
+  [76, 22, 96],
+  [84, 24, 96],
+  [92, 25, 97],
+  [100, 18, 97.5],
+  [108, 7, 98],
+  [116, 4, 98],
+];
+
+const spindleHalfWidth = 2.1;
+
+function spindle(x: number, top: number, bottom: number) {
+  const middle = (top + bottom) / 2;
+  const left = x - spindleHalfWidth;
+  const right = x + spindleHalfWidth;
+  return `M${x} ${top}Q${right} ${middle} ${x} ${bottom}Q${left} ${middle} ${x} ${top}Z`;
+}
+
+// Left edge, the small puff over it, then the big lobe sweeping round to the
+// flat base: the cloud is two overlapping circles with a shallow notch between.
+const soundCloudCloud =
+  "M120 100V36A33 33 0 0 1 166.5 5.9A50 50 0 1 1 190 100Z";
 
 function SoundCloudIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg viewBox="0 0 250 100" fill="currentColor" aria-hidden="true" {...props}>
-      {waveform.map((top, index) => (
-        <rect
-          key={index}
-          x={2 + index * 8.5}
-          y={top}
-          width={4.6}
-          height={100 - top}
-          rx={2.3}
-        />
-      ))}
-      <path d="M130 100V34a34 34 0 0 1 67.4 6.5 33 33 0 0 1 19.6 59.5Z" />
+    <svg
+      viewBox="0 0 240 100"
+      fill="currentColor"
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d={
+          waveform.map(([x, top, bottom]) => spindle(x, top, bottom)).join("") +
+          soundCloudCloud
+        }
+      />
+    </svg>
+  );
+}
+
+/*
+ * The X mark is the two crossing strokes of the logo — a thick descending one
+ * and a thin ascending one — as two subpaths wound the same way so the default
+ * nonzero fill unions them into one solid glyph.
+ */
+function XIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M0 0h7.5l16.5 24h-7.5ZM20.32 0H24L3.68 24H0Z" />
     </svg>
   );
 }
@@ -60,20 +106,23 @@ type SocialLink = {
   href: string;
   icon: React.ComponentType<React.ComponentProps<"svg">>;
   /**
-   * The two marks are set to all but the same height so neither reads as the
-   * bigger logo. Width is left to each mark's own proportions.
+   * Each mark is sized on its own so none reads as the bigger logo: the wide
+   * SoundCloud mark is set by width, the taller YouTube and X marks by height.
+   * They all sit in the same fixed box, so the handles line up down the row.
    */
   iconClassName: string;
   cardClassName: string;
   note: Note;
 };
 
-// Official brand colours: YouTube red and SoundCloud orange.
+// Official brand colours: YouTube red, SoundCloud orange, X black.
 const youTubeCard = "bg-[#FF0000]";
 const soundCloudCard = "bg-[#FF5500]";
+const xCard = "bg-black";
 
-const youTubeIconSize = "h-[26px] w-auto";
-const soundCloudIconSize = "h-6 w-auto";
+const youTubeIconSize = "h-[19px] w-auto";
+const soundCloudIconSize = "w-9 h-auto";
+const xIconSize = "h-[15px] w-auto";
 
 const links: SocialLink[] = [
   {
@@ -156,15 +205,35 @@ const links: SocialLink[] = [
       },
     },
   },
+  {
+    name: "@MaxWinterL",
+    platform: "X",
+    href: "https://x.com/MaxWinterL",
+    icon: XIcon,
+    iconClassName: xIconSize,
+    cardClassName: xCard,
+    note: {
+      label: "Hacking",
+      labelClassName: "top-[62px] left-4 rotate-2",
+      arrow: {
+        path: "M14 50c-2-12 1-22 8-30 3-3 6-6 10-8",
+        tip: [33, 11],
+        angle: -30,
+        width: 60,
+        height: 54,
+        className: "absolute top-0 left-8",
+      },
+    },
+  },
 ];
 
 export function SocialCards() {
   return (
     <>
       <PencilDefs />
-      <ul className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-3">
+      <ul className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-3">
         {links.map((link) => (
-          <li key={link.name} className="flex flex-col">
+          <li key={link.href} className="flex flex-col">
             <SocialCard link={link} />
             <ScribbledNote note={link.note} />
           </li>
@@ -186,15 +255,15 @@ function SocialCard({ link }: { link: SocialLink }) {
       className="flex rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       <Card
-        className={`flex-1 gap-0 border-transparent py-5 text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
+        className={`flex-1 gap-0 border-transparent py-3 text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
       >
-        <CardContent className="flex flex-col gap-3 px-5 lg:px-4">
-          {/* Fixed row height so both marks share one baseline across the row,
-              whatever their own proportions are. */}
-          <span className="flex h-7 items-center">
+        <CardContent className="flex items-center gap-2.5 px-4 lg:gap-2 lg:px-3">
+          {/* Fixed box so the marks share one centre whatever their own
+              proportions are, and every handle starts at the same point. */}
+          <span className="flex h-5 w-9 shrink-0 items-center justify-center">
             <Icon className={link.iconClassName} />
           </span>
-          <span className="leading-tight font-semibold break-words lg:text-sm">
+          <span className="min-w-0 text-sm leading-tight font-semibold break-words lg:text-[13px]">
             {link.name}
           </span>
         </CardContent>
