@@ -1,5 +1,7 @@
 import { Grandstander } from "next/font/google";
 
+import { SocialCards } from "@/components/social-cards";
+
 const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
 
 export default function Home() {
@@ -10,6 +12,9 @@ export default function Home() {
       >
         Max Winter-Leinweber
       </h1>
+      <div className="mt-8 md:mt-10">
+        <SocialCards />
+      </div>
     </div>
   );
 }
