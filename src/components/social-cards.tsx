@@ -169,22 +169,93 @@ const links: SocialLink[] = [
   },
 ];
 
+/*
+ * The row is one line that never ends: the cards are laid out in a single
+ * track, the track slides steadily sideways, and the cards that leave one edge
+ * come back round the other. What makes that possible without a jump is laying
+ * the same cards down COPIES times and sliding the track by exactly one copy
+ * before starting over, at which point the row looks identical to how it looked
+ * at the start and nobody can see where the loop is.
+ *
+ * The count is what covers the width: only one copy of the row is guaranteed to
+ * have gone past by the end of a turn, so the remaining COPIES - 1 have to be
+ * wide enough to fill the column, and four of a row this long is comfortably
+ * more than half of even a very wide display.
+ */
+const COPIES = 4;
+
+/*
+ * What the row is handed: how far the cards fade at each edge, and how far one
+ * turn of the animation travels, which is one copy out of the COPIES the track
+ * is made of and so counted off the number above rather than written out twice
+ * and left to drift from it. How long that turn takes is the marquee keyframes'
+ * own business, in globals.css.
+ */
+const marqueeStyle = {
+  "--fade": "2.5rem",
+  "--marquee-shift": `${-100 / COPIES}%`,
+} as React.CSSProperties;
+
+/*
+ * The cards do not stop dead at the edges of the column, they thin out into the
+ * glass over the last few millimetres and come back the same way, so the row
+ * reads as carrying on past the card rather than being cut off by it. The mask
+ * does the clipping wherever it is understood; the overflow rule beside it is
+ * what keeps a browser that ignores the mask from spilling the track across the
+ * page rather than merely losing the fade.
+ */
+const edgeFade =
+  "motion-safe:[mask-image:linear-gradient(to_right,transparent,#000_var(--fade),#000_calc(100%-var(--fade)),transparent)]";
+
 export function SocialCards() {
   return (
-    // A wrapping row rather than fixed tracks: each card is exactly its own
-    // contents wide, and centring the flex line keeps a short last row centred
-    // under the ones above it however many cards happen to fit per row.
-    <ul className="flex flex-wrap justify-center gap-2">
-      {links.map((link) => (
-        <li key={link.href} className="flex">
-          <SocialCard link={link} />
-        </li>
-      ))}
-    </ul>
+    <div
+      style={marqueeStyle}
+      // The window the row travels behind. The fade is asked for only where the
+      // row actually moves, so the still row below is left as plain as it was.
+      className={`relative overflow-hidden ${edgeFade}`}
+    >
+      {/* The track. It is as wide as its contents and holds one flat line of
+          cards, spaced by trailing padding on each rather than by a gap between
+          them: a gap falls between cards but not after the last one, which
+          would leave every copy of the row one space short of the step the loop
+          takes and show a stutter at the seam. Held still while a pointer is on
+          it or a card in it has the keyboard, since a link that is walking away
+          from the cursor is a link that is hard to click.
+
+          For anyone who has asked for less motion the track stops being a track
+          at all: it wraps, centres and spaces itself the way the row did before
+          it moved, and the repeats below drop out. */}
+      <ul
+        // Every rule that shapes the moving track is asked for under
+        // motion-safe and every rule that shapes the still one under
+        // motion-reduce, so the two never both apply and neither has to win an
+        // ordering argument with the other. Sliding a line of text under a mask
+        // is worth a layer of its own: without one the row is repainted every
+        // frame across the whole width of the column.
+        className="flex motion-safe:w-max motion-safe:animate-marquee motion-safe:[will-change:transform] motion-safe:hover:[animation-play-state:paused] motion-safe:focus-within:[animation-play-state:paused] motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-2"
+      >
+        {Array.from({ length: COPIES }, (_, copy) =>
+          links.map((link) => (
+            <li
+              key={`${copy}-${link.href}`}
+              // Only the first copy is the row; the rest are the same cards
+              // again to fill the line, so they are passed over by screen
+              // readers and skipped by the tab key rather than read out four
+              // times over.
+              aria-hidden={copy > 0 || undefined}
+              className={`flex motion-safe:pe-2 ${copy > 0 ? "motion-reduce:hidden" : ""}`}
+            >
+              <SocialCard link={link} repeat={copy > 0} />
+            </li>
+          )),
+        )}
+      </ul>
+    </div>
   );
 }
 
-function SocialCard({ link }: { link: SocialLink }) {
+function SocialCard({ link, repeat }: { link: SocialLink; repeat?: boolean }) {
   const Icon = link.icon;
 
   return (
@@ -192,7 +263,8 @@ function SocialCard({ link }: { link: SocialLink }) {
       href={link.href}
       target="_blank"
       rel="noreferrer"
-      aria-label={`${link.name} on ${link.platform}`}
+      aria-label={repeat ? undefined : `${link.name} on ${link.platform}`}
+      tabIndex={repeat ? -1 : undefined}
       className="flex rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       <Card
