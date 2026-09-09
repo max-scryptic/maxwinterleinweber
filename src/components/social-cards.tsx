@@ -196,7 +196,11 @@ function SocialCard({ link }: { link: SocialLink }) {
       className="flex rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       <Card
-        className={`flex-1 gap-0 border-transparent py-[7px] text-white transition-shadow hover:shadow-md ${link.cardClassName}`}
+        // The lift is small on purpose: these are pills in a tight row, and
+        // anything more makes the hovered one jump out of the line. Held back
+        // for anyone who has asked for less motion, where the shadow alone
+        // still says the card is live.
+        className={`flex-1 gap-0 border-transparent py-[7px] text-white transition duration-200 hover:shadow-lg motion-safe:hover:-translate-y-0.5 ${link.cardClassName}`}
       >
         {/* The mark to handle gap is 8px on every card, and the two outer gaps
             are that plus 5 so the contents are not squeezed up against the
