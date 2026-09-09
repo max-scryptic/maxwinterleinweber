@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
@@ -41,7 +41,7 @@ const DRIFT_SECONDS = 9;
 function Model({ still }: { still: boolean }) {
   const { scene, animations } = useGLTF(MODEL_URL);
   const root = useRef<Group>(null);
-  const { actions, names } = useAnimations(animations, root);
+  const { actions, names, mixer } = useAnimations(animations, root);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
   // the plane through the origin. This runs on the first render, before the
@@ -70,7 +70,7 @@ function Model({ still }: { still: boolean }) {
     });
   }, [scene]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // The placeholder carries a set of Mixamo clips. "idle" is the standing
     // one, which is the only one that suits a figure at rest; any other model
     // falls back to its first clip, and a model with no clips just stands
@@ -79,11 +79,21 @@ function Model({ still }: { still: boolean }) {
     const action = clip ? actions[clip] : undefined;
     if (!action) return;
 
-    action.reset().fadeIn(0.4).play();
+    // Straight in at full weight, and the first frame of it written onto the
+    // skeleton here rather than at the next tick of the render loop. Until a
+    // clip is applied, a skinned mesh is drawn in its bind pose, which for this
+    // model is the arms held straight out; fading the clip in from nothing
+    // meant opening on that pose and then watching the arms drop into the idle
+    // one. Starting already in the pose the figure is going to hold is what
+    // standing there looks like. A layout effect, so this lands before the
+    // first painted frame rather than one frame into it.
+    action.reset().play();
+    mixer.update(0);
+
     return () => {
-      action.fadeOut(0.3);
+      action.stop();
     };
-  }, [actions, names]);
+  }, [actions, mixer, names]);
 
   useFrame((state, delta) => {
     if (!root.current || still) return;
