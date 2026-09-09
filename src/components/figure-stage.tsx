@@ -221,21 +221,30 @@ function Model({
   }, [actions, mixer, names]);
 
   // The clock has been running since the canvas was created, which is a second
-  // or so of loading before this figure exists. Everything below is measured
-  // from the first frame it is actually drawn on instead, so that a figure
-  // whose model was slow to arrive still gets the whole of its entrance.
+  // or so of loading before this figure exists. Motion is measured from the
+  // first frame it is actually drawn, while transition progress is measured
+  // from the first frame of the current phase. Those clocks must be separate:
+  // an existing figure keeps its exact turn and drift when it starts leaving,
+  // but its breakup still has to begin at zero on that frame.
   const born = useRef<number | null>(null);
+  const phaseStarted = useRef<{ phase: Phase; at: number } | null>(null);
 
   useFrame((state, delta) => {
     const spin = root.current;
     if (!spin) return;
 
-    if (born.current === null) born.current = state.clock.elapsedTime;
-    const age = state.clock.elapsedTime - born.current;
+    const now = state.clock.elapsedTime;
+    if (born.current === null) born.current = now;
+    if (!phaseStarted.current || phaseStarted.current.phase !== phase) {
+      phaseStarted.current = { phase, at: now };
+    }
+
+    const age = now - born.current;
+    const phaseAge = now - phaseStarted.current.at;
 
     // Under reduced motion there is no change to be part way through: the
     // figure is simply whole, and the cloud is never built or drawn.
-    const at = still ? SETTLED : progress(phase, age);
+    const at = still ? SETTLED : progress(phase, phaseAge);
     transition.current.form.value = at.form;
     transition.current.fade.value = at.fade;
     transition.current.solid.value = at.solid;
@@ -330,11 +339,15 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
       {/* A boundary each, not one around the pair. The arriving figure
           suspends on its model, and a boundary shared with the departing one
           would replace both with the fallback: the figure being replaced would
-          vanish on the press instead of coming apart. */}
+          vanish on the press instead of coming apart. The key belongs on the
+          boundary rather than on Model: when an active figure moves into the
+          leaving slot, React must move that whole boundary and preserve the
+          live model instance. Remounting it here would reset its turn and drift
+          and, because useGLTF shares the scene, could measure its normalisation
+          while it was still parented under the previous instance's transforms. */}
       {cast.leaving ? (
-        <Suspense fallback={null}>
+        <Suspense key={cast.leaving} fallback={null}>
           <Model
-            key={cast.leaving}
             url={source(cast.leaving)}
             phase="leaving"
             still={still}
@@ -342,9 +355,8 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
         </Suspense>
       ) : null}
 
-      <Suspense fallback={null}>
+      <Suspense key={cast.arriving} fallback={null}>
         <Model
-          key={cast.arriving}
           url={source(cast.arriving)}
           phase={cast.phase}
           still={still}
