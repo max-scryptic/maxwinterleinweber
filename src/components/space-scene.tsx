@@ -1,6 +1,14 @@
 "use client";
 
-import { Suspense, lazy, useLayoutEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Group, PerspectiveCamera } from "three";
@@ -134,9 +142,48 @@ function ColumnFraming() {
   return null;
 }
 
+/*
+ * Reports the first frame the canvas actually puts on screen, which is what the
+ * fade up from the painted sky underneath is timed off.
+ *
+ * Not onCreated, which fires with the context made and nothing drawn on it, and
+ * not an effect, which fires before the loop has run at all: either would start
+ * the fade against an empty buffer and reach full strength somewhere in the
+ * middle of compiling the shaders. useFrame runs before the frame it belongs
+ * to, so the report is put off one further, to a frame that can only run once
+ * this one has been drawn.
+ */
+function FirstLight({ onLit }: { onLit: () => void }) {
+  const reported = useRef(false);
+
+  useFrame(() => {
+    if (reported.current) return;
+    reported.current = true;
+    requestAnimationFrame(onLit);
+  });
+
+  return null;
+}
+
 export default function SpaceScene() {
   const wide = useMediaQuery(WIDE);
   const still = useMediaQuery(REDUCED_MOTION);
+
+  // Whether the canvas has a sky on it yet. Until it does the painted one in
+  // the wrapper behind is what is showing, and this is what crosses from the
+  // one to the other.
+  const [lit, setLit] = useState(false);
+  const light = useCallback(() => setLit(true), []);
+
+  // The model the page opens on, fetched from here rather than waiting for the
+  // chunk that draws it to be parsed and to ask for it itself. The two are
+  // several megabytes and a few hundred kilobytes over the same connection;
+  // starting them together rather than one after the other is most of a second
+  // off how long the sky stands empty. Only on a viewport wide enough to show a
+  // figure, so a phone still fetches neither.
+  useEffect(() => {
+    if (wide) warm(FIGURES[0].url);
+  }, [wide]);
 
   const [view, setView] = useState<ViewId>("full");
 
@@ -159,6 +206,14 @@ export default function SpaceScene() {
         // The only hint that the figure is more than a picture. Nothing to grab
         // on a narrow window, where the figure is not there to drag.
         className={wide ? "cursor-grab active:cursor-grabbing" : undefined}
+        // Held back until there is something on it, then brought up over the
+        // painted sky in the wrapper behind. The two are close enough that this
+        // reads as the sky coming into focus; cutting to the canvas instead is
+        // a visible switch from one picture to another.
+        style={{
+          opacity: lit ? 1 : 0,
+          transition: "opacity 700ms ease-out",
+        }}
         // The sky fills every pixel, so there is nothing to composite against
         // and no reason to pay for an alpha channel.
         gl={{ alpha: false, antialias: true }}
@@ -179,6 +234,8 @@ export default function SpaceScene() {
         }}
       >
         <Sky still={still} />
+
+        <FirstLight onLit={light} />
 
         {/* Only where there is a figure to frame: on a narrow window the sky
             is the whole page and is left centred on it. */}
