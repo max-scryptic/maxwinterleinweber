@@ -1,10 +1,10 @@
-import { Grandstander } from "next/font/google";
+import { Orbitron } from "next/font/google";
 
 import { SaasCards } from "@/components/saas-cards";
 import { SocialCards } from "@/components/social-cards";
 import { SpaceBackdrop } from "@/components/space-backdrop";
 
-const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
+const orbitron = Orbitron({ subsets: ["latin"], weight: "700" });
 
 export default function Home() {
   return (
@@ -33,13 +33,19 @@ export default function Home() {
             the head of the card and grow downwards, rather than riding up and
             down with the height of the window. */}
         <div className="@container pointer-events-auto flex min-h-0 flex-col items-center justify-start overflow-y-auto overscroll-contain rounded-2xl bg-[#f4f4f4] px-4 pt-10 pb-10 shadow-[0_6px_24px_rgba(0,0,0,0.18)] sm:px-6 md:px-10 md:pt-12 md:pb-10">
-          {/* The name is set on one line at any width: "Max Winter-Leinweber"
-              in Grandstander 700 measures 9.375% of its own font size per
-              character of column width, i.e. it exactly fills the column at
-              9.375cqi, so 9cqi fits it with a little air at both ends. The cap
-              stops it growing without limit on very wide displays. */}
+          {/* The name is set on one line at any width. In caps, in Orbitron
+              700, it measures 15% of its own font size per character of column
+              width, i.e. it exactly fills the column at 6.667cqi, so 6.4cqi
+              fits it with a little air at both ends. Orbitron is a wide face
+              and caps are wider still, so the same column carries the name at
+              about two thirds the size Grandstander set it at. The cap stops
+              it growing without limit on very wide displays.
+
+              The caps are CSS rather than typed into the text, so the name is
+              still spelled normally to anything reading the page rather than
+              looking at it. */}
           <h1
-            className={`${grandstander.className} text-[min(5rem,9cqi)] leading-tight whitespace-nowrap text-neutral-900`}
+            className={`${orbitron.className} text-[min(5rem,6.4cqi)] leading-tight whitespace-nowrap text-neutral-900 uppercase`}
           >
             Max Winter-Leinweber
           </h1>

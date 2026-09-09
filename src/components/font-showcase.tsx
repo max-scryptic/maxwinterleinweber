@@ -126,8 +126,8 @@ export function FontShowcase({ groups }: { groups: FontGroup[] }) {
           <h1 className="text-2xl font-semibold">Futuristic fonts</h1>
           <p className="mt-2 max-w-prose text-sm text-white/70">
             {NAME}, set in each candidate at the largest size that fits the
-            card on one line. Grandstander, what the site uses now, is at the
-            bottom for comparison.
+            card on one line. The home page now uses the first of them,
+            Orbitron, in caps.
           </p>
 
           <div

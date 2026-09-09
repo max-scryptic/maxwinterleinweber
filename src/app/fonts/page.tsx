@@ -141,8 +141,8 @@ const groups: FontGroup[] = [
     ],
   },
   {
-    title: "Where it stands now",
-    blurb: "The current header, for the comparison.",
+    title: "What it replaced",
+    blurb: "The header the site opened with, for the comparison.",
     samples: [
       {
         name: "Grandstander 700",
