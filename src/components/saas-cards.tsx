@@ -1,3 +1,4 @@
+import { ArrowUpRight } from "lucide-react";
 import * as React from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,9 +13,9 @@ import { Card, CardContent } from "@/components/ui/card";
  * page's theme.
  */
 
-export const viewlioBlue = "#2f63e1";
+const viewlioBlue = "#2f63e1";
 
-export function ViewlioIcon(props: React.ComponentProps<"svg">) {
+function ViewlioIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" {...props}>
       <defs>
@@ -105,32 +106,38 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className="group flex w-[22rem] max-w-full rounded-xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5"
+      className="group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5"
     >
       {/* The lift and the deeper shadow together read as the card coming up
           off the page, and the border darkening keeps its edge from washing
           out against the shadow. The lift is held back for anyone who has
           asked for less motion; the rest still happens. */}
-      <Card className="flex-1 gap-0 border-neutral-200 bg-white py-5 transition duration-200 group-hover:border-neutral-300 group-hover:shadow-lg">
-        {/* The mark and the name share the top line, with the line about the
-            app under both of them. */}
-        <CardContent className="flex flex-col items-start gap-2 px-5">
-          <span className="flex items-center gap-3">
-            <span
-              className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${build.tileClassName}`}
-              style={build.tileStyle}
-            >
-              {/* 70% of the tile, which is the clear space the mark is drawn
-                  with in the app itself. */}
-              <Icon className="size-[70%]" />
-            </span>
-            <span className="text-xl leading-tight font-semibold text-neutral-900">
+      <Card className="flex-1 gap-0 rounded-2xl border-neutral-200 bg-white py-4 transition duration-200 group-hover:border-neutral-300 group-hover:shadow-lg">
+        {/* The mark on the left, the name and the line about the app stacked
+            beside it, and the arrow held out at the far edge. */}
+        <CardContent className="flex items-center gap-4 px-5">
+          <span
+            className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${build.tileClassName}`}
+            style={build.tileStyle}
+          >
+            {/* 70% of the tile, which is the clear space the mark is drawn
+                with in the app itself. */}
+            <Icon className="size-[70%]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg leading-tight font-semibold text-neutral-900">
               {build.name}
             </span>
+            <span className="mt-1 block text-sm leading-snug text-neutral-500">
+              {build.description}
+            </span>
           </span>
-          <span className="text-base leading-snug text-neutral-500">
-            {build.description}
-          </span>
+          {/* The arrow leans the way the link goes, which is the one bit of
+              the card that says it opens somewhere else. */}
+          <ArrowUpRight
+            aria-hidden="true"
+            className="size-5 shrink-0 text-neutral-400 transition duration-200 group-hover:text-neutral-900 motion-safe:group-hover:translate-x-0.5 motion-safe:group-hover:-translate-y-0.5"
+          />
         </CardContent>
       </Card>
     </a>
