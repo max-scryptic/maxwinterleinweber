@@ -20,12 +20,12 @@ export const HEIGHT = 1.8;
  * what lets a scan be dropped in beside the placeholder without a second set
  * of camera numbers to go with it.
  *
- * shift and rise are small visual calibrations after that normalisation. Scan
- * 01's exported bounds do not centre its visible head, so it otherwise lands
- * slightly left and low even though its bounding box is centred and reaches
- * HEIGHT. Keeping those corrections on the figure, rather than in a particular
- * camera view, leaves its head in the same relative place through every
- * framing.
+ * shift, rise and yaw are small visual calibrations after that normalisation.
+ * Scan 01's exported bounds do not centre its visible head, and its forward
+ * axis differs from the mannequin's, so it otherwise lands slightly left and
+ * low while facing the wrong way. Keeping those corrections on the figure
+ * leaves every model aligned at the same shared turntable angle through every
+ * framing. Yaw is measured in radians about the vertical axis.
  *
  * The first entry is what the page opens on.
  */
@@ -36,6 +36,7 @@ export const FIGURES = [
     url: "/models/mannequin.glb",
     shift: 0,
     rise: 0,
+    yaw: 0,
   },
   {
     id: "scan-01",
@@ -43,6 +44,7 @@ export const FIGURES = [
     url: "/models/scan-01.glb",
     shift: 0.06,
     rise: 0.08,
+    yaw: (Math.PI * 5) / 4,
   },
 ] as const;
 
