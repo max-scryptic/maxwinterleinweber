@@ -33,19 +33,19 @@ export default function Home() {
             the head of the card and grow downwards, rather than riding up and
             down with the height of the window. */}
         <div className="@container pointer-events-auto flex min-h-0 flex-col items-center justify-start overflow-y-auto overscroll-contain rounded-2xl bg-[#f4f4f4] px-4 pt-10 pb-10 shadow-[0_6px_24px_rgba(0,0,0,0.18)] sm:px-6 md:px-10 md:pt-12 md:pb-10">
-          {/* The name is set on one line at any width. In caps, in Orbitron
-              700, it measures 15% of its own font size per character of column
-              width, i.e. it exactly fills the column at 6.667cqi, so 6.4cqi
-              fits it with a little air at both ends. Orbitron is a wide face
-              and caps are wider still, so the same column carries the name at
-              about two thirds the size Grandstander set it at. The cap stops
-              it growing without limit on very wide displays.
-
-              The caps are CSS rather than typed into the text, so the name is
-              still spelled normally to anything reading the page rather than
-              looking at it. */}
+          {/* The name is set on one line at any width: "Max Winter-Leinweber"
+              in Orbitron 700 measures 12.8% of its own font size per character
+              of column width, i.e. it exactly fills the column at 7.8cqi, so
+              7.3cqi fits it with a little air at both ends. The margin is
+              wider than the arithmetic needs because glyph advances round to
+              whole pixels as they are laid out, which swells the line by a few
+              percent at the smaller sizes and would otherwise put the last
+              letter on the padding. Orbitron is a wide face, so this is
+              smaller than Grandstander's 9cqi set it at, and it is the letters
+              being wider rather than the name being smaller. The cap stops it
+              growing without limit on very wide displays. */}
           <h1
-            className={`${orbitron.className} text-[min(5rem,6.4cqi)] leading-tight whitespace-nowrap text-neutral-900 uppercase`}
+            className={`${orbitron.className} text-[min(5rem,7.3cqi)] leading-tight whitespace-nowrap text-neutral-900`}
           >
             Max Winter-Leinweber
           </h1>

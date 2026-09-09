@@ -127,7 +127,7 @@ export function FontShowcase({ groups }: { groups: FontGroup[] }) {
           <p className="mt-2 max-w-prose text-sm text-white/70">
             {NAME}, set in each candidate at the largest size that fits the
             card on one line. The home page now uses the first of them,
-            Orbitron, in caps.
+            Orbitron.
           </p>
 
           <div
