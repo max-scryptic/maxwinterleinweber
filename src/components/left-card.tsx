@@ -1,10 +1,10 @@
-import { Grandstander } from "next/font/google";
+import { Orbitron } from "next/font/google";
 
 import { GlassCard } from "@/components/glass-card";
 import { SaasCards } from "@/components/saas-cards";
 import { SocialCards } from "@/components/social-cards";
 
-const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
+const orbitron = Orbitron({ subsets: ["latin"], weight: "700" });
 
 /*
  * What the card says, as opposed to what it is made of. The glass, the light on
@@ -16,12 +16,18 @@ export function LeftCard() {
   return (
     <GlassCard>
       {/* The name is set on one line at any width: "Max Winter-Leinweber" in
-          Grandstander 700 measures 9.375% of its own font size per character of
-          column width, i.e. it exactly fills the column at 9.375cqi, so 9cqi
-          fits it with a little air at both ends. The cap stops it growing
-          without limit on very wide displays. */}
+          Orbitron 700 measures 12.8% of its own font size per character of
+          column width, i.e. it exactly fills the column at 7.8cqi, so 7.3cqi
+          fits it with a little air at both ends. The margin is wider than the
+          arithmetic needs because glyph advances round to whole pixels as the
+          line is laid out, which swells it by a few percent at the smaller
+          sizes and would otherwise put the last letter on the padding.
+          Orbitron is a wide face, so this is smaller than Grandstander's 9cqi
+          set it at, and it is the letters being wider rather than the name
+          being smaller. The cap stops it growing without limit on very wide
+          displays. */}
       <h1
-        className={`${grandstander.className} text-[min(5rem,9cqi)] leading-tight whitespace-nowrap text-neutral-900`}
+        className={`${orbitron.className} text-[min(5rem,7.3cqi)] leading-tight whitespace-nowrap text-neutral-900`}
       >
         Max Winter-Leinweber
       </h1>
