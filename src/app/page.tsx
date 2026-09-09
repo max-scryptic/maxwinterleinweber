@@ -32,9 +32,9 @@ export default function Home() {
         <div className="mt-8 w-full md:mt-10">
           <SocialCards />
         </div>
-        {/* The builds sit under the social row, far enough off it to read as
-            their own group rather than another line of the same one. */}
-        <div className="mt-4 w-full">
+        {/* The builds sit well clear of the social row, so the two read as
+            separate groups rather than one block of cards. */}
+        <div className="mt-16 w-full md:mt-20">
           <SaasCards />
         </div>
       </div>

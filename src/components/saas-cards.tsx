@@ -105,27 +105,27 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className="flex w-72 max-w-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+      className="flex w-[22rem] max-w-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
     >
-      <Card className="flex-1 gap-0 border-neutral-200 bg-white py-4 transition-shadow hover:shadow-md">
-        {/* The mark on its own line at the top left, the name and the line
-            about it stacked under it. */}
-        <CardContent className="flex flex-col items-start gap-3 px-4">
-          <span
-            className={`flex size-9 shrink-0 items-center justify-center rounded-[10px] ${build.tileClassName}`}
-            style={build.tileStyle}
-          >
-            {/* 70% of the tile, which is the clear space the mark is drawn
-                with in the app itself. */}
-            <Icon className="size-[70%]" />
-          </span>
-          <span className="flex flex-col gap-1">
-            <span className="text-sm leading-tight font-semibold text-neutral-900">
+      <Card className="flex-1 gap-0 border-neutral-200 bg-white py-5 transition-shadow hover:shadow-md">
+        {/* The mark and the name share the top line, with the line about the
+            app under both of them. */}
+        <CardContent className="flex flex-col items-start gap-2 px-5">
+          <span className="flex items-center gap-3">
+            <span
+              className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${build.tileClassName}`}
+              style={build.tileStyle}
+            >
+              {/* 70% of the tile, which is the clear space the mark is drawn
+                  with in the app itself. */}
+              <Icon className="size-[70%]" />
+            </span>
+            <span className="text-xl leading-tight font-semibold text-neutral-900">
               {build.name}
             </span>
-            <span className="text-[13px] leading-snug text-neutral-500">
-              {build.description}
-            </span>
+          </span>
+          <span className="text-base leading-snug text-neutral-500">
+            {build.description}
           </span>
         </CardContent>
       </Card>
