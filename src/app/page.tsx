@@ -1,17 +1,7 @@
-import { LeftCard, asCardDesign } from "@/components/left-card";
+import { LeftCard } from "@/components/left-card";
 import { SpaceBackdrop } from "@/components/space-backdrop";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  /* While the card's design is being settled, ?card= names which one to draw:
-     current, lifted, frosted, aurora or editorial. Anything else, including
-     nothing at all, gets the default. Once one is chosen this goes and the card
-     is drawn with it directly, which also puts the page back to being static. */
-  const design = asCardDesign((await searchParams).card);
-
+export default function Home() {
   return (
     <>
       <SpaceBackdrop />
@@ -31,7 +21,7 @@ export default async function Home({
           on the right hand side has to reach the canvas underneath to turn the
           figure. */}
       <div className="pointer-events-none relative z-10 grid h-svh grid-cols-1 grid-rows-1 p-[10px] md:grid-cols-2">
-        <LeftCard design={design} />
+        <LeftCard />
       </div>
     </>
   );
