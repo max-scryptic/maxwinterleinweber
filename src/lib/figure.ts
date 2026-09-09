@@ -12,6 +12,32 @@
 // distance derived from it.
 export const HEIGHT = 1.8;
 
+/*
+ * The figures the tabs switch between, in the order they were made. Every one
+ * of them is normalised to HEIGHT on load and stood on the plane through the
+ * origin, so they can arrive at any size, in any unit and sitting anywhere
+ * relative to their own origin, and still land framed the same way. That is
+ * what lets a scan be dropped in beside the placeholder without a second set
+ * of camera numbers to go with it.
+ *
+ * The first entry is what the page opens on.
+ */
+export const FIGURES = [
+  {
+    id: "mannequin",
+    label: "Mannequin",
+    url: "/models/mannequin.glb",
+  },
+  {
+    id: "scan-01",
+    label: "Scan 01",
+    url: "/models/scan-01.glb",
+  },
+] as const;
+
+export type Figure = (typeof FIGURES)[number];
+export type FigureId = Figure["id"];
+
 // Degrees, vertical.
 export const FOV = 35;
 
