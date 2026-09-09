@@ -11,9 +11,15 @@ import {
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
+import { Box3, Group, MathUtils, Mesh, Vector3, type Material } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
+import {
+  FORMATION,
+  Motes,
+  STILL_FADE,
+  revealed,
+} from "@/components/figure-motes";
 import {
   COLUMN,
   FIGURES,
@@ -130,6 +136,17 @@ function Model({
   const thrown = useRef<Group>(null);
   const { actions, names, mixer } = useAnimations(animations, root);
 
+  /*
+   * Whether this figure is still gathering itself out of the sky.
+   *
+   * Only the one the page opens on: a figure arriving because a tab was pressed
+   * is thrown in after the one it replaces, and that fall is already an
+   * entrance. The opening figure has nothing to be thrown in after, and without
+   * this it simply exists from one frame to the next, whenever several
+   * megabytes of model happen to finish arriving.
+   */
+  const [forming, setForming] = useState(!entering && !leaving);
+
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
   // the plane through the origin. This runs on the first render, before the
   // groups below it exist, so the box it measures is the model's own and
@@ -157,6 +174,64 @@ function Model({
       if ((object as Mesh).isMesh) object.frustumCulled = false;
     });
   }, [scene]);
+
+  /*
+   * Sets how much of the figure itself is showing, while there is an entrance
+   * to run, and null once there is not.
+   *
+   * The loop is handed this rather than the materials themselves because the
+   * effect below owns them: it is what put them into a state they have to be
+   * taken back out of, and it is the only place that knows what they were.
+   */
+  const fade = useRef<((shown: number) => void) | null>(null);
+
+  useLayoutEffect(() => {
+    if (!forming) return;
+
+    // Once each: a model can share one material across several meshes, and
+    // fading it once per mesh would step it several times a frame.
+    const skins = new Set<Material>();
+    scene.traverse((object) => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+
+      const materials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+      for (const material of materials) if (material) skins.add(material);
+    });
+
+    // useGLTF hands out one cached scene per file, so these are the same
+    // material objects a later mount of the same figure will be drawn with:
+    // what is done to them here has to be undone, and undone on the way out
+    // rather than at the end of the entrance, in case the figure is swapped
+    // away mid-gather.
+    const held = [...skins].map((material) => ({
+      material,
+      transparent: material.transparent,
+      opacity: material.opacity,
+    }));
+
+    for (const material of skins) {
+      material.transparent = true;
+      material.opacity = 0;
+      material.needsUpdate = true;
+    }
+
+    fade.current = (shown) => {
+      for (const material of skins) material.opacity = shown;
+    };
+
+    return () => {
+      fade.current = null;
+
+      for (const entry of held) {
+        entry.material.transparent = entry.transparent;
+        entry.material.opacity = entry.opacity;
+        entry.material.needsUpdate = true;
+      }
+    };
+  }, [forming, scene]);
 
   useLayoutEffect(() => {
     // The placeholder carries a set of Mixamo clips. "idle" is the standing
@@ -209,6 +284,17 @@ function Model({
       throw_.position.y = arriving(age);
     }
 
+    if (forming) {
+      // Brought up under the swarm as it lands, rather than switched on once
+      // it is gone.
+      fade.current?.(revealed(age, still));
+
+      // Ended from the loop rather than from a timer, so a tab that was in the
+      // background for the whole of the entrance comes back to a figure part
+      // way through it rather than to one that finished without being drawn.
+      if (age > (still ? STILL_FADE : FORMATION)) setForming(false);
+    }
+
     if (still) return;
 
     // Turning the figure rather than the camera. Orbiting the camera instead
@@ -242,6 +328,12 @@ function Model({
             <primitive object={scene} />
           </group>
         </group>
+
+        {/* Outside the scale, so the swarm is laid out in the same metres as
+            everything else out here whatever size the model arrived at, and
+            inside the turn and the drift, so it is already moving with the
+            figure before there is a figure to move with. */}
+        {forming && !still ? <Motes scene={scene} /> : null}
       </group>
     </group>
   );
