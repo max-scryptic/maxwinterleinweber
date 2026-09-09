@@ -140,12 +140,14 @@ function Model({
   url,
   shift,
   rise,
+  yaw,
   phase,
   still,
 }: {
   url: string;
   shift: number;
   rise: number;
+  yaw: number;
   phase: Phase;
   still: boolean;
 }) {
@@ -249,7 +251,7 @@ function Model({
   return (
     // Inside the shared turntable but outside the normalised model, so this
     // figure-specific alignment follows the common motion without being scaled.
-    <group position={[shift, rise, 0]}>
+    <group position={[shift, rise, 0]} rotation={[0, yaw, 0]}>
       <group ref={root}>
         <group scale={scale}>
           <group position={offset}>
@@ -362,6 +364,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
             url={leaving.url}
             shift={leaving.shift}
             rise={leaving.rise}
+            yaw={leaving.yaw}
             phase="leaving"
             still={still}
           />
@@ -373,6 +376,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
           url={arriving.url}
           shift={arriving.shift}
           rise={arriving.rise}
+          yaw={arriving.yaw}
           phase={cast.phase}
           still={still}
         />
@@ -513,12 +517,21 @@ export default function FigureRig({
       {/* The figure is the only lit thing in the scene: the sky and the stars
           draw themselves. A warm key from the front left, a violet fill from
           the opposite side so the shadowed half picks up the colour of the
-          cloud it is floating in rather than going black, and a cool rim from
-          behind to hold the silhouette off a background of a similar value. */}
+          cloud it is floating in rather than going black, a warm point source
+          above the stage to cast light down across the figure, and a cool rim
+          from behind to hold the silhouette off a background of a similar
+          value. */}
       <ambientLight intensity={0.5} color="#b9a8f0" />
       <directionalLight position={[3, 4, 4]} intensity={2.6} color="#fff4ea" />
       <directionalLight position={[-4, 2, -1]} intensity={0.9} color="#7b5ad6" />
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
+      <pointLight
+        position={[-1.4, HEIGHT * 1.9, 1.6]}
+        intensity={14}
+        distance={8}
+        decay={2}
+        color="#fff1dc"
+      />
 
       <Stage figure={figure} still={still} />
       <Controls view={view} fitId={fitId} />
