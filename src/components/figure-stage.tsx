@@ -132,16 +132,18 @@ function progress(phase: Phase, age: number) {
   };
 }
 
-function source(id: FigureId) {
-  return (FIGURES.find((figure) => figure.id === id) ?? FIGURES[0]).url;
+function definition(id: FigureId) {
+  return FIGURES.find((figure) => figure.id === id) ?? FIGURES[0];
 }
 
 function Model({
   url,
+  rise,
   phase,
   still,
 }: {
   url: string;
+  rise: number;
   phase: Phase;
   still: boolean;
 }) {
@@ -263,17 +265,23 @@ function Model({
   });
 
   return (
-    <group ref={root}>
-      <group scale={scale}>
-        <group position={offset}>
-          <primitive object={scene} />
+    // Outside the drifting group, so this figure-specific alignment is fixed
+    // while the same small rise and fall continues around it.
+    <group position={[0, rise, 0]}>
+      <group ref={root}>
+        <group scale={scale}>
+          <group position={offset}>
+            <primitive object={scene} />
 
-          {/* Beside the model rather than around it, and under the same two
-              groups, so that a cloud with no skeleton to carry it is scaled and
-              stood on the ground plane with the figure it was taken off. A
-              skinned one is carried by the bones instead, which are inside this
-              same pair and so end up in the same place. */}
-          {surface ? <Cloud surface={surface} transition={transition} /> : null}
+            {/* Beside the model rather than around it, and under the same two
+                groups, so that a cloud with no skeleton to carry it is scaled and
+                stood on the ground plane with the figure it was taken off. A
+                skinned one is carried by the bones instead, which are inside this
+                same pair and so end up in the same place. */}
+            {surface ? (
+              <Cloud surface={surface} transition={transition} />
+            ) : null}
+          </group>
         </group>
       </group>
     </group>
@@ -325,17 +333,21 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
     return () => clearTimeout(timer);
   }, [cast.leaving]);
 
+  const arriving = definition(cast.arriving);
+  const leaving = cast.leaving ? definition(cast.leaving) : null;
+
   return (
     <>
       {/* A boundary each, not one around the pair. The arriving figure
           suspends on its model, and a boundary shared with the departing one
           would replace both with the fallback: the figure being replaced would
           vanish on the press instead of coming apart. */}
-      {cast.leaving ? (
+      {leaving ? (
         <Suspense fallback={null}>
           <Model
-            key={cast.leaving}
-            url={source(cast.leaving)}
+            key={leaving.id}
+            url={leaving.url}
+            rise={leaving.rise}
             phase="leaving"
             still={still}
           />
@@ -344,8 +356,9 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
 
       <Suspense fallback={null}>
         <Model
-          key={cast.arriving}
-          url={source(cast.arriving)}
+          key={arriving.id}
+          url={arriving.url}
+          rise={arriving.rise}
           phase={cast.phase}
           still={still}
         />

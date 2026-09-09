@@ -20,6 +20,12 @@ export const HEIGHT = 1.8;
  * what lets a scan be dropped in beside the placeholder without a second set
  * of camera numbers to go with it.
  *
+ * rise is a small visual calibration after that normalisation. Scan 01's
+ * exported bounds extend above its actual surface, so its visible crown lands
+ * lower than the mannequin's even though both bounding boxes reach HEIGHT.
+ * Keeping that correction on the figure, rather than in a particular camera
+ * view, leaves its head in the same relative place through every framing.
+ *
  * The first entry is what the page opens on.
  */
 export const FIGURES = [
@@ -27,11 +33,13 @@ export const FIGURES = [
     id: "mannequin",
     label: "Mannequin",
     url: "/models/mannequin.glb",
+    rise: 0,
   },
   {
     id: "scan-01",
     label: "Scan 01",
     url: "/models/scan-01.glb",
+    rise: 0.05,
   },
 ] as const;
 
