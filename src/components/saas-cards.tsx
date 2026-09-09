@@ -12,9 +12,9 @@ import { Card, CardContent } from "@/components/ui/card";
  * page's theme.
  */
 
-const viewlioBlue = "#2f63e1";
+export const viewlioBlue = "#2f63e1";
 
-function ViewlioIcon(props: React.ComponentProps<"svg">) {
+export function ViewlioIcon(props: React.ComponentProps<"svg">) {
   return (
     <svg viewBox="0 0 48 48" fill="none" aria-hidden="true" {...props}>
       <defs>
@@ -105,9 +105,13 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className="flex w-[22rem] max-w-full rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+      className="group flex w-[22rem] max-w-full rounded-xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5"
     >
-      <Card className="flex-1 gap-0 border-neutral-200 bg-white py-5 transition-shadow hover:shadow-md">
+      {/* The lift and the deeper shadow together read as the card coming up
+          off the page, and the border darkening keeps its edge from washing
+          out against the shadow. The lift is held back for anyone who has
+          asked for less motion; the rest still happens. */}
+      <Card className="flex-1 gap-0 border-neutral-200 bg-white py-5 transition duration-200 group-hover:border-neutral-300 group-hover:shadow-lg">
         {/* The mark and the name share the top line, with the line about the
             app under both of them. */}
         <CardContent className="flex flex-col items-start gap-2 px-5">
