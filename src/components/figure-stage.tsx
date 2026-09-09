@@ -223,25 +223,17 @@ function Model({
   }, [actions, mixer, names]);
 
   // The clock has been running since the canvas was created, which is a second
-  // or so of loading before this figure exists. Motion is measured from the
-  // first frame it is actually drawn, while transition progress is measured
-  // from the first frame of the current phase. Those clocks must be separate:
-  // an existing figure keeps its exact turn and drift when it starts leaving,
-  // but its breakup still has to begin at zero on that frame.
-  const born = useRef<number | null>(null);
+  // or so of loading before this figure exists. Transition progress is
+  // therefore measured from the first frame of the current phase rather than
+  // from the canvas clock's origin.
   const phaseStarted = useRef<{ phase: Phase; at: number } | null>(null);
 
-  useFrame((state, delta) => {
-    const spin = root.current;
-    if (!spin) return;
-
+  useFrame((state) => {
     const now = state.clock.elapsedTime;
-    if (born.current === null) born.current = now;
     if (!phaseStarted.current || phaseStarted.current.phase !== phase) {
       phaseStarted.current = { phase, at: now };
     }
 
-    const age = now - born.current;
     const phaseAge = now - phaseStarted.current.at;
 
     // Under reduced motion there is no change to be part way through: the
@@ -250,32 +242,9 @@ function Model({
     transition.current.form.value = at.form;
     transition.current.fade.value = at.fade;
     transition.current.solid.value = at.solid;
-
-    if (still) return;
-
-    // Turning the figure rather than the camera. Orbiting the camera instead
-    // would drag the framing and the lighting around with it; this way the key
-    // light stays put and the turn is what reveals the form. It also leaves
-    // the camera free for the buttons to drive.
-    //
-    // Negative is clockwise seen from above. Delta is clamped because a tab
-    // returning from the background reports the whole time it was away, which
-    // would arrive as a jump.
-    const step = (Math.PI * 2) / TURN_SECONDS;
-    spin.rotation.y -= step * Math.min(delta, 0.1);
-
-    // There is nothing under the feet out here, so the figure rises and falls
-    // rather than standing. Set from the clock rather than accumulated, so a
-    // long pause cannot leave it drifted somewhere odd, and from the figure's
-    // own age so that it starts at rest and drifts from there rather than
-    // appearing part way up a swing it was never seen taking.
-    const cycle = (Math.PI * 2) / DRIFT_SECONDS;
-    spin.position.y = Math.sin(age * cycle) * DRIFT;
   });
 
   return (
-    // Outside the drifting group, so this figure-specific alignment is fixed
-    // while the same small rise and fall continues around it.
     <group position={[0, rise, 0]}>
       <group ref={root}>
         <group scale={scale}>
@@ -306,6 +275,32 @@ function Model({
  * the prop has changed the only record of what was showing is here.
  */
 function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
+  // The turntable belongs to the stage rather than to either model. Both the
+  // departing and arriving figures consequently occupy the same angle during
+  // a swap, and the next figure continues the exact tempo and position of the
+  // one it replaces instead of mounting at its own zero rotation.
+  const turntable = useRef<Group>(null);
+  const age = useRef(0);
+
+  useFrame((_, delta) => {
+    const root = turntable.current;
+    if (still || !root) return;
+
+    // Turning the figures rather than the camera keeps the framing and light
+    // fixed. Negative is clockwise seen from above. Delta is clamped because
+    // a tab returning from the background reports the whole time it was away,
+    // which would otherwise arrive as a jump.
+    const elapsed = Math.min(delta, 0.1);
+    const step = (Math.PI * 2) / TURN_SECONDS;
+    age.current += elapsed;
+    root.rotation.y -= step * elapsed;
+
+    // There is nothing under the feet out here, so the stage rises and falls.
+    // Driving every figure from this same age keeps their drift aligned too.
+    const cycle = (Math.PI * 2) / DRIFT_SECONDS;
+    root.position.y = Math.sin(age.current * cycle) * DRIFT;
+  });
+
   const [cast, setCast] = useState<{
     arriving: FigureId;
     leaving: FigureId | null;
@@ -346,16 +341,17 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
   const leaving = cast.leaving ? definition(cast.leaving) : null;
 
   return (
-    <>
+    <group ref={turntable}>
       {/* A boundary each, not one around the pair. The arriving figure
           suspends on its model, and a boundary shared with the departing one
           would replace both with the fallback: the figure being replaced would
           vanish on the press instead of coming apart. The key belongs on the
           boundary rather than on Model: when an active figure moves into the
           leaving slot, React must move that whole boundary and preserve the
-          live model instance. Remounting it here would reset its turn and drift
-          and, because useGLTF shares the scene, could measure its normalisation
-          while it was still parented under the previous instance's transforms. */}
+          live model instance. Remounting it here would restart its animation
+          and transition and, because useGLTF shares the scene, could measure
+          its normalisation while it was still parented under the previous
+          instance's transforms. */}
       {leaving ? (
         <Suspense key={leaving.id} fallback={null}>
           <Model
@@ -375,7 +371,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
           still={still}
         />
       </Suspense>
-    </>
+    </group>
   );
 }
 
