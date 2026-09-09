@@ -4,17 +4,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group, MathUtils, Mesh, PerspectiveCamera, Vector3 } from "three";
+import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import {
-  CENTRE,
-  COLUMN,
-  HEIGHT,
-  VIEWS,
-  framing,
-  type ViewId,
-} from "@/lib/figure";
+import { COLUMN, HEIGHT, VIEWS, framing, type ViewId } from "@/lib/figure";
 
 /*
  * The figure adrift on the right hand side of the page, together with the light
@@ -95,8 +88,15 @@ function Model({ still }: { still: boolean }) {
     };
   }, [actions, mixer, names]);
 
+  // The clock has been running since the canvas was created, which is a second
+  // or so of loading before this figure exists. Everything below is measured
+  // from the first frame it is actually drawn on instead.
+  const born = useRef<number | null>(null);
+
   useFrame((state, delta) => {
     if (!root.current || still) return;
+    if (born.current === null) born.current = state.clock.elapsedTime;
+    const age = state.clock.elapsedTime - born.current;
 
     // Turning the figure rather than the camera. Orbiting the camera instead
     // would drag the framing and the lighting around with it; this way the key
@@ -111,9 +111,11 @@ function Model({ still }: { still: boolean }) {
 
     // There is nothing under the feet out here, so the figure rises and falls
     // rather than standing. Set from the clock rather than accumulated, so a
-    // long pause cannot leave it drifted somewhere odd.
+    // long pause cannot leave it drifted somewhere odd, and from the figure's
+    // own age so that it starts at rest and drifts from there rather than
+    // appearing part way up a swing it was never seen taking.
     const cycle = (Math.PI * 2) / DRIFT_SECONDS;
-    root.current.position.y = Math.sin(state.clock.elapsedTime * cycle) * DRIFT;
+    root.current.position.y = Math.sin(age * cycle) * DRIFT;
   });
 
   return (
@@ -128,43 +130,6 @@ function Model({ still }: { still: boolean }) {
 }
 
 /*
- * Slides the camera's frustum sideways so that the figure, which sits at the
- * origin, projects into the middle of the right hand half rather than into the
- * middle of the window.
- *
- * This is a change to the projection, not a move: the figure holds its place on
- * screen however far the camera is orbited around it. Offsetting the orbit
- * target instead would not, because that offset would swing round with the
- * camera and carry the figure across the page with it.
- */
-function ColumnFraming() {
-  const camera = useThree((state) => state.camera) as PerspectiveCamera;
-  const size = useThree((state) => state.size);
-
-  useEffect(() => {
-    // The full size is the viewport's own, so nothing is scaled: only the
-    // window onto the frustum moves. Negative, because putting the subject to
-    // the right of centre means looking at a region that starts left of it.
-    camera.setViewOffset(
-      size.width,
-      size.height,
-      (0.5 - CENTRE) * size.width,
-      0,
-      size.width,
-      size.height,
-    );
-    camera.updateProjectionMatrix();
-
-    return () => {
-      camera.clearViewOffset();
-      camera.updateProjectionMatrix();
-    };
-  }, [camera, size]);
-
-  return null;
-}
-
-/*
  * Drag to orbit, wheel or pinch to zoom, right-drag or two fingers to pan.
  *
  * These are three.js's own OrbitControls rather than the pair drei re-exports:
@@ -176,7 +141,24 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
   const domElement = useThree((state) => state.gl.domElement);
   const size = useThree((state) => state.size);
 
-  const controls = useMemo(() => {
+  // Where the camera is being eased to, or null once it has arrived or the
+  // viewer has taken over.
+  const goal = useRef<{ focus: number; distance: number } | null>(null);
+
+  const controls = useRef<OrbitControls | null>(null);
+
+  // Built in an effect rather than in a memo, and this is not a detail. The
+  // controls take hold of the camera the moment they are constructed: three
+  // aims it at their target, which starts at the origin, before there is any
+  // chance to say where the target really is. A memo runs while rendering, and
+  // the render this component is first part of is one React throws away and
+  // retries when the model below it suspends. That threw away the component but
+  // not what its constructor had already done to the camera, and left a live
+  // set of controls listening on the canvas with nothing to dispose it: the sky
+  // pitched several degrees a second into the page, and again when the figure
+  // finally landed. An effect only runs on a render that was kept, and the
+  // target is set before the frame after it is drawn.
+  useLayoutEffect(() => {
     const orbit = new OrbitControls(camera, domElement);
 
     // The full-body focus, matching where the camera is pointed at mount. The
@@ -206,14 +188,25 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
     orbit.minPolarAngle = Math.PI * 0.08;
     orbit.maxPolarAngle = Math.PI * 0.92;
 
-    return orbit;
+    // Puts the camera back on the target it was just given, undoing the aim at
+    // the origin the constructor took, while still inside the effect and so
+    // still before anything is drawn.
+    orbit.update();
+
+    // A drag, a wheel or a pinch hands control back to the viewer mid-flight,
+    // rather than the camera fighting them for the rest of the transition.
+    const release = () => {
+      goal.current = null;
+    };
+    orbit.addEventListener("start", release);
+
+    controls.current = orbit;
+    return () => {
+      orbit.removeEventListener("start", release);
+      orbit.dispose();
+      controls.current = null;
+    };
   }, [camera, domElement]);
-
-  useEffect(() => () => controls.dispose(), [controls]);
-
-  // Where the camera is being eased to, or null once it has arrived or the
-  // viewer has taken over.
-  const goal = useRef<{ focus: number; distance: number } | null>(null);
 
   useEffect(() => {
     // fitId changes on every press, including a press of the button that is
@@ -223,30 +216,22 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
     goal.current = framing(preset, (size.width * COLUMN) / size.height);
   }, [view, fitId, size]);
 
-  useEffect(() => {
-    // A drag, a wheel or a pinch hands control back to the viewer mid-flight,
-    // rather than the camera fighting them for the rest of the transition.
-    const release = () => {
-      goal.current = null;
-    };
-
-    controls.addEventListener("start", release);
-    return () => controls.removeEventListener("start", release);
-  }, [controls]);
-
   useFrame((_, delta) => {
+    const orbit = controls.current;
+    if (!orbit) return;
+
     const target = goal.current;
 
     if (target) {
       // Ease both the point being looked at and the distance from it, keeping
       // whatever direction the viewer has orbited to. damp is a half-life, so
       // the approach is the same shape whatever the frame rate.
-      const offset = camera.position.clone().sub(controls.target);
-      const focus = MathUtils.damp(controls.target.y, target.focus, 4, delta);
+      const offset = camera.position.clone().sub(orbit.target);
+      const focus = MathUtils.damp(orbit.target.y, target.focus, 4, delta);
       const distance = MathUtils.damp(offset.length(), target.distance, 4, delta);
 
-      controls.target.set(0, focus, 0);
-      camera.position.copy(controls.target).add(offset.setLength(distance));
+      orbit.target.set(0, focus, 0);
+      camera.position.copy(orbit.target).add(offset.setLength(distance));
 
       const arrived =
         Math.abs(focus - target.focus) < 0.001 &&
@@ -254,7 +239,7 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
       if (arrived) goal.current = null;
     }
 
-    controls.update();
+    orbit.update();
   });
 
   return null;
@@ -282,7 +267,6 @@ export default function MannequinRig({
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
 
       <Model still={still} />
-      <ColumnFraming />
       <Controls view={view} fitId={fitId} />
     </>
   );

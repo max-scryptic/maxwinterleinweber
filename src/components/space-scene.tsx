@@ -1,15 +1,23 @@
 "use client";
 
-import { Suspense, lazy, useRef, useState } from "react";
+import { Suspense, lazy, useLayoutEffect, useRef, useState } from "react";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Group } from "three";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Group, PerspectiveCamera } from "three";
 
 import { Nebula } from "@/components/nebula";
 import { Starfield } from "@/components/starfield";
 import { Button } from "@/components/ui/button";
 import { REDUCED_MOTION, WIDE, useMediaQuery } from "@/hooks/use-media-query";
-import { CAMERA_RISE, FOV, OPENING, VIEWS, type ViewId } from "@/lib/figure";
+import {
+  CAMERA_RISE,
+  CENTRE,
+  FOV,
+  OPENING,
+  OPENING_PITCH,
+  VIEWS,
+  type ViewId,
+} from "@/lib/figure";
 
 /*
  * The one canvas the whole page sits on. It covers the window rather than a
@@ -51,6 +59,49 @@ function Sky({ still }: { still: boolean }) {
   );
 }
 
+/*
+ * Slides the camera's frustum sideways so that the figure, which sits at the
+ * origin, projects into the middle of the right hand half rather than into the
+ * middle of the window.
+ *
+ * This is a change to the projection, not a move: the figure holds its place on
+ * screen however far the camera is orbited around it. Offsetting the orbit
+ * target instead would not, because that offset would swing round with the
+ * camera and carry the figure across the page with it.
+ *
+ * It belongs to the canvas rather than to the figure, even though it is the
+ * figure it is framing. Left inside the chunk the figure is loaded from, it was
+ * applied a second or so after the page opened, and the sky, which is drawn
+ * through the same camera, visibly slid a quarter of the window sideways when
+ * it arrived.
+ */
+function ColumnFraming() {
+  const camera = useThree((state) => state.camera) as PerspectiveCamera;
+  const size = useThree((state) => state.size);
+
+  useLayoutEffect(() => {
+    // The full size is the viewport's own, so nothing is scaled: only the
+    // window onto the frustum moves. Negative, because putting the subject to
+    // the right of centre means looking at a region that starts left of it.
+    camera.setViewOffset(
+      size.width,
+      size.height,
+      (0.5 - CENTRE) * size.width,
+      0,
+      size.width,
+      size.height,
+    );
+    camera.updateProjectionMatrix();
+
+    return () => {
+      camera.clearViewOffset();
+      camera.updateProjectionMatrix();
+    };
+  }, [camera, size]);
+
+  return null;
+}
+
 export default function SpaceScene() {
   const wide = useMediaQuery(WIDE);
   const still = useMediaQuery(REDUCED_MOTION);
@@ -82,11 +133,20 @@ export default function SpaceScene() {
         camera={{
           fov: FOV,
           position: [0, OPENING.focus + CAMERA_RISE, OPENING.distance],
+          // Aimed at the middle of the figure from the first frame. Giving a
+          // rotation is also what stops the canvas from pointing the camera at
+          // the origin itself, which is the floor the figure would be standing
+          // on and several degrees below where it is about to be looking.
+          rotation: [OPENING_PITCH, 0, 0],
           near: NEAR,
           far: FAR,
         }}
       >
         <Sky still={still} />
+
+        {/* Only where there is a figure to frame: on a narrow window the sky
+            is the whole page and is left centred on it. */}
+        {wide ? <ColumnFraming /> : null}
 
         {/* Suspends twice over: once on the chunk, once on the model inside
             it. Both resolve into the sky, which is already drawn. */}
