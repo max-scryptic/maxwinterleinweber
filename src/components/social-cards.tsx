@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import carved from "@/components/carved.module.css";
 import { Card, CardContent } from "@/components/ui/card";
 
 /*
@@ -208,45 +209,15 @@ const edgeFade =
   "motion-safe:[mask-image:linear-gradient(to_right,transparent,#000_var(--fade),#000_calc(100%-var(--fade)),transparent)]";
 
 /*
- * A card cut into the glass rather than lifted off it: the name on the card
- * above done again at the size of a pill.
- *
- * The last two are the name's own pair, a white hairline along the bottom edge
- * and a fainter dark one along the top, which is the value break that says the
- * pane is stepped down here. The dark one is the name's exactly; the white is
- * about half its strength, because a hairline offset down a shape this round
- * shows along most of the perimeter rather than only under it, and at the
- * name's 0.9 the card wears it as a ring instead of a lip.
- *
- * The first four are what a trough has that a letter does not, being wide
- * enough to see into. Light on this card comes from above and to the left, so
- * the walls under the top edge and inside the left one face away from it and go
- * dark, the falloff below the top carries that down over the upper half of the
- * card, and the wall above the bottom edge faces the light and catches a line
- * of it.
- *
- * What is deliberately absent is a drop shadow, since only a raised thing casts
- * one. The card at rest keeps the faint shadow it is built with, so what
- * happens on hover is a card that was sitting on the glass going into it.
- */
-const ETCHED_CARD = [
-  "inset 0 2px 2px -1px rgb(3 2 37 / 0.62)",
-  "inset 0 9px 10px -8px rgb(3 2 37 / 0.55)",
-  "inset 1px 0 2px -1px rgb(3 2 37 / 0.4)",
-  "inset 0 -1px 0 rgb(255 255 255 / 0.32)",
-  "0 1px 0 rgb(255 255 255 / 0.5)",
-  "0 -1px 0 rgb(10 4 40 / 0.18)",
-].join(", ");
-
-/*
  * The window has to clip sideways, but clipping is not one edge at a time: a
  * box that hides what runs past its left and right hides what runs past its top
  * and bottom too, and a card wears a focus ring from the keyboard and a
- * hairline above and below when it is etched, both of which run past the top.
- * So the window is given a band of its own above and below to clip into, and
- * takes the same band back off as negative margin, leaving the row sitting
- * exactly where it did. Half a rem either side is measured off the deeper of
- * the two: the ring and its offset stand 4px clear of a card, the hairline 1px.
+ * hairline above and below however it is sitting in the glass, both of which
+ * run past the top. So the window is given a band of its own above and below to
+ * clip into, and takes the same band back off as negative margin, leaving the
+ * row sitting exactly where it did. Half a rem either side is measured off the
+ * deeper of the two: the ring and its offset stand 4px clear of a card, the
+ * hairline 1px.
  */
 const clipRoom = "-my-2 py-2";
 
@@ -308,16 +279,16 @@ function SocialCard({ link, repeat }: { link: SocialLink; repeat?: boolean }) {
       rel="noreferrer"
       aria-label={repeat ? undefined : `${link.name} on ${link.platform}`}
       tabIndex={repeat ? -1 : undefined}
-      className="flex rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+      className={`flex rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       <Card
-        // Nothing moves and nothing grows: the card is where it was and the
-        // line it sits in is undisturbed, and all that changes is the light on
-        // it. That is worth having in a row this tight, and it means the hover
-        // is the same for everyone rather than something held back from anyone
-        // who has asked for less motion.
-        style={{ "--etched": ETCHED_CARD } as React.CSSProperties}
-        className={`flex-1 gap-0 border-transparent py-[7px] text-white transition duration-200 hover:shadow-[var(--etched)] ${link.cardClassName}`}
+        // Cut into the pane, and coming up to its face under a pointer. Nothing
+        // moves and nothing grows: the card is where it was and the line it
+        // sits in is undisturbed, and all that changes is the light on it. That
+        // is worth having in a row this tight, and it means the row answers a
+        // pointer the same way for everyone rather than in a way held back from
+        // anyone who has asked for less motion.
+        className={`flex-1 gap-0 border-transparent py-[7px] text-white transition duration-200 ${carved.carved} ${link.cardClassName}`}
       >
         {/* The mark to handle gap is 8px on every card, and the two outer gaps
             are that plus 5 so the contents are not squeezed up against the

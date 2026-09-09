@@ -1,0 +1,75 @@
+/*
+ * Cards cut into the pane, and rising to its face when a pointer is on them.
+ *
+ * This is the name at the head of the card done at the size of a card: the name
+ * is engraved into the glass, and everything laid out below it is engraved into
+ * the glass too, so the whole face reads as one worked surface rather than a
+ * sheet with things resting on it. What a pointer does is lift the one card it
+ * is on up to the face of the pane, flush with it, which is as far as anything
+ * here goes: nothing floats above the glass.
+ *
+ * It lives in a stylesheet rather than in utility classes because a card
+ * arrives already carrying a shadow of its own, and two box-shadows that land
+ * in the same cascade layer are settled by source order. Module rules are not
+ * in a layer at all, so they win outright, and the long lists below are worth
+ * more read as shadows than as underscores.
+ */
+
+/*
+ * The trough. Light on this card comes from above and to the left, which is
+ * where the pane's own bloom is, so: the wall under the top edge and the one
+ * inside the left edge face away from that and go dark, the shade under the top
+ * wall falls away down the inside of the card, and the wall above the bottom
+ * edge faces the light and takes a line of it.
+ *
+ * Then the two hairlines on the glass outside, which are the name's own pair,
+ * white along the bottom and dark along the top, the value break that says the
+ * pane is stepped down here. The dark one is the name's value exactly. The
+ * white one is about half the name's, because a hairline offset down a shape
+ * with corners this round shows along most of the perimeter rather than only
+ * under it, and at full strength a card wears it as a ring instead of a lip.
+ *
+ * No drop shadow anywhere in it, because only a raised thing casts one.
+ */
+.carved {
+  /*
+   * How far the shade from the top wall reaches down the inside. It is the one
+   * thing that cannot be shared, because it is a depth into a card and the
+   * cards are not the same height: at a pill's 34px this is most of the way
+   * down, and the same distance on a card of 80 is a smudge under the top edge.
+   */
+  --carve-reach: 9px;
+
+  box-shadow:
+    inset 0 2px 2px -1px rgb(3 2 37 / 62%),
+    inset 0 var(--carve-reach) calc(var(--carve-reach) + 1px)
+      calc(1px - var(--carve-reach)) rgb(3 2 37 / 55%),
+    inset 1px 0 2px -1px rgb(3 2 37 / 40%),
+    inset 0 -1px 0 rgb(255 255 255 / 32%),
+    0 1px 0 rgb(255 255 255 / 50%),
+    0 -1px 0 rgb(10 4 40 / 18%);
+}
+
+/* A card tall enough to see down into. */
+.deep {
+  --carve-reach: 22px;
+}
+
+/*
+ * Risen to the face of the pane, which is the trough turned over: lit along the
+ * top edge instead of the bottom, dark along the bottom instead of the top, and
+ * a shadow under it rather than above it. That last one is only the tight
+ * contact shadow of something sitting on a surface, and deliberately not the
+ * wide soft one of something held above it, because the card has come up to the
+ * glass and not off it.
+ *
+ * Given to the keyboard as well as to the pointer, so tabbing through the row
+ * shows the same card coming up that hovering it would.
+ */
+.carved:hover,
+.link:focus-visible .carved {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 45%),
+    inset 0 -1px 0 rgb(3 2 37 / 22%),
+    0 1px 2px rgb(3 2 37 / 30%);
+}
