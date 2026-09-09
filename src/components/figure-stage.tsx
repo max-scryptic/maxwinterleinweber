@@ -138,11 +138,13 @@ function definition(id: FigureId) {
 
 function Model({
   url,
+  shift,
   rise,
   phase,
   still,
 }: {
   url: string;
+  shift: number;
   rise: number;
   phase: Phase;
   still: boolean;
@@ -245,7 +247,9 @@ function Model({
   });
 
   return (
-    <group position={[0, rise, 0]}>
+    // Inside the shared turntable but outside the normalised model, so this
+    // figure-specific alignment follows the common motion without being scaled.
+    <group position={[shift, rise, 0]}>
       <group ref={root}>
         <group scale={scale}>
           <group position={offset}>
@@ -356,6 +360,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
         <Suspense key={leaving.id} fallback={null}>
           <Model
             url={leaving.url}
+            shift={leaving.shift}
             rise={leaving.rise}
             phase="leaving"
             still={still}
@@ -366,6 +371,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
       <Suspense key={arriving.id} fallback={null}>
         <Model
           url={arriving.url}
+          shift={arriving.shift}
           rise={arriving.rise}
           phase={cast.phase}
           still={still}
