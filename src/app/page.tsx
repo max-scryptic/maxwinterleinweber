@@ -1,5 +1,6 @@
 import { Grandstander } from "next/font/google";
 
+import { SaasCards } from "@/components/saas-cards";
 import { SocialCards } from "@/components/social-cards";
 
 const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
@@ -30,6 +31,11 @@ export default function Home() {
         </h1>
         <div className="mt-8 w-full md:mt-10">
           <SocialCards />
+        </div>
+        {/* The builds sit well clear of the social row, so the two read as
+            separate groups rather than one block of cards. */}
+        <div className="mt-16 w-full md:mt-20">
+          <SaasCards />
         </div>
       </div>
       {/* Reserved for the 3D model. */}
