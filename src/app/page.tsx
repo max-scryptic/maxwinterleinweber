@@ -1,5 +1,6 @@
 import { Grandstander } from "next/font/google";
 
+import { MannequinViewer } from "@/components/mannequin-viewer";
 import { SocialCards } from "@/components/social-cards";
 
 const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
@@ -29,8 +30,10 @@ export default function Home() {
           <SocialCards />
         </div>
       </div>
-      {/* Reserved for the 3D model. */}
-      <div className="hidden md:block" />
+      {/* The 3D model. */}
+      <div className="hidden md:block">
+        <MannequinViewer />
+      </div>
     </div>
   );
 }
