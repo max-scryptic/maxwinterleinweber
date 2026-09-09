@@ -6,22 +6,31 @@ const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
 
 export default function Home() {
   return (
-    <div className="flex-1 bg-[#f4f4f4] px-4 py-6 sm:px-6 sm:py-8 md:p-10">
-      <div className="w-fit max-w-full">
+    // Two equal columns from md up: the name and links on the left, the right
+    // half held clear for the 3D model. Narrower than that there is no room to
+    // split the screen, so the left column takes the full width and the empty
+    // right one collapses to nothing.
+    <div className="grid flex-1 grid-cols-1 bg-[#f4f4f4] md:grid-cols-2">
+      {/* A query container, so the name below can size itself against this
+          column's content box rather than the viewport, and keeps fitting if
+          the split between the two columns ever changes. */}
+      <div className="@container flex flex-col items-center justify-center px-4 py-10 sm:px-6 md:p-10">
+        {/* The name is set on one line at any width: "Max Winter-Leinweber" in
+            Grandstander 700 measures 9.375% of its own font size per character
+            of column width — i.e. it exactly fills the column at 9.375cqi — so
+            9cqi fits it with a little air at both ends. The cap stops it
+            growing without limit on very wide displays. */}
         <h1
-          className={`${grandstander.className} text-4xl leading-tight break-words text-neutral-900 sm:text-5xl md:text-6xl`}
+          className={`${grandstander.className} text-[min(5rem,9cqi)] leading-tight whitespace-nowrap text-neutral-900`}
         >
           Max Winter-Leinweber
         </h1>
-        {/* w-0 min-w-full keeps the grid from widening the fit-content wrapper,
-            so the cards match the title's width instead of the other way round.
-            Once the five cards are side by side that width no longer holds a
-            handle on one line, so from lg the row sizes itself and the title
-            follows it. */}
-        <div className="mt-8 w-0 min-w-full md:mt-10 lg:w-auto">
+        <div className="mt-8 w-full md:mt-10">
           <SocialCards />
         </div>
       </div>
+      {/* Reserved for the 3D model. */}
+      <div className="hidden md:block" />
     </div>
   );
 }
