@@ -1,24 +1,40 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import {
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import { COLUMN, HEIGHT, VIEWS, framing, type ViewId } from "@/lib/figure";
+import {
+  COLUMN,
+  FIGURES,
+  HEIGHT,
+  VIEWS,
+  framing,
+  type FigureId,
+  type ViewId,
+} from "@/lib/figure";
 
 /*
  * The figure adrift on the right hand side of the page, together with the light
- * on it and the camera work that keeps it there. Swapping the placeholder for a
- * scan is meant to be a one-line change: point MODEL_URL at the new file and
- * the scene re-fits itself around it. Everything below is derived from the
- * model's own bounding box rather than from numbers measured against this
- * particular mesh, so a scan exported at a different scale, in different units,
- * or sitting off its own origin still lands upright, centred and framed.
+ * on it and the camera work that keeps it there.
+ *
+ * There is more than one figure now, and the tabs swap between them. Adding
+ * another is an entry in FIGURES and nothing else: everything below is derived
+ * from whichever model is loaded, from its own bounding box rather than from
+ * numbers measured against a particular mesh, so a scan exported at a different
+ * scale, in different units, or sitting off its own origin still lands upright,
+ * centred and framed like the one before it.
  */
-const MODEL_URL = "/models/mannequin.glb";
 
 // Seconds per revolution. Slow enough to read as a turntable rather than as
 // something spinning, and slow enough that a viewer trying to look at one side
@@ -31,9 +47,87 @@ const TURN_SECONDS = 32;
 const DRIFT = 0.05;
 const DRIFT_SECONDS = 9;
 
-function Model({ still }: { still: boolean }) {
-  const { scene, animations } = useGLTF(MODEL_URL);
+/*
+ * The swap between two figures, as a fall: the one being replaced drops out of
+ * frame and the new one drops in after it.
+ *
+ * TRAVEL is how far above and below its resting place a figure is thrown, in
+ * metres. It is set against the furthest the controls can be zoomed out, where
+ * the figure fills the least of the frame and so has the furthest to go before
+ * it is out of it, rather than against the framing the page opens on.
+ */
+const TRAVEL = HEIGHT * 2.6;
+
+// How far the departing figure topples as it goes, in radians. Enough to read
+// as falling rather than as being lowered on a wire.
+const TUMBLE = 0.5;
+
+// Seconds. The arrival is held back until the departure is most of the way
+// gone, so that for a moment both are falling together and the stage is never
+// actually empty.
+const EXIT_SECONDS = 0.75;
+const ENTRY_DELAY = 0.4;
+const ENTRY_SECONDS = 0.85;
+
+// The end of an arrival: how far past its resting place the figure carries, in
+// metres, how quickly it swings back and how fast that dies away.
+const SETTLE = 0.09;
+const SETTLE_RATE = 15;
+const SETTLE_DECAY = 6;
+
+/*
+ * A fall under gravity, as a fraction of the whole drop: still at the start and
+ * fastest at the end.
+ *
+ * Distance going with the square of the time is the whole difference between
+ * something falling and something being slid. A linear ramp over the same
+ * seconds reads as a machine lowering the figure into place.
+ */
+function fallen(seconds: number, over: number) {
+  const progress = MathUtils.clamp(seconds / over, 0, 1);
+  return progress * progress;
+}
+
+/*
+ * Where an arriving figure is, relative to where it comes to rest.
+ *
+ * It waits out of frame while the figure it replaces is thrown clear, falls
+ * under the same gravity, then overshoots and swings back rather than stopping
+ * dead on the mark. There is no floor out here to stop it, so what ends the
+ * fall has to look like its own momentum running out rather than like a
+ * landing.
+ */
+function arriving(seconds: number) {
+  const fall = seconds - ENTRY_DELAY;
+  if (fall <= 0) return TRAVEL;
+  if (fall < ENTRY_SECONDS) return TRAVEL * (1 - fallen(fall, ENTRY_SECONDS));
+
+  const settling = fall - ENTRY_SECONDS;
+  return (
+    -Math.sin(settling * SETTLE_RATE) *
+    SETTLE *
+    Math.exp(-settling * SETTLE_DECAY)
+  );
+}
+
+function source(id: FigureId) {
+  return (FIGURES.find((figure) => figure.id === id) ?? FIGURES[0]).url;
+}
+
+function Model({
+  url,
+  entering,
+  leaving,
+  still,
+}: {
+  url: string;
+  entering: boolean;
+  leaving: boolean;
+  still: boolean;
+}) {
+  const { scene, animations } = useGLTF(url);
   const root = useRef<Group>(null);
+  const thrown = useRef<Group>(null);
   const { actions, names, mixer } = useAnimations(animations, root);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
@@ -56,8 +150,9 @@ function Model({ still }: { still: boolean }) {
   useEffect(() => {
     // A skinned mesh is culled against its bind pose, not its animated one, so
     // an arm swinging out of that box can flicker the whole figure away when
-    // the camera is close. There is one figure on screen; culling it saves
-    // nothing worth this.
+    // the camera is close. A figure mid-swap is a long way from where its box
+    // says it is as well. There is one figure on screen, two for a moment
+    // while they change over; culling them saves nothing worth this.
     scene.traverse((object) => {
       if ((object as Mesh).isMesh) object.frustumCulled = false;
     });
@@ -66,8 +161,8 @@ function Model({ still }: { still: boolean }) {
   useLayoutEffect(() => {
     // The placeholder carries a set of Mixamo clips. "idle" is the standing
     // one, which is the only one that suits a figure at rest; any other model
-    // falls back to its first clip, and a model with no clips just stands
-    // still.
+    // falls back to its first clip, and a model with no clips, which is every
+    // photogrammetry scan, just stands still.
     const clip = names.includes("idle") ? "idle" : names[0];
     const action = clip ? actions[clip] : undefined;
     if (!action) return;
@@ -90,13 +185,31 @@ function Model({ still }: { still: boolean }) {
 
   // The clock has been running since the canvas was created, which is a second
   // or so of loading before this figure exists. Everything below is measured
-  // from the first frame it is actually drawn on instead.
+  // from the first frame it is actually drawn on instead, so that a figure
+  // whose model was slow to arrive still gets the whole of its entrance.
   const born = useRef<number | null>(null);
 
   useFrame((state, delta) => {
-    if (!root.current || still) return;
+    const spin = root.current;
+    const throw_ = thrown.current;
+    if (!spin || !throw_) return;
+
     if (born.current === null) born.current = state.clock.elapsedTime;
     const age = state.clock.elapsedTime - born.current;
+
+    // The swap rides on a group of its own, above the turntable and the drift,
+    // so that a figure on its way out keeps turning as it goes and one on its
+    // way in is already turning when it lands. Sharing a group would mean the
+    // fall fighting the drift for the same property.
+    if (leaving) {
+      const gone = fallen(age, EXIT_SECONDS);
+      throw_.position.y = -TRAVEL * gone;
+      throw_.rotation.x = -gone * TUMBLE;
+    } else if (entering) {
+      throw_.position.y = arriving(age);
+    }
+
+    if (still) return;
 
     // Turning the figure rather than the camera. Orbiting the camera instead
     // would drag the framing and the lighting around with it; this way the key
@@ -107,7 +220,7 @@ function Model({ still }: { still: boolean }) {
     // returning from the background reports the whole time it was away, which
     // would arrive as a jump.
     const step = (Math.PI * 2) / TURN_SECONDS;
-    root.current.rotation.y -= step * Math.min(delta, 0.1);
+    spin.rotation.y -= step * Math.min(delta, 0.1);
 
     // There is nothing under the feet out here, so the figure rises and falls
     // rather than standing. Set from the clock rather than accumulated, so a
@@ -115,17 +228,99 @@ function Model({ still }: { still: boolean }) {
     // own age so that it starts at rest and drifts from there rather than
     // appearing part way up a swing it was never seen taking.
     const cycle = (Math.PI * 2) / DRIFT_SECONDS;
-    root.current.position.y = Math.sin(age * cycle) * DRIFT;
+    spin.position.y = Math.sin(age * cycle) * DRIFT;
   });
 
   return (
-    <group ref={root}>
-      <group scale={scale}>
-        <group position={offset}>
-          <primitive object={scene} />
+    // Held out of frame from the first render rather than from the first frame
+    // of the loop. One frame drawn at the resting place is a flash of the new
+    // figure standing where the old one still is.
+    <group ref={thrown} position-y={entering ? TRAVEL : 0}>
+      <group ref={root}>
+        <group scale={scale}>
+          <group position={offset}>
+            <primitive object={scene} />
+          </group>
         </group>
       </group>
     </group>
+  );
+}
+
+/*
+ * Which figures are on stage. Normally one; during a swap, two, the one being
+ * replaced falling away and its replacement dropping in after it.
+ *
+ * The swap runs from an effect rather than straight off the prop because the
+ * figure being replaced has to outlive the press that replaced it, and once
+ * the prop has changed the only record of what was showing is here.
+ */
+function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
+  const [cast, setCast] = useState<{
+    arriving: FigureId;
+    leaving: FigureId | null;
+    swapped: boolean;
+  }>({ arriving: figure, leaving: null, swapped: false });
+
+  // Adjusted while rendering rather than from an effect. The swap is not a
+  // synchronisation with anything outside React, it is the direct consequence
+  // of the prop changing, and React re-runs this component with the new state
+  // before it commits anything: the departing figure is never drawn a frame
+  // still standing in its place.
+  if (cast.arriving !== figure) {
+    setCast({
+      arriving: figure,
+      // Under reduced motion the swap is a cut. Nothing is thrown anywhere;
+      // the new figure is simply the one that is there.
+      leaving: still ? null : cast.arriving,
+      swapped: !still,
+    });
+  }
+
+  useEffect(() => {
+    if (!cast.leaving) return;
+
+    // Dropped on a timer rather than when its own fall reaches the end,
+    // because the fall is measured in the render loop and a backgrounded tab
+    // does not run one. A figure thrown off screen and then left there would
+    // otherwise still be mounted, and still being drawn, whenever the tab came
+    // back.
+    const timer = setTimeout(
+      () => setCast((current) => ({ ...current, leaving: null })),
+      EXIT_SECONDS * 1000,
+    );
+
+    return () => clearTimeout(timer);
+  }, [cast.leaving]);
+
+  return (
+    <>
+      {/* A boundary each, not one around the pair. The arriving figure
+          suspends on its model, and a boundary shared with the departing one
+          would replace both with the fallback: the figure being replaced would
+          vanish on the press instead of falling out of frame. */}
+      {cast.leaving ? (
+        <Suspense fallback={null}>
+          <Model
+            key={cast.leaving}
+            url={source(cast.leaving)}
+            entering={false}
+            leaving
+            still={still}
+          />
+        </Suspense>
+      ) : null}
+
+      <Suspense fallback={null}>
+        <Model
+          key={cast.arriving}
+          url={source(cast.arriving)}
+          entering={cast.swapped}
+          leaving={false}
+          still={still}
+        />
+      </Suspense>
+    </>
   );
 }
 
@@ -245,11 +440,13 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
   return null;
 }
 
-export default function MannequinRig({
+export default function FigureRig({
+  figure,
   view,
   fitId,
   still,
 }: {
+  figure: FigureId;
   view: ViewId;
   fitId: number;
   still: boolean;
@@ -266,14 +463,15 @@ export default function MannequinRig({
       <directionalLight position={[-4, 2, -1]} intensity={0.9} color="#7b5ad6" />
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
 
-      <Model still={still} />
+      <Stage figure={figure} still={still} />
       <Controls view={view} fitId={fitId} />
     </>
   );
 }
 
-// Start fetching the model as soon as this chunk is parsed, in parallel with
-// React mounting it, rather than waiting for the first render. The chunk itself
-// is only loaded on a viewport wide enough to show the figure, so a phone never
-// pays for either.
-useGLTF.preload(MODEL_URL);
+// Start fetching the figure the page opens on as soon as this chunk is parsed,
+// in parallel with React mounting it, rather than waiting for the first render.
+// The chunk itself is only loaded on a viewport wide enough to show a figure,
+// so a phone never pays for either. The rest are fetched when a tab for them is
+// hovered, which is the canvas's job rather than this one's.
+useGLTF.preload(FIGURES[0].url);

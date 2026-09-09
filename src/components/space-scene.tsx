@@ -12,10 +12,12 @@ import { REDUCED_MOTION, WIDE, useMediaQuery } from "@/hooks/use-media-query";
 import {
   CAMERA_RISE,
   CENTRE,
+  FIGURES,
   FOV,
   OPENING,
   OPENING_PITCH,
   VIEWS,
+  type FigureId,
   type ViewId,
 } from "@/lib/figure";
 
@@ -26,9 +28,39 @@ import {
  * picture of one.
  */
 
-// The figure, three.js's loaders and a three megabyte model, split off so that
-// a phone, which is shown the sky but not the figure, never fetches any of it.
-const MannequinRig = lazy(() => import("@/components/mannequin"));
+// The figures, three.js's loaders and several megabytes of model, split off so
+// that a phone, which is shown the sky but not the figure, never fetches any of
+// it.
+const FigureRig = lazy(() => import("@/components/figure-stage"));
+
+/*
+ * Pulls a figure's model into the browser cache when its tab is hovered or
+ * focused, so that pressing it starts the swap against a file already on the
+ * machine rather than one still on its way.
+ *
+ * A plain fetch, rather than drei's own preloader, because reaching for that
+ * here would mean importing three.js into the bundle this page is split to
+ * avoid loading in the first place.
+ */
+const warmed = new Set<string>();
+
+function warm(url: string) {
+  if (warmed.has(url)) return;
+  warmed.add(url);
+
+  // A failure here costs nothing: the model is fetched again, for real, when
+  // the figure is actually asked for. Forgetting it means a later hover tries
+  // again rather than the file never being warmed at all.
+  void fetch(url).catch(() => warmed.delete(url));
+}
+
+// Both rows of controls are the same object: a row of alternatives with one of
+// them current. The current one is solid white, the rest are glass over the sky.
+function control(active: boolean) {
+  return active
+    ? "pointer-events-auto bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900"
+    : "pointer-events-auto border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white";
+}
 
 // Radians per second: one revolution of the sky roughly every twelve minutes.
 // Slow enough that it is only noticeable by having changed.
@@ -108,6 +140,10 @@ export default function SpaceScene() {
 
   const [view, setView] = useState<ViewId>("full");
 
+  // Which iteration is on stage. The page opens on the first entry, which is
+  // the placeholder every later one is measured against.
+  const [figure, setFigure] = useState<FigureId>(FIGURES[0].id);
+
   // Bumped on every press so that pressing the active button re-frames rather
   // than doing nothing.
   const [fitId, setFitId] = useState(0);
@@ -152,10 +188,40 @@ export default function SpaceScene() {
             it. Both resolve into the sky, which is already drawn. */}
         {wide ? (
           <Suspense fallback={null}>
-            <MannequinRig view={view} fitId={fitId} still={still} />
+            <FigureRig
+              figure={figure}
+              view={view}
+              fitId={fitId}
+              still={still}
+            />
           </Suspense>
         ) : null}
       </Canvas>
+
+      {/* Which iteration is showing, over the right hand half where it is.
+          Above the figure rather than below it, so the two rows read as what
+          is on stage and how it is being looked at, in that order. */}
+      {wide ? (
+        <div className="pointer-events-none absolute top-8 right-0 flex w-1/2 justify-center gap-2">
+          {FIGURES.map((option) => (
+            <Button
+              key={option.id}
+              variant="ghost"
+              size="sm"
+              className={control(option.id === figure)}
+              aria-pressed={option.id === figure}
+              onClick={() => setFigure(option.id)}
+              // Fetched on the way to the press rather than on the press
+              // itself. A pointer arriving on the tab is most of a second of
+              // warning, which is about what a four megabyte model needs.
+              onPointerEnter={() => warm(option.url)}
+              onFocus={() => warm(option.url)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
 
       {/* Over the right hand half, where the figure is. The row spans that half
           so it passes clicks through everywhere the buttons themselves are not;
@@ -167,11 +233,7 @@ export default function SpaceScene() {
               key={option.id}
               variant="ghost"
               size="sm"
-              className={
-                option.id === view
-                  ? "pointer-events-auto bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900"
-                  : "pointer-events-auto border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
-              }
+              className={control(option.id === view)}
               // The button says which framing is showing, not just which one
               // the next press would give, so it is a state to announce.
               aria-pressed={option.id === view}
