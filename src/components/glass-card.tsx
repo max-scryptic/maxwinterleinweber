@@ -26,13 +26,16 @@ const CLEAREST = { fill: 0.4, blur: 4 };
 const FROSTIEST = { fill: 0.96, blur: 52 };
 
 /*
- * Where the slider sits before anyone touches it. The floor above is set by the
- * name, which is the only text that sits on the glass rather than on a card of
- * its own: at 0.4 it is still black on mid lavender even when the darkest part
- * of the cloud passes behind it, and at 80px it is large enough for that to be
- * a comfortable read rather than a borderline one.
+ * Where the slider sits before anyone touches it: near the clear end, so the
+ * card opens as a thin pane with the cloud still legible through it and the
+ * frost is there to be reached for rather than started from. It is safe to open
+ * this low because the floor above is set by the name, which is the only text
+ * that sits on the glass rather than on a card of its own: at 0.4 it is still
+ * black on mid lavender even when the darkest part of the cloud passes behind
+ * it, and at 80px it is large enough for that to be a comfortable read rather
+ * than a borderline one.
  */
-const OPENS_AT = 0.7;
+const OPENS_AT = 0.1;
 
 function mix(from: number, to: number, at: number) {
   return from + (to - from) * at;
