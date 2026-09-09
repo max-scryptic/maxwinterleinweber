@@ -71,8 +71,20 @@ export function GlassCard({ children }: { children: React.ReactNode }) {
        move over it.
 
        The hairline of white on the top edge and the ring around it are the lit
-       edge of a sheet of glass, and the three shadows are the pane's contact
-       with the sky, its thickness, and its own darkness thrown well behind it. */
+       edge of a sheet of glass, and the shadows under them are the pane's
+       contact with the sky, its thickness, and its own darkness thrown behind
+       it.
+
+       They are stacked the way they are because of how little room there is to
+       cast into: the card is held 10px off the top, left and bottom of the
+       window, so everything but the open half of the sky on its right is read
+       in a band about a finger's width wide. A single wide, far thrown shadow
+       spends all of its darkness outside that band and leaves the card looking
+       pasted on, so the near layers do the work of lifting it. The contact
+       line draws the edge, the unoffset halo puts darkness on the left and top
+       as well as below (a shadow thrown straight down has nothing to show in
+       the gutters at the sides), and the two thrown layers carry the weight out
+       into the sky on the right, where there is depth to fall through. */
     <div
       className={`pointer-events-auto ${styles.surface}`}
       style={{
