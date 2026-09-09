@@ -85,3 +85,15 @@ export function framing(view: View, aspect: number) {
  * against the real shape of the column.
  */
 export const OPENING = framing(VIEWS[0], COLUMN);
+
+/**
+ * How far the camera is tilted down at that framing, in radians about X.
+ *
+ * The camera has to be handed this rather than left to aim itself. Given no
+ * rotation, the canvas points a new camera at the origin, which out here is the
+ * point between the figure's feet, and the controls then aim it at the middle
+ * of the figure the moment they load: a several degree pitch that swings the
+ * whole sky with it, arriving a second into the page. Opening at the angle the
+ * controls are going to hold means there is nothing to correct.
+ */
+export const OPENING_PITCH = -Math.atan2(CAMERA_RISE, OPENING.distance);
