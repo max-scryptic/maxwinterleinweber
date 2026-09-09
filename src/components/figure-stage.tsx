@@ -138,11 +138,13 @@ function definition(id: FigureId) {
 
 function Model({
   url,
+  shift,
   rise,
   phase,
   still,
 }: {
   url: string;
+  shift: number;
   rise: number;
   phase: Phase;
   still: boolean;
@@ -276,7 +278,7 @@ function Model({
   return (
     // Outside the drifting group, so this figure-specific alignment is fixed
     // while the same small rise and fall continues around it.
-    <group position={[0, rise, 0]}>
+    <group position={[shift, rise, 0]}>
       <group ref={root}>
         <group scale={scale}>
           <group position={offset}>
@@ -360,6 +362,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
         <Suspense key={leaving.id} fallback={null}>
           <Model
             url={leaving.url}
+            shift={leaving.shift}
             rise={leaving.rise}
             phase="leaving"
             still={still}
@@ -370,6 +373,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
       <Suspense key={arriving.id} fallback={null}>
         <Model
           url={arriving.url}
+          shift={arriving.shift}
           rise={arriving.rise}
           phase={cast.phase}
           still={still}
