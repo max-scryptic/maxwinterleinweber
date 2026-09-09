@@ -145,10 +145,15 @@ function BuildCard({ build }: { build: Build }) {
             </span>
           </span>
           {/* The arrow leans the way the link goes, which is the one bit of
-              the card that says it opens somewhere else. */}
+              the card that says it opens somewhere else. It does not travel
+              when the card is hovered, it only darkens: the card coming up to
+              the face of the glass is the whole of what the hover says, and a
+              mark sliding about on top of it is a second thing happening at
+              the same time. Darkening over the same 200ms carries it up with
+              the card rather than beside it. */}
           <ArrowUpRight
             aria-hidden="true"
-            className="size-5 shrink-0 text-neutral-400 transition duration-200 group-hover:text-neutral-900 motion-safe:group-hover:translate-x-0.5 motion-safe:group-hover:-translate-y-0.5"
+            className="size-5 shrink-0 text-neutral-400 transition duration-200 group-hover:text-neutral-900"
           />
         </CardContent>
       </Card>
