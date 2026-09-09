@@ -40,14 +40,20 @@
    */
   --carve-reach: 9px;
 
+  /*
+   * Every layer carries its spread even where that spread is zero, so that this
+   * list and the surfaced one below read as the same six slots in the same
+   * order and can be checked against each other by eye. See the note there for
+   * why the two have to stay the same length.
+   */
   box-shadow:
     inset 0 2px 2px -1px rgb(3 2 37 / 62%),
     inset 0 var(--carve-reach) calc(var(--carve-reach) + 1px)
       calc(1px - var(--carve-reach)) rgb(3 2 37 / 55%),
     inset 1px 0 2px -1px rgb(3 2 37 / 40%),
-    inset 0 -1px 0 rgb(255 255 255 / 32%),
-    0 1px 0 rgb(255 255 255 / 50%),
-    0 -1px 0 rgb(10 4 40 / 18%);
+    inset 0 -1px 0 0 rgb(255 255 255 / 32%),
+    0 1px 0 0 rgb(255 255 255 / 50%),
+    0 -1px 0 0 rgb(10 4 40 / 18%);
 }
 
 /* A card tall enough to see down into. */
@@ -65,11 +71,25 @@
  *
  * Given to the keyboard as well as to the pointer, so tabbing through the row
  * shows the same card coming up that hovering it would.
+ *
+ * THE THREE EMPTY LAYERS BELOW ARE LOAD BEARING. A box-shadow only animates
+ * into another one layer by layer, which needs the two to have the same number
+ * of layers with the inset keyword falling the same way down both; a browser
+ * given six shadows on one side and three on the other cannot pair them up, so
+ * it gives up on interpolating and swaps the whole value at the halfway point.
+ * That swap is instant however long the transition is set to, which looks like
+ * the transition not being applied at all. So the walls that a card at the
+ * surface does not have are still written here, in the slots they occupy above,
+ * drawing nothing: same size and offset as a shadow that is not there, and the
+ * colour they fade from at no alpha, so the pair animates rather than jumps.
  */
 .carved:hover,
 .link:focus-visible .carved {
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 45%),
-    inset 0 -1px 0 rgb(3 2 37 / 22%),
-    0 1px 2px rgb(3 2 37 / 30%);
+    inset 0 1px 0 0 rgb(255 255 255 / 45%),
+    inset 0 0 0 0 rgb(3 2 37 / 0%),
+    inset 0 0 0 0 rgb(3 2 37 / 0%),
+    inset 0 -1px 0 0 rgb(3 2 37 / 22%),
+    0 1px 2px 0 rgb(3 2 37 / 30%),
+    0 0 0 0 rgb(10 4 40 / 0%);
 }
