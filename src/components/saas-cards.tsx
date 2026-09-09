@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import * as React from "react";
 
+import carved from "@/components/carved.module.css";
 import { Card, CardContent } from "@/components/ui/card";
 
 /*
@@ -110,13 +111,20 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className="group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:hover:-translate-y-0.5"
+      className={`group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
-      {/* The lift and the deeper shadow together read as the card coming up
-          off the page, and the border darkening keeps its edge from washing
-          out against the shadow. The lift is held back for anyone who has
-          asked for less motion; the rest still happens. */}
-      <Card className="flex-1 gap-0 rounded-2xl border-neutral-200 bg-white py-4 transition duration-200 group-hover:border-neutral-300 group-hover:shadow-lg">
+      {/* Cut into the pane like the row of handles above it and the name above
+          that, and coming up to the face of the glass under a pointer. It is
+          the deeper of the two carves, being a card rather than a pill and so
+          tall enough to see down into.
+
+          Its border goes with the carve: the edge of a trough is drawn by the
+          light falling into it, and a drawn line around the outside of that is
+          a second edge in the wrong place, reading on a white card as a grey
+          outline laid over the shading rather than as part of it. */}
+      <Card
+        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-4 transition duration-200 ${carved.carved} ${carved.deep}`}
+      >
         {/* The mark on the left, the name and the line about the app stacked
             beside it, and the arrow held out at the far edge. */}
         <CardContent className="flex items-center gap-4 px-5">
