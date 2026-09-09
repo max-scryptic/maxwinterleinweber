@@ -114,6 +114,28 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@theme {
+  /*
+   * The social row's endless travel. The track is a whole number of identical
+   * copies of the cards laid end to end, and one turn of this shifts it left by
+   * exactly one of them, so the frame it restarts on is the frame it left and
+   * the seam never shows. How far that is depends on how many copies the
+   * component laid down, so it hands the distance over in --marquee-shift;
+   * being read from inside the keyframe, that one resolves against the row
+   * itself rather than here. The time is one copy's worth of travel, i.e. the
+   * speed: slow enough to read a handle as it goes by. It is spelled out rather
+   * than handed over the same way because this declaration resolves at the
+   * root, where a value set further down the page is not yet in scope.
+   */
+  --animate-marquee: marquee 34s linear infinite;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(var(--marquee-shift));
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
