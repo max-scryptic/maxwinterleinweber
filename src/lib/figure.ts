@@ -42,7 +42,7 @@ export const FIGURES = [
     id: "scan-01",
     label: "Scan 01",
     url: "/models/scan-01.glb",
-    shift: 0.18,
+    shift: 0.13,
     rise: 0.08,
     yaw: (Math.PI * 5) / 4,
   },
