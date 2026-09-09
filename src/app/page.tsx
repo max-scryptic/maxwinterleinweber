@@ -14,7 +14,10 @@ export default function Home() {
       {/* A query container, so the name below can size itself against this
           column's content box rather than the viewport, and keeps fitting if
           the split between the two columns ever changes. */}
-      <div className="@container flex flex-col items-center justify-center px-4 py-10 sm:px-6 md:p-10">
+      {/* Horizontally centred but top aligned: the name and the cards sit at
+          the head of the column and grow downwards, rather than riding up and
+          down with the height of the viewport. */}
+      <div className="@container flex flex-col items-center justify-start px-4 pt-10 pb-10 sm:px-6 md:px-10 md:pt-12 md:pb-10">
         {/* The name is set on one line at any width: "Max Winter-Leinweber" in
             Grandstander 700 measures 9.375% of its own font size per character
             of column width — i.e. it exactly fills the column at 9.375cqi — so
