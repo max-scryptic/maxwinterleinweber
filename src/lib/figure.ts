@@ -1,0 +1,87 @@
+/*
+ * The numbers that describe where the figure sits on the page and how the
+ * camera is pointed at it.
+ *
+ * Kept apart from the components that use them because they are needed on both
+ * sides of a split: the canvas has to set up its camera and draw its buttons
+ * from these, while the figure itself, three.js and a three megabyte model are
+ * a separate chunk that narrow screens never load.
+ */
+
+// Metres. The model is rescaled to this, so it also sets the scale of every
+// distance derived from it.
+export const HEIGHT = 1.8;
+
+// Degrees, vertical.
+export const FOV = 35;
+
+// The camera sits above whatever it is looking at, angled very slightly down.
+export const CAMERA_RISE = HEIGHT * 0.22;
+
+// How much of the frame is left empty around the part being shown. 1 would
+// crop to it exactly.
+const MARGIN = 1.3;
+
+/*
+ * The figure does not stand in the middle of the page: the card takes the left
+ * half, so it is framed into the middle of the right half instead. The canvas
+ * still covers the whole window, because the sky has to, so this is done by
+ * offsetting the camera's frustum rather than by moving anything.
+ *
+ * CENTRE is where the figure lands across the viewport, and COLUMN is the share
+ * of the viewport width it is fitted into. Together they put it centred in the
+ * right hand half and sized to it.
+ */
+export const CENTRE = 0.75;
+export const COLUMN = 0.5;
+
+/*
+ * The three framings, as fractions of the figure's height measured from its
+ * feet: the band of the body each one has to fit on screen, and how wide that
+ * band is at its widest point. Proportions of a standing figure, not of this
+ * particular mesh, so they survive the swap to a scan: the hips sit a little
+ * above half of a person's height, and the head is the top eighth.
+ */
+export const VIEWS = [
+  // Width here is what must not be cropped, which is not always the whole
+  // silhouette: the full-body view has to hold the arms, but a torso shot that
+  // loses the hands at the edges of a narrow column is still a torso shot, and
+  // insisting on the arm span there would pull the camera back far enough to
+  // show the knees.
+  { id: "full", label: "Full body", bottom: 0, top: 1, width: 0.44 },
+  { id: "torso", label: "Torso", bottom: 0.52, top: 1, width: 0.32 },
+  { id: "head", label: "Head", bottom: 0.85, top: 1, width: 0.16 },
+] as const;
+
+export type View = (typeof VIEWS)[number];
+export type ViewId = View["id"];
+
+/*
+ * Where the camera has to be to fit one of those bands. The vertical field of
+ * view is fixed, so the distance that fits the band's height is fixed too; the
+ * distance that fits its width depends on the shape of the space the figure is
+ * given. Taking the larger of the two is what keeps a head from being cropped
+ * down the sides in a narrow column, where fitting the height alone is not
+ * enough.
+ *
+ * The aspect passed in is the figure's own column, not the canvas: the canvas
+ * covers the whole window, and fitting to that would size the figure as though
+ * it had the card's half to spread into as well.
+ */
+export function framing(view: View, aspect: number) {
+  const halfFov = Math.tan((FOV * Math.PI) / 360);
+  const height = (view.top - view.bottom) * HEIGHT * MARGIN;
+  const width = view.width * HEIGHT * MARGIN;
+
+  return {
+    focus: ((view.top + view.bottom) / 2) * HEIGHT,
+    distance: Math.max(height / 2 / halfFov, width / 2 / (halfFov * aspect)),
+  };
+}
+
+/**
+ * The framing to open on, before there is a window to measure. Only has to be
+ * close enough not to be seen jumping: the first frame after mount corrects it
+ * against the real shape of the column.
+ */
+export const OPENING = framing(VIEWS[0], COLUMN);

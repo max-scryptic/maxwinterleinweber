@@ -88,8 +88,12 @@ export function SaasCards() {
     // Same wrapping, centred row as the social cards, so a second build later
     // lines up beside this one and a short last row stays centred.
     <ul className="flex flex-wrap justify-center gap-2">
+      {/* min-w-0 on the item: the card below asks for 26rem and settles for
+          less, but a flex item will not go below its own content width without
+          being told it may, and in a column narrower than that it would
+          otherwise push a horizontal scrollbar into the page. */}
       {builds.map((build) => (
-        <li key={build.href} className="flex">
+        <li key={build.href} className="flex min-w-0">
           <BuildCard build={build} />
         </li>
       ))}
