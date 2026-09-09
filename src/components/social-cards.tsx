@@ -207,13 +207,26 @@ const marqueeStyle = {
 const edgeFade =
   "motion-safe:[mask-image:linear-gradient(to_right,transparent,#000_var(--fade),#000_calc(100%-var(--fade)),transparent)]";
 
+/*
+ * The window has to clip sideways, but clipping is not one edge at a time: a
+ * box that hides what runs past its left and right hides what runs past its top
+ * and bottom too, and a hovered card lifts, throws a shadow and (from the
+ * keyboard) wears a focus ring, all of which run past the top. So the window is
+ * given a band of its own above and below to clip into, and takes the same band
+ * back off as negative margin, leaving the row sitting exactly where it did.
+ * A rem either side is measured off the deepest of the three: the shadow falls
+ * about 15px past the foot of a card, and the lift and the ring are well inside
+ * that.
+ */
+const liftRoom = "-my-4 py-4";
+
 export function SocialCards() {
   return (
     <div
       style={marqueeStyle}
       // The window the row travels behind. The fade is asked for only where the
       // row actually moves, so the still row below is left as plain as it was.
-      className={`relative overflow-hidden ${edgeFade}`}
+      className={`relative overflow-hidden ${liftRoom} ${edgeFade}`}
     >
       {/* The track. It is as wide as its contents and holds one flat line of
           cards, spaced by trailing padding on each rather than by a gap between
