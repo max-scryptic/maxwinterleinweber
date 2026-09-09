@@ -15,9 +15,6 @@
     0 0 18px -2px rgb(3 2 37 / 50%),
     0 12px 28px -6px rgb(3 2 37 / 60%),
     0 40px 80px -16px rgb(3 2 37 / 85%);
-  transition:
-    background 180ms ease-out,
-    box-shadow 180ms ease-out;
 }
 
 /*
@@ -95,10 +92,4 @@
 .content {
   position: relative;
   z-index: 3;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .surface {
-    transition: none;
-  }
 }

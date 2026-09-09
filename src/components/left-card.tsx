@@ -7,10 +7,10 @@ import { SocialCards } from "@/components/social-cards";
 const orbitron = Orbitron({ subsets: ["latin"], weight: "700" });
 
 /*
- * What the card says, as opposed to what it is made of. The glass, the light on
- * it and the slider that thickens it are all in GlassCard; everything here is
- * the name and the two groups of cards, which stay rendered on the server since
- * none of this changes once it is drawn.
+ * What the card says, as opposed to what it is made of. The glass and the light
+ * on it are both in GlassCard; everything here is the name and the two groups
+ * of cards, which stay rendered on the server since none of this changes once
+ * it is drawn.
  */
 export function LeftCard() {
   return (
