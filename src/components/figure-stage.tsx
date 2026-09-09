@@ -11,15 +11,14 @@ import {
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group, MathUtils, Mesh, Vector3, type Material } from "three";
+import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import {
-  FORMATION,
-  Motes,
-  STILL_FADE,
-  revealed,
-} from "@/components/figure-motes";
+  Cloud,
+  useErosion,
+  type Transition,
+} from "@/components/figure-particles";
 import {
   COLUMN,
   FIGURES,
@@ -29,6 +28,7 @@ import {
   type FigureId,
   type ViewId,
 } from "@/lib/figure";
+import { sampleSurface } from "@/lib/surface";
 
 /*
  * The figure adrift on the right hand side of the page, together with the light
@@ -54,66 +54,82 @@ const DRIFT = 0.05;
 const DRIFT_SECONDS = 9;
 
 /*
- * The swap between two figures, as a fall: the one being replaced drops out of
- * frame and the new one drops in after it.
- *
- * TRAVEL is how far above and below its resting place a figure is thrown, in
- * metres. It is set against the furthest the controls can be zoomed out, where
- * the figure fills the least of the frame and so has the furthest to go before
- * it is out of it, rather than against the framing the page opens on.
+ * How many particles a figure is sampled into. This is a density over the
+ * surface rather than a budget for the machine: the cloud has to be thick
+ * enough, once it is spread over half a metre of empty space, to read as
+ * something the figure was made of rather than as a handful of sparks thrown
+ * off it.
  */
-const TRAVEL = HEIGHT * 2.6;
-
-// How far the departing figure topples as it goes, in radians. Enough to read
-// as falling rather than as being lowered on a wire.
-const TUMBLE = 0.5;
-
-// Seconds. The arrival is held back until the departure is most of the way
-// gone, so that for a moment both are falling together and the stage is never
-// actually empty.
-const EXIT_SECONDS = 0.75;
-const ENTRY_DELAY = 0.4;
-const ENTRY_SECONDS = 0.85;
-
-// The end of an arrival: how far past its resting place the figure carries, in
-// metres, how quickly it swings back and how fast that dies away.
-const SETTLE = 0.09;
-const SETTLE_RATE = 15;
-const SETTLE_DECAY = 6;
+const MOTES = 26000;
 
 /*
- * A fall under gravity, as a fraction of the whole drop: still at the start and
- * fastest at the end.
+ * The swap between two figures, as a dispersal: the one being replaced crumbles
+ * into its own particles and blows apart, and the arriving one condenses out of
+ * the cloud that is left.
  *
- * Distance going with the square of the time is the whole difference between
- * something falling and something being slid. A linear ramp over the same
- * seconds reads as a machine lowering the figure into place.
+ * The arrival is held back until the departure is well under way, so that for a
+ * moment both clouds are in the air together and the stage is never empty. The
+ * page's own first figure has no departure to wait for and takes longer over it,
+ * because there is nothing else happening and it is the first thing seen.
  */
-function fallen(seconds: number, over: number) {
-  const progress = MathUtils.clamp(seconds / over, 0, 1);
-  return progress * progress;
-}
+const OPENING_SECONDS = 2.4;
+const GATHER_SECONDS = 1.5;
+const GATHER_DELAY = 0.45;
+const DISPERSE_SECONDS = 1.1;
+
+/**
+ * Which figures are doing what. A figure is in exactly one of these for the
+ * whole of its life on stage.
+ */
+type Phase = "opening" | "arriving" | "leaving" | "settled";
+
+// A figure that is not changing: whole, with no cloud drawn over it at all.
+// What every transition starts from and ends at, and the only state a figure is
+// ever in under reduced motion.
+const SETTLED = { form: 1, fade: 0, solid: 1 };
 
 /*
- * Where an arriving figure is, relative to where it comes to rest.
+ * The three numbers that describe a figure part way through a change, given how
+ * long it has been in its phase.
  *
- * It waits out of frame while the figure it replaces is thrown clear, falls
- * under the same gravity, then overshoots and swings back rather than stopping
- * dead on the mark. There is no floor out here to stop it, so what ends the
- * fall has to look like its own momentum running out rather than like a
- * landing.
+ * form is where the particles are, fade is how brightly they are drawn and
+ * solid is how much of the model's own surface is left. They are separate
+ * curves rather than one, because the surface has to be gone before the cloud
+ * is at its thickest on the way out and cannot come back until the cloud has
+ * nearly landed on the way in. Tying all three to a single ramp put the solid
+ * figure and the cloud of it on screen at the same time, which reads as a
+ * double exposure rather than as a change of state.
  */
-function arriving(seconds: number) {
-  const fall = seconds - ENTRY_DELAY;
-  if (fall <= 0) return TRAVEL;
-  if (fall < ENTRY_SECONDS) return TRAVEL * (1 - fallen(fall, ENTRY_SECONDS));
+function progress(phase: Phase, age: number) {
+  if (phase === "settled") return SETTLED;
 
-  const settling = fall - ENTRY_SECONDS;
-  return (
-    -Math.sin(settling * SETTLE_RATE) *
-    SETTLE *
-    Math.exp(-settling * SETTLE_DECAY)
-  );
+  if (phase === "leaving") {
+    const gone = MathUtils.clamp(age / DISPERSE_SECONDS, 0, 1);
+    const left = 1 - gone;
+
+    return {
+      // Fast out of the surface and slowing as it goes, which is what something
+      // thrown into a space with nothing in it does.
+      form: left * left * left,
+      fade:
+        MathUtils.smoothstep(gone, 0, 0.1) *
+        (1 - MathUtils.smoothstep(gone, 0.42, 1)),
+      solid: 1 - MathUtils.smoothstep(gone, 0.03, 0.34),
+    };
+  }
+
+  const over = phase === "opening" ? OPENING_SECONDS : GATHER_SECONDS;
+  const delay = phase === "opening" ? 0 : GATHER_DELAY;
+  const made = MathUtils.clamp((age - delay) / over, 0, 1);
+  const left = 1 - made;
+
+  return {
+    form: 1 - left * left * left,
+    fade:
+      MathUtils.smoothstep(made, 0, 0.14) *
+      (1 - MathUtils.smoothstep(made, 0.72, 1)),
+    solid: MathUtils.smoothstep(made, 0.58, 0.96),
+  };
 }
 
 function source(id: FigureId) {
@@ -122,30 +138,16 @@ function source(id: FigureId) {
 
 function Model({
   url,
-  entering,
-  leaving,
+  phase,
   still,
 }: {
   url: string;
-  entering: boolean;
-  leaving: boolean;
+  phase: Phase;
   still: boolean;
 }) {
   const { scene, animations } = useGLTF(url);
   const root = useRef<Group>(null);
-  const thrown = useRef<Group>(null);
   const { actions, names, mixer } = useAnimations(animations, root);
-
-  /*
-   * Whether this figure is still gathering itself out of the sky.
-   *
-   * Only the one the page opens on: a figure arriving because a tab was pressed
-   * is thrown in after the one it replaces, and that fall is already an
-   * entrance. The opening figure has nothing to be thrown in after, and without
-   * this it simply exists from one frame to the next, whenever several
-   * megabytes of model happen to finish arriving.
-   */
-  const [forming, setForming] = useState(!entering && !leaving);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
   // the plane through the origin. This runs on the first render, before the
@@ -164,74 +166,34 @@ function Model({
     };
   }, [scene]);
 
+  // The cloud this figure comes apart into and comes back together out of, and
+  // the erosion of its own surface that the cloud is coming off. Both are
+  // driven by the one set of numbers written below, once a frame.
+  //
+  // A ref, because they are written from inside the render loop, which is
+  // outside anything React tracks, and because a value React hands back from a
+  // hook is not one it allows to be written to.
+  const transition = useRef<Transition>({
+    form: { value: 1 },
+    fade: { value: 0 },
+    solid: { value: 1 },
+  });
+  const surface = useMemo(
+    () => (still ? null : sampleSurface(scene, MOTES)),
+    [scene, still],
+  );
+
+  useErosion(scene, transition);
+
   useEffect(() => {
     // A skinned mesh is culled against its bind pose, not its animated one, so
     // an arm swinging out of that box can flicker the whole figure away when
-    // the camera is close. A figure mid-swap is a long way from where its box
-    // says it is as well. There is one figure on screen, two for a moment
+    // the camera is close. There is one figure on screen, two for a moment
     // while they change over; culling them saves nothing worth this.
     scene.traverse((object) => {
       if ((object as Mesh).isMesh) object.frustumCulled = false;
     });
   }, [scene]);
-
-  /*
-   * Sets how much of the figure itself is showing, while there is an entrance
-   * to run, and null once there is not.
-   *
-   * The loop is handed this rather than the materials themselves because the
-   * effect below owns them: it is what put them into a state they have to be
-   * taken back out of, and it is the only place that knows what they were.
-   */
-  const fade = useRef<((shown: number) => void) | null>(null);
-
-  useLayoutEffect(() => {
-    if (!forming) return;
-
-    // Once each: a model can share one material across several meshes, and
-    // fading it once per mesh would step it several times a frame.
-    const skins = new Set<Material>();
-    scene.traverse((object) => {
-      const mesh = object as Mesh;
-      if (!mesh.isMesh) return;
-
-      const materials = Array.isArray(mesh.material)
-        ? mesh.material
-        : [mesh.material];
-      for (const material of materials) if (material) skins.add(material);
-    });
-
-    // useGLTF hands out one cached scene per file, so these are the same
-    // material objects a later mount of the same figure will be drawn with:
-    // what is done to them here has to be undone, and undone on the way out
-    // rather than at the end of the entrance, in case the figure is swapped
-    // away mid-gather.
-    const held = [...skins].map((material) => ({
-      material,
-      transparent: material.transparent,
-      opacity: material.opacity,
-    }));
-
-    for (const material of skins) {
-      material.transparent = true;
-      material.opacity = 0;
-      material.needsUpdate = true;
-    }
-
-    fade.current = (shown) => {
-      for (const material of skins) material.opacity = shown;
-    };
-
-    return () => {
-      fade.current = null;
-
-      for (const entry of held) {
-        entry.material.transparent = entry.transparent;
-        entry.material.opacity = entry.opacity;
-        entry.material.needsUpdate = true;
-      }
-    };
-  }, [forming, scene]);
 
   useLayoutEffect(() => {
     // The placeholder carries a set of Mixamo clips. "idle" is the standing
@@ -266,34 +228,17 @@ function Model({
 
   useFrame((state, delta) => {
     const spin = root.current;
-    const throw_ = thrown.current;
-    if (!spin || !throw_) return;
+    if (!spin) return;
 
     if (born.current === null) born.current = state.clock.elapsedTime;
     const age = state.clock.elapsedTime - born.current;
 
-    // The swap rides on a group of its own, above the turntable and the drift,
-    // so that a figure on its way out keeps turning as it goes and one on its
-    // way in is already turning when it lands. Sharing a group would mean the
-    // fall fighting the drift for the same property.
-    if (leaving) {
-      const gone = fallen(age, EXIT_SECONDS);
-      throw_.position.y = -TRAVEL * gone;
-      throw_.rotation.x = -gone * TUMBLE;
-    } else if (entering) {
-      throw_.position.y = arriving(age);
-    }
-
-    if (forming) {
-      // Brought up under the swarm as it lands, rather than switched on once
-      // it is gone.
-      fade.current?.(revealed(age, still));
-
-      // Ended from the loop rather than from a timer, so a tab that was in the
-      // background for the whole of the entrance comes back to a figure part
-      // way through it rather than to one that finished without being drawn.
-      if (age > (still ? STILL_FADE : FORMATION)) setForming(false);
-    }
+    // Under reduced motion there is no change to be part way through: the
+    // figure is simply whole, and the cloud is never built or drawn.
+    const at = still ? SETTLED : progress(phase, age);
+    transition.current.form.value = at.form;
+    transition.current.fade.value = at.fade;
+    transition.current.solid.value = at.solid;
 
     if (still) return;
 
@@ -318,22 +263,18 @@ function Model({
   });
 
   return (
-    // Held out of frame from the first render rather than from the first frame
-    // of the loop. One frame drawn at the resting place is a flash of the new
-    // figure standing where the old one still is.
-    <group ref={thrown} position-y={entering ? TRAVEL : 0}>
-      <group ref={root}>
-        <group scale={scale}>
-          <group position={offset}>
-            <primitive object={scene} />
-          </group>
-        </group>
+    <group ref={root}>
+      <group scale={scale}>
+        <group position={offset}>
+          <primitive object={scene} />
 
-        {/* Outside the scale, so the swarm is laid out in the same metres as
-            everything else out here whatever size the model arrived at, and
-            inside the turn and the drift, so it is already moving with the
-            figure before there is a figure to move with. */}
-        {forming && !still ? <Motes scene={scene} /> : null}
+          {/* Beside the model rather than around it, and under the same two
+              groups, so that a cloud with no skeleton to carry it is scaled and
+              stood on the ground plane with the figure it was taken off. A
+              skinned one is carried by the bones instead, which are inside this
+              same pair and so end up in the same place. */}
+          {surface ? <Cloud surface={surface} transition={transition} /> : null}
+        </group>
       </group>
     </group>
   );
@@ -341,7 +282,7 @@ function Model({
 
 /*
  * Which figures are on stage. Normally one; during a swap, two, the one being
- * replaced falling away and its replacement dropping in after it.
+ * replaced blowing apart and its replacement condensing out of the cloud.
  *
  * The swap runs from an effect rather than straight off the prop because the
  * figure being replaced has to outlive the press that replaced it, and once
@@ -351,8 +292,8 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
   const [cast, setCast] = useState<{
     arriving: FigureId;
     leaving: FigureId | null;
-    swapped: boolean;
-  }>({ arriving: figure, leaving: null, swapped: false });
+    phase: Phase;
+  }>({ arriving: figure, leaving: null, phase: "opening" });
 
   // Adjusted while rendering rather than from an effect. The swap is not a
   // synchronisation with anything outside React, it is the direct consequence
@@ -362,24 +303,23 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
   if (cast.arriving !== figure) {
     setCast({
       arriving: figure,
-      // Under reduced motion the swap is a cut. Nothing is thrown anywhere;
-      // the new figure is simply the one that is there.
+      // Under reduced motion the swap is a cut. Nothing comes apart; the new
+      // figure is simply the one that is there.
       leaving: still ? null : cast.arriving,
-      swapped: !still,
+      phase: still ? "settled" : "arriving",
     });
   }
 
   useEffect(() => {
     if (!cast.leaving) return;
 
-    // Dropped on a timer rather than when its own fall reaches the end,
-    // because the fall is measured in the render loop and a backgrounded tab
-    // does not run one. A figure thrown off screen and then left there would
-    // otherwise still be mounted, and still being drawn, whenever the tab came
-    // back.
+    // Dropped on a timer rather than when its own dispersal reaches the end,
+    // because that is measured in the render loop and a backgrounded tab does
+    // not run one. A figure blown apart and then left there would otherwise
+    // still be mounted, and still being drawn, whenever the tab came back.
     const timer = setTimeout(
       () => setCast((current) => ({ ...current, leaving: null })),
-      EXIT_SECONDS * 1000,
+      DISPERSE_SECONDS * 1000,
     );
 
     return () => clearTimeout(timer);
@@ -390,14 +330,13 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
       {/* A boundary each, not one around the pair. The arriving figure
           suspends on its model, and a boundary shared with the departing one
           would replace both with the fallback: the figure being replaced would
-          vanish on the press instead of falling out of frame. */}
+          vanish on the press instead of coming apart. */}
       {cast.leaving ? (
         <Suspense fallback={null}>
           <Model
             key={cast.leaving}
             url={source(cast.leaving)}
-            entering={false}
-            leaving
+            phase="leaving"
             still={still}
           />
         </Suspense>
@@ -407,8 +346,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
         <Model
           key={cast.arriving}
           url={source(cast.arriving)}
-          entering={cast.swapped}
-          leaving={false}
+          phase={cast.phase}
           still={still}
         />
       </Suspense>
