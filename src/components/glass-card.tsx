@@ -56,10 +56,22 @@ export function GlassCard({ children }: { children: React.ReactNode }) {
        move over it.
 
        The hairline of white on the top edge and the ring around it are the lit
-       edge of a sheet of glass, and the three shadows are the pane's contact
-       with the sky, its thickness, and its own darkness thrown well behind it. */
+       edge of a sheet of glass, and the shadows under them are the pane's
+       contact with the sky, its thickness, and its own darkness thrown behind
+       it.
+
+       They are stacked the way they are because of how little room there is to
+       cast into: the card is held 10px off the top, left and bottom of the
+       window, so everything but the open half of the sky on its right is read
+       in a band about a finger's width wide. A single wide, far thrown shadow
+       spends all of its darkness outside that band and leaves the card looking
+       pasted on, so the near layers do the work of lifting it. The contact
+       line draws the edge, the unoffset halo puts darkness on the left and top
+       as well as below (a shadow thrown straight down has nothing to show in
+       the gutters at the sides), and the two thrown layers carry the weight out
+       into the sky on the right, where there is depth to fall through. */
     <div
-      className="pointer-events-auto relative isolate min-h-0 overflow-hidden rounded-[28px] ring-1 ring-white/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_2px_4px_rgba(3,2,37,0.2),0_36px_80px_-28px_rgba(3,2,37,0.9)]"
+      className="pointer-events-auto relative isolate min-h-0 overflow-hidden rounded-[28px] ring-1 ring-white/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_3px_rgba(3,2,37,0.55),0_0_18px_-2px_rgba(3,2,37,0.5),0_12px_28px_-6px_rgba(3,2,37,0.6),0_40px_80px_-16px_rgba(3,2,37,0.85)]"
       style={{
         backgroundColor: `rgb(255 255 255 / ${fill.toFixed(3)})`,
         backdropFilter: glass,
