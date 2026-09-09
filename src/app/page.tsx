@@ -32,7 +32,7 @@ export default function Home() {
         {/* Horizontally centred but top aligned: the name and the cards sit at
             the head of the card and grow downwards, rather than riding up and
             down with the height of the window. */}
-        <div className="@container pointer-events-auto flex min-h-0 flex-col items-center justify-start overflow-y-auto overscroll-contain rounded-2xl bg-[#f4f4f4] px-4 pt-10 pb-10 sm:px-6 md:px-10 md:pt-12 md:pb-10">
+        <div className="@container pointer-events-auto flex min-h-0 flex-col items-center justify-start overflow-y-auto overscroll-contain rounded-2xl bg-[#f4f4f4] px-4 pt-10 pb-10 shadow-[0_6px_24px_rgba(0,0,0,0.18)] sm:px-6 md:px-10 md:pt-12 md:pb-10">
           {/* The name is set on one line at any width: "Max Winter-Leinweber"
               in Grandstander 700 measures 9.375% of its own font size per
               character of column width, i.e. it exactly fills the column at
