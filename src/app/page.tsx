@@ -1,5 +1,6 @@
 import { Grandstander } from "next/font/google";
 
+import { MannequinViewer } from "@/components/mannequin-viewer";
 import { SaasCards } from "@/components/saas-cards";
 import { SocialCards } from "@/components/social-cards";
 
@@ -7,10 +8,10 @@ const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
 
 export default function Home() {
   return (
-    // Two equal columns from md up: the name and links on the left, the right
-    // half held clear for the 3D model. Narrower than that there is no room to
-    // split the screen, so the left column takes the full width and the empty
-    // right one collapses to nothing.
+    // Two equal columns from md up: the name and the cards on the left, the 3D
+    // model on the right. Narrower than that there is no room to split the
+    // screen, so the left column takes the full width and the model is dropped
+    // rather than squeezed.
     <div className="grid flex-1 grid-cols-1 bg-[#f4f4f4] md:grid-cols-2">
       {/* A query container, so the name below can size itself against this
           column's content box rather than the viewport, and keeps fitting if
@@ -38,8 +39,10 @@ export default function Home() {
           <SaasCards />
         </div>
       </div>
-      {/* Reserved for the 3D model. */}
-      <div className="hidden md:block" />
+      {/* The 3D model. */}
+      <div className="hidden md:block">
+        <MannequinViewer />
+      </div>
     </div>
   );
 }
