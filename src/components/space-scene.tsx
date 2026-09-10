@@ -28,6 +28,7 @@ import {
   type FigureId,
   type ViewId,
 } from "@/lib/figure";
+import { POSES, type PoseId } from "@/lib/poses";
 
 /*
  * The one canvas the whole page sits on. It covers the window rather than a
@@ -191,6 +192,18 @@ export default function SpaceScene() {
   // the placeholder every later one is measured against.
   const [figure, setFigure] = useState<FigureId>(FIGURES[0].id);
 
+  /*
+   * What it is doing, which is kept across a change of figure rather than reset
+   * with it. Switching to a scan and back is then a way of seeing how far the
+   * scan has to go, rather than something that quietly puts the placeholder back
+   * on its feet while nobody is looking.
+   */
+  const [pose, setPose] = useState<PoseId>(POSES[0].id);
+
+  // Whether this figure has a skeleton to pose. A scan does not, so the row is
+  // not offered rather than offered and ignored.
+  const rigged = FIGURES.find((option) => option.id === figure)?.rigged ?? false;
+
   // Bumped on every press so that pressing the active button re-frames rather
   // than doing nothing.
   const [fitId, setFitId] = useState(0);
@@ -247,6 +260,7 @@ export default function SpaceScene() {
           <Suspense fallback={null}>
             <FigureRig
               figure={figure}
+              pose={pose}
               view={view}
               fitId={fitId}
               still={still}
@@ -273,6 +287,33 @@ export default function SpaceScene() {
               // warning, which is about what a four megabyte model needs.
               onPointerEnter={() => warm(option.url)}
               onFocus={() => warm(option.url)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
+      {/* What the figure is doing, down the right hand edge and centred on it,
+          clear of both of the horizontal rows. A column of its own rather than
+          a third row, so the two axes say what they change: across the top and
+          the bottom is which figure and which framing, and down the side is the
+          figure itself. Stretched to a common width so it reads as one column
+          rather than as four buttons that happen to be stacked.
+
+          Only for a figure with a skeleton under it. Nothing here can pose a
+          photogrammetry scan, so on one of those the column is absent rather
+          than present and inert. */}
+      {wide && rigged ? (
+        <div className="pointer-events-none absolute top-1/2 right-8 flex -translate-y-1/2 flex-col items-stretch gap-2">
+          {POSES.map((option) => (
+            <Button
+              key={option.id}
+              variant="ghost"
+              size="sm"
+              className={control(option.id === pose)}
+              aria-pressed={option.id === pose}
+              onClick={() => setPose(option.id)}
             >
               {option.label}
             </Button>

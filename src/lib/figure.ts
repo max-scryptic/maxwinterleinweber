@@ -29,6 +29,19 @@ export const HEIGHT = 1.8;
  * clean export, centred and standing on its own origin, so it needs no shift
  * or rise; it is only turned, because it was captured back to the camera.
  *
+ * rigged says whether the model has a skeleton inside it, which is what decides
+ * whether the pose buttons are offered for it at all. It is stated here rather
+ * than discovered from the file because the buttons are drawn on the canvas,
+ * which is on the page long before three.js has been loaded, let alone a model
+ * opened and looked inside. Getting it wrong costs nothing worse than a row of
+ * buttons that do not do anything: the figure itself reads the real skeleton and
+ * is not fooled by this.
+ *
+ * It is false for both scans, and that is not an oversight. Photogrammetry
+ * produces a single mesh and no bones, and a mesh with no bones cannot be posed
+ * by any amount of code at this end. See `public/models/README.md` for what has
+ * to happen to a scan first.
+ *
  * The first entry is what the page opens on.
  */
 export const FIGURES = [
@@ -39,6 +52,7 @@ export const FIGURES = [
     shift: 0,
     rise: 0,
     yaw: 0,
+    rigged: true,
   },
   {
     id: "scan-01",
@@ -47,6 +61,7 @@ export const FIGURES = [
     shift: 0.13,
     rise: 0.08,
     yaw: (Math.PI * 5) / 4,
+    rigged: false,
   },
   {
     id: "scan-02",
@@ -55,6 +70,7 @@ export const FIGURES = [
     shift: 0,
     rise: 0,
     yaw: Math.PI,
+    rigged: false,
   },
 ] as const;
 
@@ -116,11 +132,17 @@ export type ViewId = View["id"];
  * The aspect passed in is the figure's own column, not the canvas: the canvas
  * covers the whole window, and fitting to that would size the figure as though
  * it had the card's half to spread into as well.
+ *
+ * span is how wide the figure is being made by whatever it is doing, in the same
+ * units as a view's own width, and is taken instead of it when it is the larger.
+ * A view's width describes a figure standing still, so a pose that reaches wider
+ * than that, which is a T pose and nothing else so far, would otherwise be
+ * framed by a number that was never about it.
  */
-export function framing(view: View, aspect: number) {
+export function framing(view: View, aspect: number, span = 0) {
   const halfFov = Math.tan((FOV * Math.PI) / 360);
   const height = (view.top - view.bottom) * HEIGHT * MARGIN;
-  const width = view.width * HEIGHT * MARGIN;
+  const width = Math.max(view.width, span) * HEIGHT * MARGIN;
 
   return {
     focus: ((view.top + view.bottom) / 2) * HEIGHT,
