@@ -39,6 +39,26 @@ npx @gltf-transform/cli optimize raw.glb scan-01.glb \
 
 which brought it to 4.6 MB and 67 MB of VRAM without touching the geometry.
 
+## scan-02.glb
+
+The second scan, and a whole figure this time: arms, legs and feet all present,
+so nothing hangs below it and the bounding box holds a person rather than a
+person and a shard. It stands on its own origin at 1.75 m and is centred within
+a couple of centimetres, so it needs no shift or rise; it carries a half turn
+of yaw because it was exported facing away from the camera.
+
+Like scan-01 it has no skeleton and no animation clips, so it stands still.
+
+Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
+Reduced the same way as scan-01:
+
+```
+npx @gltf-transform/cli optimize raw.glb scan-02.glb \
+  --texture-size 2048 --compress meshopt --simplify false
+```
+
+which brought it to 3.4 MB with all 96,744 triangles intact.
+
 ## Adding another
 
 Drop a `.glb` in this directory and add an entry to `FIGURES`. Nothing else
