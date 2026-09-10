@@ -25,7 +25,9 @@ export const HEIGHT = 1.8;
  * axis differs from the mannequin's, so it otherwise lands slightly left and
  * low while facing the wrong way. Keeping those corrections on the figure
  * leaves every model aligned at the same shared turntable angle through every
- * framing. Yaw is measured in radians about the vertical axis.
+ * framing. Yaw is measured in radians about the vertical axis. Scan 02 is a
+ * clean export, centred and standing on its own origin, so it needs no shift
+ * or rise; it is only turned, because it was captured back to the camera.
  *
  * The first entry is what the page opens on.
  */
@@ -45,6 +47,14 @@ export const FIGURES = [
     shift: 0.13,
     rise: 0.08,
     yaw: (Math.PI * 5) / 4,
+  },
+  {
+    id: "scan-02",
+    label: "Scan 02",
+    url: "/models/scan-02.glb",
+    shift: 0,
+    rise: 0,
+    yaw: Math.PI,
   },
 ] as const;
 
