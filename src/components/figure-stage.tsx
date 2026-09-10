@@ -233,13 +233,16 @@ function Model({
   const { actions, names, mixer } = useAnimations(clips, root);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
-  // the plane through the origin. This runs on the first render, before the
-  // groups below it exist, so the box it measures is the model's own and
-  // carries none of the transforms that are about to be put above it. The
-  // loaded scene graph itself is left untouched, because useGLTF caches and
-  // shares it.
+  // the plane through the origin. The precise bound is important for scans
+  // whose mesh is rotated inside the file: transforming the eight corners of
+  // its local box leaves empty space above and below the actual surface, which
+  // makes the visible figure shorter and leaves its head below the presets.
+  // This runs on the first render, before the groups below it exist, so the box
+  // it measures is the model's own and carries none of the transforms that are
+  // about to be put above it. The loaded scene graph itself is left untouched,
+  // because useGLTF caches and shares it.
   const { scale, offset } = useMemo(() => {
-    const box = new Box3().setFromObject(scene);
+    const box = new Box3().setFromObject(scene, true);
     const size = box.getSize(new Vector3());
     const centre = box.getCenter(new Vector3());
 
