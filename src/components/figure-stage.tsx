@@ -11,7 +11,15 @@ import {
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group, MathUtils, Mesh, SpotLight, Vector3 } from "three";
+import {
+  Box3,
+  Group,
+  MathUtils,
+  Mesh,
+  SpotLight,
+  Vector3,
+  type AnimationAction,
+} from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import {
@@ -28,6 +36,8 @@ import {
   type FigureId,
   type ViewId,
 } from "@/lib/figure";
+import { named, poseClips } from "@/lib/pose-clip";
+import { poseOf, type PoseId } from "@/lib/poses";
 import { sampleSurface } from "@/lib/surface";
 
 /*
@@ -76,6 +86,17 @@ const OPENING_SECONDS = 2.4;
 const GATHER_SECONDS = 1.5;
 const GATHER_DELAY = 0.45;
 const DISPERSE_SECONDS = 1.1;
+
+/*
+ * How long the figure takes to move from one pose into the next.
+ *
+ * A pose change is a blend rather than a cut, and this is short enough to
+ * answer the press immediately while still being a move the eye can follow:
+ * the figure is seen dropping into the squat rather than found already in it,
+ * which is the whole of the joke. Shorter than any of the times above, because
+ * unlike a change of figure this is one body doing one thing.
+ */
+const BLEND_SECONDS = 0.5;
 
 /**
  * Which figures are doing what. A figure is in exactly one of these for the
@@ -141,6 +162,7 @@ function Model({
   shift,
   rise,
   yaw,
+  pose,
   phase,
   still,
 }: {
@@ -148,12 +170,28 @@ function Model({
   shift: number;
   rise: number;
   yaw: number;
+  pose: PoseId;
   phase: Phase;
   still: boolean;
 }) {
   const { scene, animations } = useGLTF(url);
   const root = useRef<Group>(null);
-  const { actions, names, mixer } = useAnimations(animations, root);
+
+  /*
+   * The clips this figure can be asked for: the ones it was exported carrying,
+   * and the poses in `src/lib/poses.ts` built onto its own skeleton.
+   *
+   * Both go into the one mixer, so a pose written by hand and a recording of
+   * somebody standing still are the same kind of thing by the time anything
+   * here has to choose between them, and blending between the two is no
+   * different from blending between two recordings. A model with no skeleton
+   * contributes nothing to the second list and is left with whatever it
+   * arrived with, which for a photogrammetry scan is nothing at all.
+   */
+  const built = useMemo(() => poseClips(scene), [scene]);
+  const clips = useMemo(() => [...animations, ...built], [animations, built]);
+
+  const { actions, names, mixer } = useAnimations(clips, root);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
   // the plane through the origin. This runs on the first render, before the
@@ -201,14 +239,63 @@ function Model({
     });
   }, [scene]);
 
+  /*
+   * Which of those clips the pose being asked for comes down to: the one built
+   * from its own joint rotations, or the one it names in the model, or, if this
+   * model has neither, whatever clip it does have. Failing all three, nothing,
+   * and a scan with no skeleton simply stands there, which it was going to do
+   * anyway.
+   */
+  const clip = useMemo(() => {
+    const wanted = poseOf(pose);
+    const shaped = wanted.frames ? named(wanted.id) : null;
+
+    if (shaped && names.includes(shaped)) return shaped;
+    if (wanted.clip && names.includes(wanted.clip)) return wanted.clip;
+    return names[0];
+  }, [pose, names]);
+
+  // What the figure is holding now, so the next pose has something to blend out
+  // of. A ref rather than state because nothing renders differently for it, and
+  // because the blend below has to see the value the last press left rather than
+  // the one this render was given.
+  const holding = useRef<AnimationAction | null>(null);
+
   useLayoutEffect(() => {
-    // The placeholder carries a set of Mixamo clips. "idle" is the standing
-    // one, which is the only one that suits a figure at rest; any other model
-    // falls back to its first clip, and a model with no clips, which is every
-    // photogrammetry scan, just stands still.
-    const clip = names.includes("idle") ? "idle" : names[0];
     const action = clip ? actions[clip] : undefined;
     if (!action) return;
+
+    const previous = holding.current;
+    holding.current = action;
+
+    /*
+     * Already in this pose and still holding it, so there is nothing to do.
+     *
+     * Asking whether it is running, rather than trusting the ref alone, is what
+     * makes a second run of this repair the first rather than assume it. React
+     * runs an effect, tears it down and runs it again on mount in development,
+     * and the teardown in between is the one belonging to the hook above, which
+     * stops every action on the mixer. Returning on the ref by itself left the
+     * figure stopped in its bind pose with this convinced it was mid idle.
+     */
+    if (previous === action && action.isRunning()) return;
+
+    if (previous && previous !== action && !still) {
+      // Out of the pose it was in and into the new one over the same moment, so
+      // the figure travels between the two rather than being replaced by itself.
+      // Not warped: these clips are of quite different lengths, and stretching a
+      // two second idle onto a one second squat to match them up would slow the
+      // breathing to a halt on the way out of it.
+      //
+      // The outgoing action is faded rather than stopped, and is left running at
+      // no weight afterwards. There are four poses, so that is at most four
+      // silent actions on a mixer that drops all of them together when the
+      // figure leaves the stage. Stopping it here instead would take its own
+      // fade out with it and cut the figure to the new pose on the frame of the
+      // press, which is the thing this is here to avoid.
+      action.reset().play().crossFadeFrom(previous, BLEND_SECONDS, false);
+      return;
+    }
 
     // Straight in at full weight, and the first frame of it written onto the
     // skeleton here rather than at the next tick of the render loop. Until a
@@ -218,13 +305,15 @@ function Model({
     // one. Starting already in the pose the figure is going to hold is what
     // standing there looks like. A layout effect, so this lands before the
     // first painted frame rather than one frame into it.
+    //
+    // Also the whole of a pose change under reduced motion, where a press is
+    // answered with the figure already in the pose rather than with a move into
+    // it. There the outgoing action is stopped outright, because there is no
+    // fade left for it to be doing.
+    previous?.stop();
     action.reset().play();
     mixer.update(0);
-
-    return () => {
-      action.stop();
-    };
-  }, [actions, mixer, names]);
+  }, [actions, mixer, clip, still]);
 
   // The clock has been running since the canvas was created, which is a second
   // or so of loading before this figure exists. Transition progress is
@@ -280,7 +369,15 @@ function Model({
  * figure being replaced has to outlive the press that replaced it, and once
  * the prop has changed the only record of what was showing is here.
  */
-function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
+function Stage({
+  figure,
+  pose,
+  still,
+}: {
+  figure: FigureId;
+  pose: PoseId;
+  still: boolean;
+}) {
   // The turntable belongs to the stage rather than to either model. Both the
   // departing and arriving figures consequently occupy the same angle during
   // a swap, and the next figure continues the exact tempo and position of the
@@ -365,6 +462,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
             shift={leaving.shift}
             rise={leaving.rise}
             yaw={leaving.yaw}
+            pose={pose}
             phase="leaving"
             still={still}
           />
@@ -377,6 +475,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
           shift={arriving.shift}
           rise={arriving.rise}
           yaw={arriving.yaw}
+          pose={pose}
           phase={cast.phase}
           still={still}
         />
@@ -392,7 +491,15 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
  * drei's come from three-stdlib, a fork that predates the target clamping this
  * relies on to keep the figure on screen.
  */
-function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
+function Controls({
+  view,
+  fitId,
+  span,
+}: {
+  view: ViewId;
+  fitId: number;
+  span: number;
+}) {
   const camera = useThree((state) => state.camera);
   const domElement = useThree((state) => state.gl.domElement);
   const size = useThree((state) => state.size);
@@ -468,9 +575,15 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
     // fitId changes on every press, including a press of the button that is
     // already active, so a viewer who has dragged somewhere odd can press it
     // again to be put back.
+    //
+    // span is here so that pressing for a pose the current framing cannot hold
+    // steps the camera back far enough to hold it. It is a number rather than
+    // the pose itself deliberately: every pose but the T pose leaves it at zero,
+    // so moving between the other three does not re-run this and does not take
+    // the camera off wherever the viewer has dragged it to.
     const preset = VIEWS.find((candidate) => candidate.id === view) ?? VIEWS[0];
-    goal.current = framing(preset, (size.width * COLUMN) / size.height);
-  }, [view, fitId, size]);
+    goal.current = framing(preset, (size.width * COLUMN) / size.height, span);
+  }, [view, fitId, size, span]);
 
   useFrame((_, delta) => {
     const orbit = controls.current;
@@ -560,11 +673,13 @@ function Overhead() {
 
 export default function FigureRig({
   figure,
+  pose,
   view,
   fitId,
   still,
 }: {
   figure: FigureId;
+  pose: PoseId;
   view: ViewId;
   fitId: number;
   still: boolean;
@@ -583,8 +698,8 @@ export default function FigureRig({
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
       <Overhead />
 
-      <Stage figure={figure} still={still} />
-      <Controls view={view} fitId={fitId} />
+      <Stage figure={figure} pose={pose} still={still} />
+      <Controls view={view} fitId={fitId} span={poseOf(pose).span ?? 0} />
     </>
   );
 }
