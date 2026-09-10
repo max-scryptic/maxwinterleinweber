@@ -240,18 +240,21 @@ function Model({
   }, [scene]);
 
   /*
-   * Which of those clips the pose being asked for comes down to: the one built
-   * from its own joint rotations, or the one it names in the model, or, if this
-   * model has neither, whatever clip it does have. Failing all three, nothing,
-   * and a scan with no skeleton simply stands there, which it was going to do
-   * anyway.
+   * Which of those clips the pose being asked for comes down to.
+   *
+   * The clip a pose names wins over the shape it describes, for the one pose
+   * that offers both: a model carrying a recording of somebody standing still
+   * should play it rather than hold a standing shape written by hand. A rigged
+   * scan carries no recordings at all, so it takes the shape. Failing both,
+   * whatever clip the model does have, and failing that nothing, which is a
+   * scan with no skeleton standing there as it was going to anyway.
    */
   const clip = useMemo(() => {
     const wanted = poseOf(pose);
     const shaped = wanted.frames ? named(wanted.id) : null;
 
-    if (shaped && names.includes(shaped)) return shaped;
     if (wanted.clip && names.includes(wanted.clip)) return wanted.clip;
+    if (shaped && names.includes(shaped)) return shaped;
     return names[0];
   }, [pose, names]);
 

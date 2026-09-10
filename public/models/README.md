@@ -58,14 +58,37 @@ which brought it to 4.6 MB and 67 MB of VRAM without touching the geometry.
 The second scan, and a whole figure this time: arms, legs and feet all present,
 so nothing hangs below it and the bounding box holds a person rather than a
 person and a shard. It stands on its own origin at 1.75 m and is centred within
-a couple of centimetres, so it needs no shift or rise; it carries a half turn
-of yaw because it was exported facing away from the camera.
+a couple of centimetres, so it needs no shift or rise.
 
-Like scan-01 it has no skeleton and no animation clips, so it stands still. It
-is a whole figure, though, which makes it the first one that could be sent
-through an auto rigger and come back able to move. What is against it is the
-capture pose: it was scanned with its arms close to its sides, and that is the
-one thing an auto rigger cannot work around. See below.
+**It is rigged**, which makes it the first scan here that can be posed. Twenty
+seven joints on Mixamo's naming, fitted to the mesh and weighted by Blender's
+bone heat solver by `scripts/rig-scan.py`, then rebound in a T-pose so that the
+poses apply to it. It carries no animation clips, because an auto rigger does
+not produce any, so its Default is the standing shape written in `POSES` rather
+than a recording.
+
+It also no longer carries the half turn of yaw it used to. It was captured back
+to the camera; rigging it was the moment to turn the export round instead, since
+a mesh, a skeleton and a set of poses that disagree about which way the figure
+is facing is a thing to correct once, in the file.
+
+What was against it, and still shows, is the capture pose. Measured across the
+body before rigging, the arms were in contact with the torso for the whole
+length of the upper arm: no gap at all from the armpit at 1.30 m down to about
+1.15 m, one centimetre at the elbow, and only five or six by the wrist.
+Shoulders are 49 cm across and the widest the figure got was 70 cm, which was
+the arms, hanging.
+
+A rigger works out which vertices belong to which limb by where they are, so an
+upper arm sharing a surface with the ribs gets weighted to both. The rig came
+out usable. What it did not come out with is an armpit that survives the arm
+being lifted: swinging the arms up to a T drags the near side of the chest
+about 3 cm with them, and 10 cm at the worst vertex, which is visible as a smear
+across the shoulder in the T-pose and the squat. Everything below the ribs, and
+the head, is untouched.
+
+Re-capturing in an A-pose is a great deal less work than repairing that, and is
+the one thing to get right for the next one.
 
 Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
 Reduced the same way as scan-01:
@@ -99,9 +122,20 @@ the same kind of thing:
   than baked against one particular body, they apply unchanged to any other rig
   that has been through the same rigger.
 
-The second is what makes rigging a scan worth doing. The moment a scan comes
-back with a Mixamo skeleton in it, every pose already written applies to it, and
-the only change here is `rigged: true` on its entry in `FIGURES`.
+The second is what makes rigging a scan worth doing. A scan that comes back with
+a Mixamo skeleton in it needs `rigged: true` on its entry in `FIGURES` and
+nothing else, and every pose already written applies to it.
+
+With one condition, which is easy to meet and quietly fatal to miss: **the rig
+has to be bound in a T-pose.** A pose here is a rotation *from* where a joint
+rests, not an instruction to point it somewhere absolute, which is what lets the
+same squat sit rigs of different proportions. Legs are unaffected either way,
+because a leg rests hanging down whatever the capture pose was. Arms are not.
+`LeftArm: { x: -66, z: -76 }` means "down out of the T and forward", and applied
+to a rig bound with its arms already down it means "down another 76 degrees",
+which puts the arm through the ribs. So bind in a T and the arm poses are right;
+bind in an A-pose and they are not. The step that guarantees it is in
+[Rigging a scan](#rigging-a-scan) below.
 
 Two things the poses do not have to state, because `src/lib/pose-clip.ts` solves
 them against whatever skeleton it is handed. How far the hips drop, which is a
@@ -115,8 +149,19 @@ numbers touched.
 
 ### Rigging a scan
 
-The path that needs no software licence is Mixamo's auto rigger
-(https://www.mixamo.com, free with an Adobe account). Upload the mesh, drop
+There are two ways to do this. `scripts/rig-scan.py` is the one that produced
+scan-02: it fits the skeleton by measuring the mesh, hands the weighting to
+Blender's own bone heat solver, and rebinds in a T, all without a browser or an
+account. Read its docstring; it is one command either side of a gltf-transform
+decode and re-compress.
+
+The rest of this section is the path to reach for on a scan captured properly,
+which is Mixamo's, because a person placing six markers by eye will beat a
+script measuring silhouettes on a figure whose limbs are where a rigger expects
+them.
+
+Mixamo's auto rigger is at https://www.mixamo.com, free with an Adobe
+account. Upload the mesh, drop
 markers on the chin, wrists, elbows, knees and groin, and it hands back a
 skinned FBX with a `mixamorig:` skeleton. Blender imports that and exports glTF,
 and then it is compressed like any other model here.
@@ -137,10 +182,22 @@ so it is worth getting the scan right first:
 - **Keep the textures out of it.** Rig the bare geometry, and let Blender put
   the material back on the skinned mesh afterwards.
 
-Then, converting and compressing:
+Then, in Blender, the step that makes the arm poses land:
+
+1. On Mixamo, with the rigged character selected, pick **T-Pose** from the
+   animation list and download it as FBX.
+2. Import that into Blender alongside the rigged mesh.
+3. Select the armature, go into Pose mode, and **Pose > Apply > Apply Pose as
+   Rest Pose**.
+
+That rebinds the skeleton so the T is what the rig rests in, which is the
+condition the arm poses need. Skipping it is not an error anyone will see at
+import: the model looks fine, and then Squat folds its arms through its chest.
+
+Then export and compress:
 
 ```
-# in Blender: import the rigged FBX, export glTF Binary, +Y up
+# in Blender: export glTF Binary, +Y up, with Skinning ticked
 npx @gltf-transform/cli optimize raw.glb scan-03.glb \
   --texture-size 2048 --compress meshopt --simplify false
 ```

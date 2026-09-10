@@ -37,10 +37,11 @@ export const HEIGHT = 1.8;
  * buttons that do not do anything: the figure itself reads the real skeleton and
  * is not fooled by this.
  *
- * It is false for both scans, and that is not an oversight. Photogrammetry
- * produces a single mesh and no bones, and a mesh with no bones cannot be posed
- * by any amount of code at this end. See `public/models/README.md` for what has
- * to happen to a scan first.
+ * It is false for scan-01, and that is not an oversight. Photogrammetry produces
+ * a single mesh and no bones, and a mesh with no bones cannot be posed by any
+ * amount of code at this end; that scan has no limbs to rig either. Scan 02 has
+ * been through `scripts/rig-scan.py` and has a skeleton in it. See
+ * `public/models/README.md`.
  *
  * The first entry is what the page opens on.
  */
@@ -69,8 +70,12 @@ export const FIGURES = [
     url: "/models/scan-02.glb",
     shift: 0,
     rise: 0,
-    yaw: Math.PI,
-    rigged: false,
+    // No yaw any more. It used to carry a half turn because it was captured
+    // back to the camera, and rigging it was the moment to turn the export
+    // round instead: a rig, a mesh and a set of poses that disagree about which
+    // way the figure faces is a thing to be corrected once, in the file.
+    yaw: 0,
+    rigged: true,
   },
 ] as const;
 

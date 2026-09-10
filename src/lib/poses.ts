@@ -18,9 +18,12 @@
  *
  * None of this can make an unrigged model move. A pose is a set of instructions
  * for a skeleton, and a scan exported straight out of photogrammetry is a
- * single mesh with no skeleton to give them to. What it does mean is that the
- * moment a scan comes back from an auto rigger, every pose here already applies
- * to it, without a single number being retuned. See `public/models/README.md`.
+ * single mesh with no skeleton to give them to. What it does mean is that a scan
+ * that comes back from an auto rigger needs no number here retuned, provided it
+ * comes back bound in a T-pose: every rotation below is measured from where a
+ * joint rests, so a rig bound with its arms already down takes the arm poses a
+ * second time and folds them through its own chest. Legs are indifferent to it,
+ * resting hanging down either way. See `public/models/README.md`.
  */
 
 /*
@@ -152,6 +155,25 @@ function hand(side: "Left" | "Right"): Shape {
 }
 
 const HANDS: Shape = { ...hand("Left"), ...hand("Right") };
+
+/*
+ * Standing there, which is only a pose worth writing because of what a rigged
+ * scan arrives as.
+ *
+ * The placeholder has a recording of somebody standing still and uses that. A
+ * scan that has been through an auto rigger has no clips at all, and it rests in
+ * the T it had to be bound in, so without this its Default would be the T pose
+ * under another name. Arms down, elbows soft, and nothing else: the scan's own
+ * stance, the width of its feet and the set of its shoulders, is already in the
+ * rig and does not want overriding.
+ */
+const STAND: Shape = {
+  ...HANDS,
+  LeftArm: { x: -6, z: -81 },
+  LeftForeArm: { y: -14 },
+  RightArm: { x: -6, z: 81 },
+  RightForeArm: { y: 14 },
+};
 
 /*
  * Sitting into a deep squat: thighs down past horizontal, knees bent under and
@@ -300,7 +322,18 @@ const MOONWALK: readonly Frame[] = [
  * it. Asking for it is asking for nothing to be applied.
  */
 export const POSES = [
-  { id: "default", label: "Default", clip: "idle" },
+  /*
+   * Two ways of standing there, and the model decides which it gets. A model
+   * carrying `idle` plays it, because a recording of a person standing still
+   * beats anything written by hand. A rigged scan, which carries no clips,
+   * falls back to the shape.
+   */
+  {
+    id: "default",
+    label: "Default",
+    clip: "idle",
+    frames: [{ at: 0, shape: STAND }],
+  },
   /*
    * The span is the one number a T pose needs and no other pose does. Arms
    * straight out is the widest a figure gets, and a standing person is about as
@@ -308,12 +341,15 @@ export const POSES = [
    * this page old enough to be named after Vitruvius. Without it the hands are
    * cropped off the side of the window for about a fifth of every turn, which
    * is exactly long enough to notice and to be unable to say why.
+   *
+   * Measured, the placeholder spans 0.955 of its height and the scan 0.996, so
+   * the ratio Vitruvius gives is both the rounder number and the safer one.
    */
   {
     id: "t-pose",
     label: "T-pose",
     frames: [{ at: 0, shape: {} }],
-    span: 0.96,
+    span: 1.0,
   },
   { id: "squat", label: "Squat", frames: [{ at: 0, shape: SQUAT }] },
   { id: "moonwalk", label: "Moonwalk", frames: MOONWALK },
