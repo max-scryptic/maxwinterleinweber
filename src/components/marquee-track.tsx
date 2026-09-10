@@ -48,13 +48,18 @@ import * as React from "react";
 /*
  * How long the row takes to come to rest once it starts slowing, and the bounds
  * on the stretch before that. The stretch is the margin the fault needs: any
- * frame shorter than it is hidden completely. It is not guessed, it is measured
- * (see below), so these are only the ends of the range it is allowed to take.
- * The floor is about two frames on a healthy display, and the ceiling is far
- * past any frame a page in real trouble has.
+ * frame shorter than it is hidden completely. It is measured (see below), then
+ * kept within a range that filters brief pointer passes at the low end and
+ * still covers a page in real trouble at the high end.
  */
 const SETTLE = 350;
-const MIN_COAST = 120;
+/*
+ * A short pass across the row should not leave a stop-and-start ripple behind
+ * it. 300ms is long enough to distinguish a pointer crossing the row from one
+ * that has settled over a link, while still bringing an intentional hover to
+ * rest in under a second.
+ */
+const MIN_COAST = 300;
 const MAX_COAST = 2000;
 
 // Off full speed to nothing, and back, each starting the way the other one
@@ -185,6 +190,18 @@ export function MarqueeTrack({
         live.animation.cancel();
         ramp.current = null;
         restore(track, live.from + track.speed * (now - live.anchor), now);
+      } else if (!live.stopping && wanted && now < live.coastEnds) {
+        /*
+         * The reverse case is just as important. A pointer can leave a held
+         * row and return before its stationary coast ends. Keep the row at the
+         * same resting frame instead of allowing the queued start to run and
+         * then scheduling another stop behind it.
+         */
+        const animation = restAt(track, live.from);
+        live.animation.cancel();
+        track.marquee.cancel();
+        ramp.current = null;
+        resting.current = { at: live.from, animation };
       }
       return;
     }
@@ -219,11 +236,33 @@ export function MarqueeTrack({
       onPointerEnter={() => hold("pointer", true)}
       onPointerLeave={() => hold("pointer", false)}
       onPointerCancel={() => hold("pointer", false)}
-      onFocus={() => hold("focus", true)}
-      onBlur={() => hold("focus", false)}
+      onFocus={(event) => {
+        // React focus events bubble. Moving between two links in this list is
+        // not a new visit to the list and must not restart its animation.
+        if (!contains(event.currentTarget, event.relatedTarget)) {
+          hold("focus", true);
+        }
+      }}
+      onBlur={(event) => {
+        if (!contains(event.currentTarget, event.relatedTarget)) {
+          hold("focus", false);
+        }
+      }}
     >
       {children}
     </ul>
+  );
+}
+
+function contains(container: HTMLElement, target: EventTarget | null) {
+  return target instanceof Node && container.contains(target);
+}
+
+/** Hold one exact frame above the marquee until movement is wanted again. */
+function restAt(track: Track, at: number) {
+  return track.el.animate(
+    [{ transform: `translateX(${at}%)` }],
+    { duration: 0, fill: "both", composite: "replace" },
   );
 }
 
