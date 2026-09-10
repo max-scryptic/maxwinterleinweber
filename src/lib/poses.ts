@@ -18,9 +18,12 @@
  *
  * None of this can make an unrigged model move. A pose is a set of instructions
  * for a skeleton, and a scan exported straight out of photogrammetry is a
- * single mesh with no skeleton to give them to. What it does mean is that the
- * moment a scan comes back from an auto rigger, every pose here already applies
- * to it, without a single number being retuned. See `public/models/README.md`.
+ * single mesh with no skeleton to give them to. What it does mean is that a scan
+ * that comes back from an auto rigger needs no number here retuned, provided it
+ * comes back bound in a T-pose: every rotation below is measured from where a
+ * joint rests, so a rig bound with its arms already down takes the arm poses a
+ * second time and folds them through its own chest. Legs are indifferent to it,
+ * resting hanging down either way. See `public/models/README.md`.
  */
 
 /*
