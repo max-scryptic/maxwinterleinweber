@@ -11,7 +11,7 @@ import {
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
+import { Box3, Group, MathUtils, Mesh, SpotLight, Vector3 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import {
@@ -501,6 +501,63 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
   return null;
 }
 
+/*
+ * The light hung above the stage.
+ *
+ * A spot rather than a bare point source, so it arrives as a cone aimed down
+ * the figure instead of spilling evenly in every direction: the head and
+ * shoulders take the hot middle of it and it falls away towards the feet, which
+ * is what something lit from above looks like. Being a cone is also what lets it
+ * be this bright without flattening the figure, since none of it goes anywhere
+ * except onto the figure.
+ *
+ * Hung forward of the figure and off to one side rather than straight overhead,
+ * where it would light the top of the head and leave the face in shadow. It
+ * sits on the same side as the warm key below, so the two agree about where the
+ * light in this scene is coming from.
+ */
+const OVERHEAD = [-1.3, HEIGHT * 2.05, 1.5] as const;
+
+// What it is pointed at: the middle of the chest, a little above the halfway
+// mark, so the brightest part of the cone lands on the part of the figure the
+// framings are usually centred on.
+const AIM = [0, HEIGHT * 0.55, 0] as const;
+
+function Overhead() {
+  const light = useRef<SpotLight>(null);
+
+  // A spot light aims at a target object that three keeps beside the light
+  // rather than inside it, and that by default is never added to the scene at
+  // all. Nothing is going to compute a world matrix for an object that is not
+  // in the graph, so it is written here, once, before the first frame.
+  useLayoutEffect(() => {
+    const spot = light.current;
+    if (!spot) return;
+
+    spot.target.position.set(...AIM);
+    spot.target.updateMatrixWorld();
+  }, []);
+
+  return (
+    <spotLight
+      ref={light}
+      position={OVERHEAD}
+      // Wide enough to hold the whole figure at every framing, with the feet
+      // well inside it: the edge of the cone is never a line drawn across the
+      // model. The penumbra is what does the visible work, taking the light
+      // down gradually over most of that width rather than at the rim.
+      angle={0.52}
+      penumbra={0.75}
+      intensity={44}
+      // Inverse square falloff, cut off far enough out that the window three
+      // applies at the limit takes nothing off the figure itself.
+      distance={12}
+      decay={2}
+      color="#fff1dc"
+    />
+  );
+}
+
 export default function FigureRig({
   figure,
   view,
@@ -517,21 +574,14 @@ export default function FigureRig({
       {/* The figure is the only lit thing in the scene: the sky and the stars
           draw themselves. A warm key from the front left, a violet fill from
           the opposite side so the shadowed half picks up the colour of the
-          cloud it is floating in rather than going black, a warm point source
-          above the stage to cast light down across the figure, and a cool rim
-          from behind to hold the silhouette off a background of a similar
-          value. */}
+          cloud it is floating in rather than going black, a warm spot hung
+          above the stage and aimed down at the figure, and a cool rim from
+          behind to hold the silhouette off a background of a similar value. */}
       <ambientLight intensity={0.5} color="#b9a8f0" />
       <directionalLight position={[3, 4, 4]} intensity={2.6} color="#fff4ea" />
       <directionalLight position={[-4, 2, -1]} intensity={0.9} color="#7b5ad6" />
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
-      <pointLight
-        position={[-1.4, HEIGHT * 1.9, 1.6]}
-        intensity={14}
-        distance={8}
-        decay={2}
-        color="#fff1dc"
-      />
+      <Overhead />
 
       <Stage figure={figure} still={still} />
       <Controls view={view} fitId={fitId} />
