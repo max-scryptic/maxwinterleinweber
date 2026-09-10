@@ -6,8 +6,8 @@ on.
 
 The column down the right hand side switches between poses instead, and is only
 there for a model with a skeleton in it. See [Making one move](#making-one-move)
-below, which is also where the answer to "why can the mannequin do that and the
-scans cannot" lives.
+below, which is also where the answer to "why can the mannequin do that and a
+raw scan cannot" lives.
 
 ## mannequin.glb
 
@@ -58,19 +58,40 @@ which brought it to 4.6 MB and 67 MB of VRAM without touching the geometry.
 The second scan, and a whole figure this time: arms, legs and feet all present,
 so nothing hangs below it and the bounding box holds a person rather than a
 person and a shard. It stands on its own origin at 1.75 m and is centred within
-a couple of centimetres, so it needs no shift or rise.
+a couple of centimetres, so it needs no shift or rise; it carries a half turn
+of yaw because it was exported facing away from the camera.
 
-**It is rigged**, which makes it the first scan here that can be posed. Twenty
-seven joints on Mixamo's naming, fitted to the mesh and weighted by Blender's
-bone heat solver by `scripts/rig-scan.py`, then rebound in a T-pose so that the
-poses apply to it. It carries no animation clips, because an auto rigger does
-not produce any, so its Default is the standing shape written in `POSES` rather
-than a recording.
+Like scan-01 it has no skeleton and no animation clips, so it stands still. This
+is the capture as it came back, and it stays that way: `scan-03.glb` is the same
+mesh rigged, and keeping both means the rig can be redone, or thrown away,
+against something that is still the original.
 
-It also no longer carries the half turn of yaw it used to. It was captured back
-to the camera; rigging it was the moment to turn the export round instead, since
-a mesh, a skeleton and a set of poses that disagree about which way the figure
-is facing is a thing to correct once, in the file.
+Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
+Reduced the same way as scan-01:
+
+```
+npx @gltf-transform/cli optimize raw.glb scan-02.glb \
+  --texture-size 2048 --compress meshopt --simplify false
+```
+
+which brought it to 3.4 MB with all 96,744 triangles intact.
+
+## scan-03.glb
+
+Not a third capture. It is scan-02's mesh with a skeleton in it, which makes it
+the first scan here that can be posed, and it sits beside the raw one rather
+than replacing it so that both are on the page to compare.
+
+**It is rigged.** Twenty seven joints on Mixamo's naming, fitted to the mesh and
+weighted by Blender's bone heat solver by `scripts/rig-scan.py`, then rebound in
+a T-pose so that the poses apply to it. It carries no animation clips, because
+an auto rigger does not produce any, so its Default is the standing shape
+written in `POSES` rather than a recording.
+
+It also carries no yaw, where scan-02 needs a half turn. Rigging it was the
+moment to turn the export round instead, since a mesh, a skeleton and a set of
+poses that disagree about which way the figure is facing is a thing to correct
+once, in the file.
 
 What was against it, and still shows, is the capture pose. Measured across the
 body before rigging, the arms were in contact with the torso for the whole
@@ -90,15 +111,8 @@ the head, is untouched.
 Re-capturing in an A-pose is a great deal less work than repairing that, and is
 the one thing to get right for the next one.
 
-Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
-Reduced the same way as scan-01:
-
-```
-npx @gltf-transform/cli optimize raw.glb scan-02.glb \
-  --texture-size 2048 --compress meshopt --simplify false
-```
-
-which brought it to 3.4 MB with all 96,744 triangles intact.
+3.39 MB against the raw mesh's 3.36: a skeleton and its weights are a rounding
+error next to two 2048px textures.
 
 ## Making one move
 
@@ -106,7 +120,8 @@ A figure moves because something is turning its joints. A model with no joints
 has nothing to turn, and no amount of code at this end invents them: posing a
 photogrammetry scan is a thing that happens to the file, before it ever reaches
 this directory. That is the whole of why the pose column is missing on the two
-scans and present on the placeholder.
+raw scans and present on the placeholder and on scan-03, which is one of those
+scans after the thing had happened to it.
 
 Given a skeleton, there are two ways to drive it, and the viewer treats them as
 the same kind of thing:
@@ -150,10 +165,12 @@ numbers touched.
 ### Rigging a scan
 
 There are two ways to do this. `scripts/rig-scan.py` is the one that produced
-scan-02: it fits the skeleton by measuring the mesh, hands the weighting to
-Blender's own bone heat solver, and rebinds in a T, all without a browser or an
-account. Read its docstring; it is one command either side of a gltf-transform
-decode and re-compress.
+scan-03 out of scan-02: it fits the skeleton by measuring the mesh, hands the
+weighting to Blender's own bone heat solver, and rebinds in a T, all without a
+browser or an account. Read its docstring; it is one command either side of a
+gltf-transform decode and re-compress. Write the result out beside the scan
+under the next number rather than over it, as scan-03 is: a rig can be redone,
+and a capture cannot.
 
 The rest of this section is the path to reach for on a scan captured properly,
 which is Mixamo's, because a person placing six markers by eye will beat a
@@ -170,10 +187,11 @@ Almost everything that goes wrong goes wrong at the capture, not at the rigger,
 so it is worth getting the scan right first:
 
 - **Capture in an A-pose, arms well clear of the torso.** This is the one that
-  matters, and it is why scan-02 is not already rigged. An auto rigger works out
-  which vertices belong to which limb by their position, so a forearm resting
-  against a hip is a forearm that welds itself to the hip, and every pose after
-  that drags the body with the arm. Feet apart, palms visible, elbows out.
+  matters, and it is what scan-02 got wrong and scan-03 still shows. An auto
+  rigger works out which vertices belong to which limb by their position, so a
+  forearm resting against a hip is a forearm that welds itself to the hip, and
+  every pose after that drags the body with the arm. Feet apart, palms visible,
+  elbows out.
 - **One mesh, closed, with all four limbs.** Holes and floating shards confuse
   the weighting. Scan-01 fails this before anything else does.
 - **Decimate before uploading, not after.** Mixamo has an upload limit, and
@@ -198,7 +216,7 @@ Then export and compress:
 
 ```
 # in Blender: export glTF Binary, +Y up, with Skinning ticked
-npx @gltf-transform/cli optimize raw.glb scan-03.glb \
+npx @gltf-transform/cli optimize raw.glb scan-04.glb \
   --texture-size 2048 --compress meshopt --simplify false
 ```
 

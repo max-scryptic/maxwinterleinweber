@@ -200,8 +200,8 @@ export default function SpaceScene() {
    */
   const [pose, setPose] = useState<PoseId>(POSES[0].id);
 
-  // Whether this figure has a skeleton to pose. A scan does not, so the row is
-  // not offered rather than offered and ignored.
+  // Whether this figure has a skeleton to pose. A scan does not until it has
+  // been rigged, so the row is not offered rather than offered and ignored.
   const rigged = FIGURES.find((option) => option.id === figure)?.rigged ?? false;
 
   // Bumped on every press so that pressing the active button re-frames rather
@@ -302,8 +302,8 @@ export default function SpaceScene() {
           rather than as four buttons that happen to be stacked.
 
           Only for a figure with a skeleton under it. Nothing here can pose a
-          photogrammetry scan, so on one of those the column is absent rather
-          than present and inert. */}
+          photogrammetry scan that has not been rigged, so on one of those the
+          column is absent rather than present and inert. */}
       {wide && rigged ? (
         <div className="pointer-events-none absolute top-1/2 right-8 flex -translate-y-1/2 flex-col items-stretch gap-2">
           {POSES.map((option) => (
