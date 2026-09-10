@@ -150,13 +150,16 @@ function Model({
   const { actions, names, mixer } = useAnimations(animations, root);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
-  // the plane through the origin. This runs on the first render, before the
-  // groups below it exist, so the box it measures is the model's own and
-  // carries none of the transforms that are about to be put above it. The
-  // loaded scene graph itself is left untouched, because useGLTF caches and
-  // shares it.
+  // the plane through the origin. The precise bound is important for scans
+  // whose mesh is rotated inside the file: transforming the eight corners of
+  // its local box leaves empty space above and below the actual surface, which
+  // makes the visible figure shorter and leaves its head below the presets.
+  // This runs on the first render, before the groups below it exist, so the box
+  // it measures is the model's own and carries none of the transforms that are
+  // about to be put above it. The loaded scene graph itself is left untouched,
+  // because useGLTF caches and shares it.
   const { scale, offset } = useMemo(() => {
-    const box = new Box3().setFromObject(scene);
+    const box = new Box3().setFromObject(scene, true);
     const size = box.getSize(new Vector3());
     const centre = box.getCenter(new Vector3());
 
@@ -221,21 +224,36 @@ function Model({
   }, [actions, mixer, names]);
 
   // The clock has been running since the canvas was created, which is a second
-  // or so of loading before this figure exists. Everything below is measured
-  // from the first frame it is actually drawn on instead, so that a figure
-  // whose model was slow to arrive still gets the whole of its entrance.
+  // or so of loading before this figure exists. The lifetime is measured from
+  // the first frame it is actually drawn on, so its turn and drift remain
+  // continuous for as long as this instance stays on stage.
   const born = useRef<number | null>(null);
+
+  // A figure can change phase without changing instance: the settled arrival
+  // becomes the departure on the next selection. Keep a separate clock for
+  // that phase so its dispersal starts at zero without resetting the lifetime
+  // clock, and therefore without resetting where the figure has turned or
+  // drifted to.
+  const phaseStarted = useRef<number | null>(null);
+  const previousPhase = useRef(phase);
 
   useFrame((state, delta) => {
     const spin = root.current;
     if (!spin) return;
 
-    if (born.current === null) born.current = state.clock.elapsedTime;
-    const age = state.clock.elapsedTime - born.current;
+    const now = state.clock.elapsedTime;
+    if (born.current === null) born.current = now;
+    if (phaseStarted.current === null || previousPhase.current !== phase) {
+      phaseStarted.current = now;
+      previousPhase.current = phase;
+    }
+
+    const age = now - born.current;
+    const phaseAge = now - phaseStarted.current;
 
     // Under reduced motion there is no change to be part way through: the
     // figure is simply whole, and the cloud is never built or drawn.
-    const at = still ? SETTLED : progress(phase, age);
+    const at = still ? SETTLED : progress(phase, phaseAge);
     transition.current.form.value = at.form;
     transition.current.fade.value = at.fade;
     transition.current.solid.value = at.solid;
@@ -332,7 +350,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
           would replace both with the fallback: the figure being replaced would
           vanish on the press instead of coming apart. */}
       {cast.leaving ? (
-        <Suspense fallback={null}>
+        <Suspense key={cast.leaving} fallback={null}>
           <Model
             key={cast.leaving}
             url={source(cast.leaving)}
@@ -342,7 +360,7 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
         </Suspense>
       ) : null}
 
-      <Suspense fallback={null}>
+      <Suspense key={cast.arriving} fallback={null}>
         <Model
           key={cast.arriving}
           url={source(cast.arriving)}
