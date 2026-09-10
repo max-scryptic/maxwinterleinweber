@@ -3,7 +3,8 @@
 Fit a Mixamo-named skeleton to a photogrammetry scan, weight it, and rebind it
 in a T-pose, so that the poses in src/lib/poses.ts apply to it.
 
-This is what produced the skeleton in public/models/scan-02.glb. It exists
+This is what produced public/models/scan-03.glb out of scan-02.glb, which is
+the same capture and is kept unrigged beside it. It exists
 because Mixamo's auto rigger, which is what public/models/README.md recommends
 and what anyone should reach for first, wants an Adobe account and six markers
 placed by hand in a browser. This does the same three jobs without one: it works

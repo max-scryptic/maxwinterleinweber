@@ -25,9 +25,11 @@ export const HEIGHT = 1.8;
  * axis differs from the mannequin's, so it otherwise lands slightly left and
  * low while facing the wrong way. Keeping those corrections on the figure
  * leaves every model aligned at the same shared turntable angle through every
- * framing. Yaw is measured in radians about the vertical axis. Scan 02 is a
- * clean export, centred and standing on its own origin, so it needs no shift
- * or rise; it is only turned, because it was captured back to the camera.
+ * framing. Yaw is measured in radians about the vertical axis. Scans 02 and 03
+ * are the same capture, a clean export centred and standing on its own origin,
+ * so neither needs a shift or a rise. Scan 02 is turned here, because it was
+ * captured back to the camera. Scan 03 is not, because rigging it was the moment
+ * to turn the export round instead.
  *
  * rigged says whether the model has a skeleton inside it, which is what decides
  * whether the pose buttons are offered for it at all. It is stated here rather
@@ -37,10 +39,12 @@ export const HEIGHT = 1.8;
  * buttons that do not do anything: the figure itself reads the real skeleton and
  * is not fooled by this.
  *
- * It is false for scan-01, and that is not an oversight. Photogrammetry produces
- * a single mesh and no bones, and a mesh with no bones cannot be posed by any
- * amount of code at this end; that scan has no limbs to rig either. Scan 02 has
- * been through `scripts/rig-scan.py` and has a skeleton in it. See
+ * It is false for both of the raw scans, and that is not an oversight.
+ * Photogrammetry produces a single mesh and no bones, and a mesh with no bones
+ * cannot be posed by any amount of code at this end; scan-01 has no limbs to rig
+ * either. Scan 03 is scan 02's mesh after `scripts/rig-scan.py`, which is where
+ * its skeleton came from, and is why the same capture appears twice: the rig is
+ * worth having and is not worth losing the untouched scan to. See
  * `public/models/README.md`.
  *
  * The first entry is what the page opens on.
@@ -70,10 +74,19 @@ export const FIGURES = [
     url: "/models/scan-02.glb",
     shift: 0,
     rise: 0,
-    // No yaw any more. It used to carry a half turn because it was captured
-    // back to the camera, and rigging it was the moment to turn the export
-    // round instead: a rig, a mesh and a set of poses that disagree about which
-    // way the figure faces is a thing to be corrected once, in the file.
+    yaw: Math.PI,
+    rigged: false,
+  },
+  {
+    id: "scan-03",
+    label: "Scan 03",
+    url: "/models/scan-03.glb",
+    shift: 0,
+    rise: 0,
+    // No yaw. The mesh is scan 02's, which was captured back to the camera, and
+    // rigging it was the moment to turn the export round instead: a rig, a mesh
+    // and a set of poses that disagree about which way the figure faces is a
+    // thing to be corrected once, in the file.
     yaw: 0,
     rigged: true,
   },
