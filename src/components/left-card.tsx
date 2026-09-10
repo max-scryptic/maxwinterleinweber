@@ -64,12 +64,14 @@ export function LeftCard() {
       <div className="mt-16 w-full md:mt-20">
         {/* Cut into the glass the same way the name is, and for the same
             reason: it sits on bare glass with the cloud swinging behind it, so
-            it needs the hairlines to hold an edge. Sized at about half the
-            name, which puts it clearly under the name and clearly over the
-            titles on the cards below, and tracked a little wider because
-            Orbitron's counters close up as it comes down in size. */}
+            it needs the hairlines to hold an edge. Sized at about three fifths
+            of the name, which keeps it clearly under the name while carrying
+            more weight over the titles on the cards below, and tracked a little
+            wider because Orbitron's counters close up as it comes down in size.
+            Even at the cap the line is nowhere near the width of the column:
+            eleven characters against the name's twenty. */}
         <h2
-          className={`${orbitron.className} mb-5 text-center text-[min(2rem,3.6cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-6`}
+          className={`${orbitron.className} mb-5 text-center text-[min(2.4rem,4.3cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-6`}
           style={{ textShadow: ETCHED }}
         >
           SaaS Builds
