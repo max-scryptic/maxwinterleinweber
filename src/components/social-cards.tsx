@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import carved from "@/components/carved.module.css";
+import { MarqueeTrack } from "@/components/marquee-track";
 import { Card, CardContent } from "@/components/ui/card";
 
 /*
@@ -235,19 +236,23 @@ export function SocialCards() {
           would leave every copy of the row one space short of the step the loop
           takes and show a stutter at the seam. Held still while a pointer is on
           it or a card in it has the keyboard, since a link that is walking away
-          from the cursor is a link that is hard to click.
+          from the cursor is a link that is hard to click. That holding is the
+          one thing here done in script rather than in the cascade, and the note
+          on MarqueeTrack is why: stopping a compositor driven animation from
+          the main thread stops it on a frame the main thread has already left
+          behind, which throws the row backwards by however long that frame was.
 
           For anyone who has asked for less motion the track stops being a track
           at all: it wraps, centres and spaces itself the way the row did before
           it moved, and the repeats below drop out. */}
-      <ul
+      <MarqueeTrack
         // Every rule that shapes the moving track is asked for under
         // motion-safe and every rule that shapes the still one under
         // motion-reduce, so the two never both apply and neither has to win an
         // ordering argument with the other. Sliding a line of text under a mask
         // is worth a layer of its own: without one the row is repainted every
         // frame across the whole width of the column.
-        className="flex motion-safe:w-max motion-safe:animate-marquee motion-safe:[will-change:transform] motion-safe:hover:[animation-play-state:paused] motion-safe:focus-within:[animation-play-state:paused] motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-2"
+        className="flex motion-safe:w-max motion-safe:animate-marquee motion-safe:[will-change:transform] motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-2"
       >
         {Array.from({ length: COPIES }, (_, copy) =>
           links.map((link) => (
@@ -264,7 +269,7 @@ export function SocialCards() {
             </li>
           )),
         )}
-      </ul>
+      </MarqueeTrack>
     </div>
   );
 }
