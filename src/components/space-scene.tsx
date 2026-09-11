@@ -80,7 +80,7 @@ function control(active: boolean) {
  *
  * It is placed against the pose column rather than against itself: that column
  * is centred, so clearing it means clearing half of it, which is its buttons at
- * 2rem each with 0.5rem between them, and then a small gap on top. Measured off
+ * 2rem each with 0.5rem between them, and then VERSION_GAP on top. Measured off
  * POSES rather than written down, so a fifth pose does not quietly push the
  * column up through this one.
  *
@@ -89,7 +89,12 @@ function control(active: boolean) {
  * with no skeleton, and buttons that moved with it would jump out from under
  * the pointer on the press that made it appear.
  */
-const VERSION_RISE = (POSES.length * 2 + (POSES.length - 1) * 0.5) / 2 + 0.75;
+// The clear space between the two columns, in rem. Wider than the 0.5rem that
+// separates buttons within either column, so that the break between them reads
+// as a break rather than as one longer list with an uneven seam.
+const VERSION_GAP = 1.25;
+const VERSION_RISE =
+  (POSES.length * 2 + (POSES.length - 1) * 0.5) / 2 + VERSION_GAP;
 
 // Radians per second: one revolution of the sky roughly every twelve minutes.
 // Slow enough that it is only noticeable by having changed.
