@@ -3,8 +3,10 @@
 Fit a Mixamo-named skeleton to a photogrammetry scan, weight it, and rebind it
 in a T-pose, so that the poses in src/lib/poses.ts apply to it.
 
-This is what produced public/models/scan-03.glb out of scan-02.glb, which is
-the same capture and is kept unrigged beside it. It exists
+This is what produced public/models/scan-04.glb out of scan-02.glb, which is
+the same capture and is kept unrigged beside it. It produced scan-03.glb too,
+before `face_forward` below was fixed, and that file is kept facing backwards as
+the record of what the bug cost. It exists
 because Mixamo's auto rigger, which is what public/models/README.md recommends
 and what anyone should reach for first, wants an Adobe account and six markers
 placed by hand in a browser. This does the same three jobs without one: it works
@@ -102,17 +104,14 @@ def clean(mesh):
     print(f"  welded {before} -> {len(mesh.data.vertices)} vertices")
 
 
-def face_forward(mesh):
+def facing(pts):
     """
-    Turn the figure to face -Y, which glTF export writes out as facing +Z.
+    Which way along Y the figure's toes reach, read off the feet.
 
-    Which way it is facing is read off the feet, because toes reach further from
-    an ankle than heels do. Doing this here rather than as a yaw on the figure
-    is what lets the rig, the mesh and the poses agree about which way is
-    forwards, and it is the difference between a squat leaning into the frame
-    and a squat leaning out of it.
+    Toes reach further from an ankle than heels do, which is the whole of the
+    measurement: take the middle of the lower leg, then ask which side of it the
+    foot reaches further on.
     """
-    pts = [mesh.matrix_world @ v.co for v in mesh.data.vertices]
     lo = min(p.z for p in pts)
     span = max(p.z for p in pts) - lo
 
@@ -120,13 +119,42 @@ def face_forward(mesh):
         [p.y for p in pts if 0.10 < (p.z - lo) / span < 0.16] or [0]
     )
     feet = [p.y for p in pts if (p.z - lo) / span < 0.05]
-    forward = 1 if (max(feet) - ankle) > (ankle - min(feet)) else -1
+    return 1 if (max(feet) - ankle) > (ankle - min(feet)) else -1
+
+
+def face_forward(mesh):
+    """
+    Turn the figure to face -Y, which glTF export writes out as facing +Z.
+
+    Doing this here rather than as a yaw on the figure is what lets the rig, the
+    mesh and the poses agree about which way is forwards, and it is the
+    difference between a squat leaning into the frame and a squat leaning out of
+    it. Getting it wrong is not a thing anyone sees at import either: the figure
+    stands there looking correct, and then bends its elbows backwards.
+
+    The half turn is written onto the object's matrix rather than onto its
+    `rotation_euler`, and that is not a matter of taste. The glTF importer leaves
+    the object in quaternion rotation mode, and an object in quaternion mode
+    ignores its Euler entirely. Setting it there raises nothing, reads back as
+    the value that was set, and applies a transform that is silently only the
+    importer's scale, which is what produced the backwards rig in scan-03.
+    Assigning `matrix_world` says the same thing in a way no rotation mode can
+    drop, and the check below is there because this failed quietly once already.
+    """
+    pts = [mesh.matrix_world @ v.co for v in mesh.data.vertices]
+    forward = facing(pts)
 
     print(f"  toes reach {'+Y' if forward > 0 else '-Y'}")
     if forward > 0:
-        mesh.rotation_euler = (0, 0, math.pi)
-        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-    return [mesh.matrix_world @ v.co for v in mesh.data.vertices]
+        mesh.matrix_world = Matrix.Rotation(math.pi, 4, "Z") @ mesh.matrix_world
+
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+    pts = [mesh.matrix_world @ v.co for v in mesh.data.vertices]
+
+    if facing(pts) > 0:
+        raise SystemExit("the half turn did not take: the figure still faces +Y")
+
+    return pts
 
 
 class Body:
