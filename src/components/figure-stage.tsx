@@ -33,7 +33,8 @@ import {
   HEIGHT,
   VIEWS,
   framing,
-  type FigureId,
+  versionOf,
+  type VersionId,
   type ViewId,
 } from "@/lib/figure";
 import { named, poseClips } from "@/lib/pose-clip";
@@ -44,9 +45,10 @@ import { sampleSurface } from "@/lib/surface";
  * The figure adrift on the right hand side of the page, together with the light
  * on it and the camera work that keeps it there.
  *
- * There is more than one figure now, and the tabs swap between them. Adding
- * another is an entry in FIGURES and nothing else: everything below is derived
- * from whichever model is loaded, from its own bounding box rather than from
+ * There is more than one figure now, and the tabs swap between them, as do the
+ * version buttons between the takes on any one of them. Adding either is an
+ * entry in FIGURES and nothing else: everything below is derived from whichever
+ * model is loaded, from its own bounding box rather than from
  * numbers measured against a particular mesh, so a scan exported at a different
  * scale, in different units, or sitting off its own origin still lands upright,
  * centred and framed like the one before it.
@@ -151,10 +153,6 @@ function progress(phase: Phase, age: number) {
       (1 - MathUtils.smoothstep(made, 0.72, 1)),
     solid: MathUtils.smoothstep(made, 0.58, 0.96),
   };
-}
-
-function definition(id: FigureId) {
-  return FIGURES.find((figure) => figure.id === id) ?? FIGURES[0];
 }
 
 function Model({
@@ -373,11 +371,11 @@ function Model({
  * the prop has changed the only record of what was showing is here.
  */
 function Stage({
-  figure,
+  version,
   pose,
   still,
 }: {
-  figure: FigureId;
+  version: VersionId;
   pose: PoseId;
   still: boolean;
 }) {
@@ -408,19 +406,19 @@ function Stage({
   });
 
   const [cast, setCast] = useState<{
-    arriving: FigureId;
-    leaving: FigureId | null;
+    arriving: VersionId;
+    leaving: VersionId | null;
     phase: Phase;
-  }>({ arriving: figure, leaving: null, phase: "opening" });
+  }>({ arriving: version, leaving: null, phase: "opening" });
 
   // Adjusted while rendering rather than from an effect. The swap is not a
   // synchronisation with anything outside React, it is the direct consequence
   // of the prop changing, and React re-runs this component with the new state
   // before it commits anything: the departing figure is never drawn a frame
   // still standing in its place.
-  if (cast.arriving !== figure) {
+  if (cast.arriving !== version) {
     setCast({
-      arriving: figure,
+      arriving: version,
       // Under reduced motion the swap is a cut. Nothing comes apart; the new
       // figure is simply the one that is there.
       leaving: still ? null : cast.arriving,
@@ -443,8 +441,8 @@ function Stage({
     return () => clearTimeout(timer);
   }, [cast.leaving]);
 
-  const arriving = definition(cast.arriving);
-  const leaving = cast.leaving ? definition(cast.leaving) : null;
+  const arriving = versionOf(cast.arriving);
+  const leaving = cast.leaving ? versionOf(cast.leaving) : null;
 
   return (
     <group ref={turntable}>
@@ -675,13 +673,13 @@ function Overhead() {
 }
 
 export default function FigureRig({
-  figure,
+  version,
   pose,
   view,
   fitId,
   still,
 }: {
-  figure: FigureId;
+  version: VersionId;
   pose: PoseId;
   view: ViewId;
   fitId: number;
@@ -701,7 +699,7 @@ export default function FigureRig({
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
       <Overhead />
 
-      <Stage figure={figure} pose={pose} still={still} />
+      <Stage version={version} pose={pose} still={still} />
       <Controls view={view} fitId={fitId} span={poseOf(pose).span ?? 0} />
     </>
   );
@@ -710,6 +708,6 @@ export default function FigureRig({
 // Start fetching the figure the page opens on as soon as this chunk is parsed,
 // in parallel with React mounting it, rather than waiting for the first render.
 // The chunk itself is only loaded on a viewport wide enough to show a figure,
-// so a phone never pays for either. The rest are fetched when a tab for them is
-// hovered, which is the canvas's job rather than this one's.
-useGLTF.preload(FIGURES[0].url);
+// so a phone never pays for either. The rest are fetched when a tab or a version
+// button for them is hovered, which is the canvas's job rather than this one's.
+useGLTF.preload(FIGURES[0].versions[0].url);
