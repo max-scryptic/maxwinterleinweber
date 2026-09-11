@@ -13,9 +13,20 @@
 export const HEIGHT = 1.8;
 
 /*
- * The figures the tabs switch between, in the order they were made. Every one
- * of them is normalised to HEIGHT on load and stood on the plane through the
- * origin, so they can arrive at any size, in any unit and sitting anywhere
+ * The figures the tabs switch between, in the order they were made, each with
+ * the versions of it that the buttons down the right hand side switch between.
+ *
+ * A tab is a capture. A version is one take on that capture, and most of them
+ * have exactly one, in which case the version buttons are not drawn at all.
+ * Scan 02 has three, because the same mesh is on the page raw, rigged wrongly
+ * and rigged again properly, and those are three states of one scan rather than
+ * three scans. Keeping all three is the point: a rig is worth having, is not
+ * worth losing the untouched capture to, and can be redone when it comes out
+ * wrong, which is what v3 is. The buttons are labelled by position, so v1 is
+ * whatever is first in the list here. See `public/models/README.md`.
+ *
+ * Every version is normalised to HEIGHT on load and stood on the plane through
+ * the origin, so they can arrive at any size, in any unit and sitting anywhere
  * relative to their own origin, and still land framed the same way. That is
  * what lets a scan be dropped in beside the placeholder without a second set
  * of camera numbers to go with it.
@@ -23,14 +34,11 @@ export const HEIGHT = 1.8;
  * shift, rise and yaw are small visual calibrations after that normalisation.
  * Scan 01's exported bounds do not centre its visible head, and its forward
  * axis differs from the mannequin's, so it otherwise lands slightly left and
- * low while facing the wrong way. Keeping those corrections on the figure
+ * low while facing the wrong way. Keeping those corrections on the version
  * leaves every model aligned at the same shared turntable angle through every
- * framing. Yaw is measured in radians about the vertical axis. Scans 02, 03 and
- * 04 are all the same capture, a clean export centred and standing on its own
- * origin, so none of them needs a shift or a rise. Scan 02 is turned here,
- * because it was captured back to the camera. Scans 03 and 04 are not, because
- * rigging is the moment to turn the export round instead. That is what scan 04
- * does, and what scan 03 only claimed to.
+ * framing. Yaw is measured in radians about the vertical axis. All three
+ * versions of scan 02 are the one capture, a clean export centred and standing
+ * on its own origin, so none of them needs a shift or a rise.
  *
  * rigged says whether the model has a skeleton inside it, which is what decides
  * whether the pose buttons are offered for it at all. It is stated here rather
@@ -43,73 +51,121 @@ export const HEIGHT = 1.8;
  * It is false for both of the raw scans, and that is not an oversight.
  * Photogrammetry produces a single mesh and no bones, and a mesh with no bones
  * cannot be posed by any amount of code at this end; scan-01 has no limbs to rig
- * either. Scans 03 and 04 are scan 02's mesh after `scripts/rig-scan.py`, which
- * is where their skeletons came from, and is why the same capture appears three
- * times: a rig is worth having, is not worth losing the untouched scan to, and
- * can be redone when it comes out wrong, which is what scan 04 is. See
- * `public/models/README.md`.
+ * either. Scan 02's v2 and v3 are its own mesh after `scripts/rig-scan.py`,
+ * which is where their skeletons came from.
  *
- * The first entry is what the page opens on.
+ * The first figure is what the page opens on, and its first version with it.
  */
 export const FIGURES = [
   {
     id: "mannequin",
     label: "Mannequin",
-    url: "/models/mannequin.glb",
-    shift: 0,
-    rise: 0,
-    yaw: 0,
-    rigged: true,
+    versions: [
+      {
+        id: "mannequin",
+        url: "/models/mannequin.glb",
+        shift: 0,
+        rise: 0,
+        yaw: 0,
+        rigged: true,
+      },
+    ],
   },
   {
     id: "scan-01",
     label: "Scan 01",
-    url: "/models/scan-01.glb",
-    shift: 0.13,
-    rise: 0.08,
-    yaw: (Math.PI * 5) / 4,
-    rigged: false,
+    versions: [
+      {
+        id: "scan-01",
+        url: "/models/scan-01.glb",
+        shift: 0.13,
+        rise: 0.08,
+        yaw: (Math.PI * 5) / 4,
+        rigged: false,
+      },
+    ],
   },
   {
     id: "scan-02",
     label: "Scan 02",
-    url: "/models/scan-02.glb",
-    shift: 0,
-    rise: 0,
-    yaw: Math.PI,
-    rigged: false,
-  },
-  {
-    id: "scan-03",
-    label: "Scan 03",
-    url: "/models/scan-03.glb",
-    shift: 0,
-    rise: 0,
-    // No yaw, and this one is wrong. Rigging was meant to be the moment the
-    // export was turned round, and the half turn that would have done it was
-    // dropped without a word by the rigger, so mesh and skeleton both came out
-    // still facing away. It is left standing exactly as it came back: this is
-    // the tab that shows what that costs, and scan 04 is the same capture with
-    // the turn actually applied.
-    yaw: 0,
-    rigged: true,
-  },
-  {
-    id: "scan-04",
-    label: "Scan 04",
-    url: "/models/scan-04.glb",
-    shift: 0,
-    rise: 0,
-    // No yaw, and this one means it. The rig, the mesh and the poses now agree
-    // about which way the figure faces, which is the whole of what scan 03 got
-    // wrong.
-    yaw: 0,
-    rigged: true,
+    versions: [
+      // v1: the capture as it came back, with no skeleton in it and so no poses
+      // offered for it. Turned here, because it was captured back to the camera,
+      // where the two rigged versions are not: rigging is the moment to turn the
+      // export round instead. That is what v3 does, and what v2 only claimed to.
+      {
+        id: "scan-02",
+        url: "/models/scan-02.glb",
+        shift: 0,
+        rise: 0,
+        yaw: Math.PI,
+        rigged: false,
+      },
+      // v2: that mesh rigged, and posed backwards for it. No yaw, and this one
+      // is wrong. Rigging was meant to be the moment the export was turned
+      // round, and the half turn that would have done it was dropped without a
+      // word by the rigger, so mesh and skeleton both came out still facing
+      // away. It is left standing exactly as it came back: this is the version
+      // that shows what that costs, and v3 is the same capture with the turn
+      // actually applied.
+      {
+        id: "scan-03",
+        url: "/models/scan-03.glb",
+        shift: 0,
+        rise: 0,
+        yaw: 0,
+        rigged: true,
+      },
+      // v3: the same rig, facing the way it always meant to. No yaw, and this
+      // one means it. The rig, the mesh and the poses now agree about which way
+      // the figure faces, which is the whole of what v2 got wrong.
+      {
+        id: "scan-04",
+        url: "/models/scan-04.glb",
+        shift: 0,
+        rise: 0,
+        yaw: 0,
+        rigged: true,
+      },
+    ],
   },
 ] as const;
 
 export type Figure = (typeof FIGURES)[number];
 export type FigureId = Figure["id"];
+export type Version = Figure["versions"][number];
+export type VersionId = Version["id"];
+
+/**
+ * The version on stage, and the figure whose tab it belongs to. What is
+ * selected on the page is a version, since that is what names a file; which tab
+ * is lit follows from it rather than being tracked beside it, so the two can
+ * never disagree about what is showing.
+ *
+ * Both fall back to the opening figure rather than throwing, because an id that
+ * is not in the list is a typo in a prop somewhere and the page standing there
+ * showing the placeholder is a better answer to that than a blank canvas.
+ */
+export function versionOf(id: VersionId): Version {
+  for (const figure of FIGURES) {
+    const found = (figure.versions as readonly Version[]).find(
+      (version) => version.id === id,
+    );
+    if (found) return found;
+  }
+
+  return FIGURES[0].versions[0];
+}
+
+export function figureOf(id: VersionId): Figure {
+  return (
+    FIGURES.find((figure) =>
+      (figure.versions as readonly Version[]).some(
+        (version) => version.id === id,
+      ),
+    ) ?? FIGURES[0]
+  );
+}
 
 // Degrees, vertical.
 export const FOV = 35;

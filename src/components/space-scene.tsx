@@ -25,7 +25,10 @@ import {
   OPENING,
   OPENING_PITCH,
   VIEWS,
-  type FigureId,
+  figureOf,
+  versionOf,
+  type Figure,
+  type VersionId,
   type ViewId,
 } from "@/lib/figure";
 import { POSES, type PoseId } from "@/lib/poses";
@@ -70,6 +73,22 @@ function control(active: boolean) {
     ? "pointer-events-auto bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900"
     : "pointer-events-auto border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white";
 }
+
+/*
+ * How far above the middle of the window the version buttons sit, in rem.
+ *
+ * They are placed against the pose column rather than against each other: that
+ * column is centred, so clearing it means clearing half of it, which is its
+ * buttons at 2rem each with 0.5rem between them, and then a gap of about the
+ * same again. Measured off POSES rather than written down, so a fifth pose does
+ * not quietly push the column up through this row.
+ *
+ * Anchoring the row to the middle of the window rather than stacking it above
+ * whatever is actually there is the whole point. The pose column is absent on a
+ * version with no skeleton, and a row that moved with it would jump out from
+ * under the pointer on the press that made it appear.
+ */
+const VERSION_RISE = (POSES.length * 2 + (POSES.length - 1) * 0.5) / 2 + 0.75;
 
 // Radians per second: one revolution of the sky roughly every twelve minutes.
 // Slow enough that it is only noticeable by having changed.
@@ -183,14 +202,32 @@ export default function SpaceScene() {
   // off how long the sky stands empty. Only on a viewport wide enough to show a
   // figure, so a phone still fetches neither.
   useEffect(() => {
-    if (wide) warm(FIGURES[0].url);
+    if (wide) warm(FIGURES[0].versions[0].url);
   }, [wide]);
 
   const [view, setView] = useState<ViewId>("full");
 
-  // Which iteration is on stage. The page opens on the first entry, which is
-  // the placeholder every later one is measured against.
-  const [figure, setFigure] = useState<FigureId>(FIGURES[0].id);
+  /*
+   * What is on stage, which is a version rather than a figure: a version is
+   * what names a file, and the tab that is lit is worked out from it below.
+   * Holding the two separately would mean keeping them in step by hand.
+   *
+   * The page opens on the first version of the first figure, which is the
+   * placeholder every later one is measured against.
+   */
+  const [version, setVersion] = useState<VersionId>(FIGURES[0].versions[0].id);
+
+  // The version showing and the figure it is a version of.
+  const shown = versionOf(version);
+  const figure = figureOf(version);
+
+  // Pressing a tab shows that figure's first version. Pressing the tab already
+  // showing does nothing, as it did before there were versions: choosing
+  // between them is what the buttons down the side are for, and a press that
+  // put the figure back to v1 would undo one of them.
+  function show(next: Figure) {
+    if (next.id !== figure.id) setVersion(next.versions[0].id);
+  }
 
   /*
    * What it is doing, which is kept across a change of figure rather than reset
@@ -200,9 +237,11 @@ export default function SpaceScene() {
    */
   const [pose, setPose] = useState<PoseId>(POSES[0].id);
 
-  // Whether this figure has a skeleton to pose. A scan does not until it has
-  // been rigged, so the row is not offered rather than offered and ignored.
-  const rigged = FIGURES.find((option) => option.id === figure)?.rigged ?? false;
+  // Whether what is on stage has a skeleton to pose. A scan does not until it
+  // has been rigged, so the column is not offered rather than offered and
+  // ignored, and that is a property of the version rather than of the tab: two
+  // of scan 02's three are rigged and the one it opens on is not.
+  const rigged = shown.rigged;
 
   // Bumped on every press so that pressing the active button re-frames rather
   // than doing nothing.
@@ -259,7 +298,7 @@ export default function SpaceScene() {
         {wide ? (
           <Suspense fallback={null}>
             <FigureRig
-              figure={figure}
+              version={version}
               pose={pose}
               view={view}
               fitId={fitId}
@@ -279,16 +318,52 @@ export default function SpaceScene() {
               key={option.id}
               variant="ghost"
               size="sm"
-              className={control(option.id === figure)}
-              aria-pressed={option.id === figure}
-              onClick={() => setFigure(option.id)}
+              className={control(option.id === figure.id)}
+              aria-pressed={option.id === figure.id}
+              onClick={() => show(option)}
               // Fetched on the way to the press rather than on the press
               // itself. A pointer arriving on the tab is most of a second of
-              // warning, which is about what a four megabyte model needs.
+              // warning, which is about what a four megabyte model needs. Only
+              // the version the press would land on: the others behind the same
+              // tab are warmed by their own buttons.
+              onPointerEnter={() => warm(option.versions[0].url)}
+              onFocus={() => warm(option.versions[0].url)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Which version of this figure, for a figure that has more than one.
+          Down the right hand edge with the poses, because a version is a
+          property of the figure rather than of the framing, but a row rather
+          than a column so that the two are not read as one list: this chooses
+          the model, and the column under it chooses what that model is doing.
+
+          Labelled by position. v1 is the capture as it came back and has no
+          skeleton, so the pose column is simply missing under it; v2 and v3 are
+          that mesh rigged, and pressing between them is what shows the poses
+          running backwards and then forwards. */}
+      {wide && figure.versions.length > 1 ? (
+        <div
+          className="pointer-events-none absolute right-8 flex justify-end gap-2"
+          style={{ bottom: `calc(50% + ${VERSION_RISE}rem)` }}
+          role="group"
+          aria-label={`${figure.label} version`}
+        >
+          {figure.versions.map((option, index) => (
+            <Button
+              key={option.id}
+              variant="ghost"
+              size="sm"
+              className={control(option.id === version)}
+              aria-pressed={option.id === version}
+              onClick={() => setVersion(option.id)}
               onPointerEnter={() => warm(option.url)}
               onFocus={() => warm(option.url)}
             >
-              {option.label}
+              v{index + 1}
             </Button>
           ))}
         </div>
@@ -301,9 +376,11 @@ export default function SpaceScene() {
           figure itself. Stretched to a common width so it reads as one column
           rather than as four buttons that happen to be stacked.
 
-          Only for a figure with a skeleton under it. Nothing here can pose a
+          Only for a version with a skeleton under it. Nothing here can pose a
           photogrammetry scan that has not been rigged, so on one of those the
-          column is absent rather than present and inert. */}
+          column is absent rather than present and inert, and the version row
+          above holds its place regardless so that it does not move on the press
+          that makes the column appear. */}
       {wide && rigged ? (
         <div className="pointer-events-none absolute top-1/2 right-8 flex -translate-y-1/2 flex-col items-stretch gap-2">
           {POSES.map((option) => (

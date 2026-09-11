@@ -4,10 +4,17 @@ The tabs above the figure switch between these. They are listed in `FIGURES` in
 `src/lib/figure.ts`, oldest first, and the first entry is what the page opens
 on.
 
-The column down the right hand side switches between poses instead, and is only
-there for a model with a skeleton in it. See [Making one move](#making-one-move)
-below, which is also where the answer to "why can the mannequin do that and a
-raw scan cannot" lives.
+A tab is a capture, not a file. Where the same capture is on the page more than
+once, the takes on it sit behind one tab as its versions, and a row of buttons
+labelled `v1`, `v2`, `v3` appears on the right to choose between them. Scan 02
+is the only one so far: `scan-02.glb` raw as v1, `scan-03.glb` rigged backwards
+as v2, and `scan-04.glb` rigged properly as v3. They are numbered by their order
+in that tab's `versions` list rather than by anything written down.
+
+The column down the right hand side, under those, switches between poses
+instead, and is only there for a model with a skeleton in it. See
+[Making one move](#making-one-move) below, which is also where the answer to
+"why can the mannequin do that and a raw scan cannot" lives.
 
 ## mannequin.glb
 
@@ -55,17 +62,18 @@ which brought it to 4.6 MB and 67 MB of VRAM without touching the geometry.
 
 ## scan-02.glb
 
-The second scan, and a whole figure this time: arms, legs and feet all present,
-so nothing hangs below it and the bounding box holds a person rather than a
-person and a shard. It stands on its own origin at 1.75 m and is centred within
-a couple of centimetres, so it needs no shift or rise; it carries a half turn
-of yaw because it was exported facing away from the camera.
+**Scan 02, v1.** The second scan, and a whole figure this time: arms, legs and
+feet all present, so nothing hangs below it and the bounding box holds a person
+rather than a person and a shard. It stands on its own origin at 1.75 m and is
+centred within a couple of centimetres, so it needs no shift or rise; it carries
+a half turn of yaw because it was exported facing away from the camera.
 
-Like scan-01 it has no skeleton and no animation clips, so it stands still. This
-is the capture as it came back, and it stays that way: `scan-03.glb` and
+Like scan-01 it has no skeleton and no animation clips, so it stands still,
+which is why v1 is the one version of this tab with no pose column under it.
+This is the capture as it came back, and it stays that way: `scan-03.glb` and
 `scan-04.glb` are the same mesh rigged, and keeping the raw one means the rig can
 be redone, or thrown away, against something that is still the original. It has
-been redone once already, which is what scan-04 is, and that is the argument for
+been redone once already, which is what v3 is, and that is the argument for
 keeping this file in one sentence.
 
 Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
@@ -80,9 +88,10 @@ which brought it to 3.4 MB with all 96,744 triangles intact.
 
 ## scan-03.glb
 
-Not a third capture. It is scan-02's mesh with a skeleton in it, which makes it
-the first scan here that can be posed, and it sits beside the raw one rather
-than replacing it so that both are on the page to compare.
+**Scan 02, v2.** Not a third capture. It is scan-02's mesh with a skeleton in
+it, which makes it the first scan here that can be posed, and it sits behind the
+same tab as the raw one rather than replacing it so that both are on the page to
+compare.
 
 **It is rigged.** Twenty seven joints on Mixamo's naming, fitted to the mesh and
 weighted by Blender's bone heat solver by `scripts/rig-scan.py`, then rebound in
@@ -131,11 +140,11 @@ error next to two 2048px textures.
 
 ## scan-04.glb
 
-Scan-03 done again, on the same mesh, with the half turn that was missing from
-it. Same script, same solver, same twenty seven joints, same T-pose rebind, and
-the same 3.39 MB. The only difference is that this one is the way round it
-always meant to be, which is the difference between the poses working and the
-poses being backwards.
+**Scan 02, v3.** Scan-03 done again, on the same mesh, with the half turn that
+was missing from it. Same script, same solver, same twenty seven joints, same
+T-pose rebind, and the same 3.39 MB. The only difference is that this one is the
+way round it always meant to be, which is the difference between the poses
+working and the poses being backwards.
 
 What that turn is worth, measured off the two files. In scan-03 the toes reach
 5 to 7 cm behind the ankles, so the figure's front is `-Z` where every pose in
@@ -169,8 +178,8 @@ A figure moves because something is turning its joints. A model with no joints
 has nothing to turn, and no amount of code at this end invents them: posing a
 photogrammetry scan is a thing that happens to the file, before it ever reaches
 this directory. That is the whole of why the pose column is missing on the two
-raw scans and present on the placeholder and on scans 03 and 04, which are one of
-those scans after the thing had happened to it.
+raw scans and present on the placeholder and on scan 02's v2 and v3, which are
+one of those scans after the thing had happened to it.
 
 Given a skeleton, there are two ways to drive it, and the viewer treats them as
 the same kind of thing:
@@ -187,7 +196,7 @@ the same kind of thing:
   that has been through the same rigger.
 
 The second is what makes rigging a scan worth doing. A scan that comes back with
-a Mixamo skeleton in it needs `rigged: true` on its entry in `FIGURES` and
+a Mixamo skeleton in it needs `rigged: true` on its version in `FIGURES` and
 nothing else, and every pose already written applies to it.
 
 With one condition, which is easy to meet and quietly fatal to miss: **the rig
@@ -219,7 +228,8 @@ mesh, hands the weighting to Blender's own bone heat solver, and rebinds in a T,
 all without a browser or an account. Read its docstring; it is one command
 either side of a gltf-transform decode and re-compress. Write the result out
 beside the scan under the next number rather than over it, as scans 03 and 04
-are: a rig can be redone, and a capture cannot. Scan-04 is that sentence being
+are, and add it to that capture's tab as its next version: a rig can be redone,
+and a capture cannot. Scan-04 is that sentence being
 cashed in, and the reason it is a rule here rather than a preference.
 
 The rest of this section is the path to reach for on a scan captured properly,
@@ -297,12 +307,15 @@ was never about it and lose its hands off the side of the window.
 
 ## Adding another figure
 
-Drop a `.glb` in this directory and add an entry to `FIGURES`, saying in
-`rigged` whether it has a skeleton in it. Nothing else needs to change: the model is measured, uniformly scaled to 1.8 m, centred on
-its X and Z axes and stood on the plane through the origin, and the camera
-framing along with the orbit and zoom limits are all derived from that height.
-A scan exported in centimetres, or sitting a long way off its own origin, needs
-no numbers changed anywhere.
+Drop a `.glb` in this directory and add an entry to `FIGURES` with one version
+in it, saying in `rigged` whether it has a skeleton. A new take on a capture
+that is already there is a version added to that capture's entry instead, which
+is what puts it on the `v` buttons and leaves the tabs alone. Nothing else needs
+to change: the model is measured, uniformly scaled to 1.8 m, centred on its X
+and Z axes and stood on the plane through the origin, and the camera framing
+along with the orbit and zoom limits are all derived from that height. A scan
+exported in centimetres, or sitting a long way off its own origin, needs no
+numbers changed anywhere.
 
 Compress it first. `useGLTF` reads Meshopt without any decoder to serve, which
 Draco would need, so prefer `--compress meshopt` as above.
