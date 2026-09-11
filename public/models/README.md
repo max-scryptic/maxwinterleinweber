@@ -62,9 +62,11 @@ a couple of centimetres, so it needs no shift or rise; it carries a half turn
 of yaw because it was exported facing away from the camera.
 
 Like scan-01 it has no skeleton and no animation clips, so it stands still. This
-is the capture as it came back, and it stays that way: `scan-03.glb` is the same
-mesh rigged, and keeping both means the rig can be redone, or thrown away,
-against something that is still the original.
+is the capture as it came back, and it stays that way: `scan-03.glb` and
+`scan-04.glb` are the same mesh rigged, and keeping the raw one means the rig can
+be redone, or thrown away, against something that is still the original. It has
+been redone once already, which is what scan-04 is, and that is the argument for
+keeping this file in one sentence.
 
 Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
 Reduced the same way as scan-01:
@@ -88,15 +90,28 @@ a T-pose so that the poses apply to it. It carries no animation clips, because
 an auto rigger does not produce any, so its Default is the standing shape
 written in `POSES` rather than a recording.
 
-It also carries no yaw, where scan-02 needs a half turn. Rigging it was the
-moment to turn the export round instead, since a mesh, a skeleton and a set of
-poses that disagree about which way the figure is facing is a thing to correct
-once, in the file.
+**It faces the wrong way, and that is the fault `scan-04.glb` exists to fix.**
+It carries no yaw, where scan-02 needs a half turn, because rigging was meant to
+be the moment the export was turned round instead. That turn never happened. The
+rigger asked for it and Blender dropped it in silence, for the reason written up
+in `scripts/rig-scan.py`, so mesh and skeleton both came out of it still facing
+away from the camera and with the joints named `Left` sitting down the body's
+right hand side.
 
-What was against it, and still shows, is the capture pose. Measured across the
-body before rigging, the arms were in contact with the torso for the whole
-length of the upper arm: no gap at all from the armpit at 1.30 m down to about
-1.15 m, one centimetre at the elbow, and only five or six by the wrist.
+Nothing about that is visible in the model standing there, which is exactly what
+makes it worth a paragraph. It shows up the moment anything is asked of the
+skeleton, because a pose is written about the figure's own axes and this figure's
+axes are turned around: Default bends the elbows backwards, and Squat sits the
+body down facing out of its own back. It is kept here posed wrongly rather than
+quietly turned round, because a yaw on the figure would not have fixed it. Yaw
+turns the whole result, poses and all, so it would have put the standing figure's
+face to the camera and left every pose reaching out of its spine.
+
+What was also against it, and still shows on scan-04, is the capture pose.
+Measured across the body before rigging, the arms were in contact with the torso
+for the whole length of the upper arm: no gap at all from the armpit at 1.30 m
+down to about 1.15 m, one centimetre at the elbow, and only five or six by the
+wrist.
 Shoulders are 49 cm across and the widest the figure got was 70 cm, which was
 the arms, hanging.
 
@@ -114,14 +129,48 @@ the one thing to get right for the next one.
 3.39 MB against the raw mesh's 3.36: a skeleton and its weights are a rounding
 error next to two 2048px textures.
 
+## scan-04.glb
+
+Scan-03 done again, on the same mesh, with the half turn that was missing from
+it. Same script, same solver, same twenty seven joints, same T-pose rebind, and
+the same 3.39 MB. The only difference is that this one is the way round it
+always meant to be, which is the difference between the poses working and the
+poses being backwards.
+
+What that turn is worth, measured off the two files. In scan-03 the toes reach
+5 to 7 cm behind the ankles, so the figure's front is `-Z` where every pose in
+`src/lib/poses.ts` is written for a figure facing `+Z`: Squat throws the knees
+and the hands out of the body's back, and the elbows in Default and Squat bend
+the wrong way, which is the symptom worth knowing because a mesh standing at
+rest gives nothing away. In scan-04 the toes reach 5 to 7 cm in front, the same
+squat puts the knees 41 cm forward of the hips and drops them from 0.97 m to
+0.53 m, and the joints called `Left` are down the body's left rather than its
+right, which is what makes an asymmetric pose like Moonwalk lead with the leg it
+was written to lead with.
+
+The bug was in `face_forward` in `scripts/rig-scan.py`, and it is worth reading
+the docstring there rather than only the fix: the rigger measured the mesh
+correctly, decided correctly that it needed turning, asked Blender to turn it,
+and Blender ignored it without raising anything. Setting `rotation_euler` on an
+object whose `rotation_mode` is `QUATERNION`, which is what the glTF importer
+leaves it as, writes a value that reads back exactly as it was set and is never
+applied to anything. The `transform_apply` that followed applied only the
+importer's scale. It now goes through `matrix_world`, which no rotation mode can
+drop, and the result is checked before the script will use it.
+
+What is not fixed here, because it is not a rigging problem, is the shoulder.
+This is scan-02's mesh, captured arms-down, so it has the same welded armpit and
+the same smear across the chest when the arms come up. Re-capturing in an A-pose
+is still the one thing to get right for the next one.
+
 ## Making one move
 
 A figure moves because something is turning its joints. A model with no joints
 has nothing to turn, and no amount of code at this end invents them: posing a
 photogrammetry scan is a thing that happens to the file, before it ever reaches
 this directory. That is the whole of why the pose column is missing on the two
-raw scans and present on the placeholder and on scan-03, which is one of those
-scans after the thing had happened to it.
+raw scans and present on the placeholder and on scans 03 and 04, which are one of
+those scans after the thing had happened to it.
 
 Given a skeleton, there are two ways to drive it, and the viewer treats them as
 the same kind of thing:
@@ -165,12 +214,13 @@ numbers touched.
 ### Rigging a scan
 
 There are two ways to do this. `scripts/rig-scan.py` is the one that produced
-scan-03 out of scan-02: it fits the skeleton by measuring the mesh, hands the
-weighting to Blender's own bone heat solver, and rebinds in a T, all without a
-browser or an account. Read its docstring; it is one command either side of a
-gltf-transform decode and re-compress. Write the result out beside the scan
-under the next number rather than over it, as scan-03 is: a rig can be redone,
-and a capture cannot.
+scan-03 and then scan-04 out of scan-02: it fits the skeleton by measuring the
+mesh, hands the weighting to Blender's own bone heat solver, and rebinds in a T,
+all without a browser or an account. Read its docstring; it is one command
+either side of a gltf-transform decode and re-compress. Write the result out
+beside the scan under the next number rather than over it, as scans 03 and 04
+are: a rig can be redone, and a capture cannot. Scan-04 is that sentence being
+cashed in, and the reason it is a rule here rather than a preference.
 
 The rest of this section is the path to reach for on a scan captured properly,
 which is Mixamo's, because a person placing six markers by eye will beat a
@@ -187,11 +237,11 @@ Almost everything that goes wrong goes wrong at the capture, not at the rigger,
 so it is worth getting the scan right first:
 
 - **Capture in an A-pose, arms well clear of the torso.** This is the one that
-  matters, and it is what scan-02 got wrong and scan-03 still shows. An auto
-  rigger works out which vertices belong to which limb by their position, so a
-  forearm resting against a hip is a forearm that welds itself to the hip, and
-  every pose after that drags the body with the arm. Feet apart, palms visible,
-  elbows out.
+  matters, and it is what scan-02 got wrong and both rigs of it still show. An
+  auto rigger works out which vertices belong to which limb by their position,
+  so a forearm resting against a hip is a forearm that welds itself to the hip,
+  and every pose after that drags the body with the arm. Feet apart, palms
+  visible, elbows out.
 - **One mesh, closed, with all four limbs.** Holes and floating shards confuse
   the weighting. Scan-01 fails this before anything else does.
 - **Decimate before uploading, not after.** Mixamo has an upload limit, and
@@ -216,7 +266,7 @@ Then export and compress:
 
 ```
 # in Blender: export glTF Binary, +Y up, with Skinning ticked
-npx @gltf-transform/cli optimize raw.glb scan-04.glb \
+npx @gltf-transform/cli optimize raw.glb scan-05.glb \
   --texture-size 2048 --compress meshopt --simplify false
 ```
 
