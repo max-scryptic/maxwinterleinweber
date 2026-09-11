@@ -75,18 +75,19 @@ function control(active: boolean) {
 }
 
 /*
- * How far above the middle of the window the version buttons sit, in rem.
+ * How far above the middle of the window the foot of the version column sits,
+ * in rem.
  *
- * They are placed against the pose column rather than against each other: that
- * column is centred, so clearing it means clearing half of it, which is its
- * buttons at 2rem each with 0.5rem between them, and then a gap of about the
- * same again. Measured off POSES rather than written down, so a fifth pose does
- * not quietly push the column up through this row.
+ * It is placed against the pose column rather than against itself: that column
+ * is centred, so clearing it means clearing half of it, which is its buttons at
+ * 2rem each with 0.5rem between them, and then a small gap on top. Measured off
+ * POSES rather than written down, so a fifth pose does not quietly push the
+ * column up through this one.
  *
- * Anchoring the row to the middle of the window rather than stacking it above
- * whatever is actually there is the whole point. The pose column is absent on a
- * version with no skeleton, and a row that moved with it would jump out from
- * under the pointer on the press that made it appear.
+ * Anchoring to the middle of the window rather than stacking above whatever is
+ * actually there is the whole point. The pose column is absent on a version
+ * with no skeleton, and buttons that moved with it would jump out from under
+ * the pointer on the press that made it appear.
  */
 const VERSION_RISE = (POSES.length * 2 + (POSES.length - 1) * 0.5) / 2 + 0.75;
 
@@ -337,9 +338,10 @@ export default function SpaceScene() {
 
       {/* Which version of this figure, for a figure that has more than one.
           Down the right hand edge with the poses, because a version is a
-          property of the figure rather than of the framing, but a row rather
-          than a column so that the two are not read as one list: this chooses
-          the model, and the column under it chooses what that model is doing.
+          property of the figure rather than of the framing, and stacked against
+          that same edge so the two read as one axis. The gap under it is what
+          keeps them from being read as one list: this chooses the model, and
+          the column below chooses what that model is doing.
 
           Labelled by position. v1 is the capture as it came back and has no
           skeleton, so the pose column is simply missing under it; v2 and v3 are
@@ -347,7 +349,7 @@ export default function SpaceScene() {
           running backwards and then forwards. */}
       {wide && figure.versions.length > 1 ? (
         <div
-          className="pointer-events-none absolute right-8 flex justify-end gap-2"
+          className="pointer-events-none absolute right-8 flex flex-col items-stretch gap-2"
           style={{ bottom: `calc(50% + ${VERSION_RISE}rem)` }}
           role="group"
           aria-label={`${figure.label} version`}
@@ -378,9 +380,9 @@ export default function SpaceScene() {
 
           Only for a version with a skeleton under it. Nothing here can pose a
           photogrammetry scan that has not been rigged, so on one of those the
-          column is absent rather than present and inert, and the version row
-          above holds its place regardless so that it does not move on the press
-          that makes the column appear. */}
+          column is absent rather than present and inert, and the version
+          buttons above hold their place regardless so that they do not move on
+          the press that makes the column appear. */}
       {wide && rigged ? (
         <div className="pointer-events-none absolute top-1/2 right-8 flex -translate-y-1/2 flex-col items-stretch gap-2">
           {POSES.map((option) => (
