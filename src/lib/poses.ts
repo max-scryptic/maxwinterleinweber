@@ -9,9 +9,10 @@
  * is `src/lib/pose-clip.ts`, on the far side of it.
  *
  * A pose is one of two things. It is either the name of a clip the model was
- * exported carrying, which is how the placeholder stands still and breathes,
- * or it is a set of joint rotations written out below. The second kind is the
- * one worth having. A photogrammetry scan arrives with no clips at all, so
+ * exported carrying, which is how a model with recorded motion in it stands
+ * still and breathes, or it is a set of joint rotations written out below. The
+ * second kind is the one worth having, and on this page it is the only kind
+ * that ever runs. A photogrammetry scan arrives with no clips at all, so
  * anything it is ever going to do has to be described somewhere that is not the
  * model, and a rotation per joint is small enough to write by hand and to read
  * back later, which a few megabytes of baked animation is not.
@@ -125,9 +126,9 @@ export function mirror(shape: Shape): Shape {
  * Worth the twenty lines because of what a rig rests in. A Mixamo skeleton is
  * bound with the fingers straight and spread, so a pose that says nothing about
  * them gets that: flat palms and splayed fingers, which on a figure squatting
- * with its arms out in front reads as jazz hands. The recorded clips all curl
- * the fingers, which is why the placeholder standing still has never looked
- * wrong, and it is only the poses written here that have to say so.
+ * with its arms out in front reads as jazz hands. A recorded clip curls the
+ * fingers for itself, so a model carrying one never looked wrong standing
+ * still; it is only the poses written here that have to say so.
  *
  * The knuckles are the same joint three times over, so the curl runs down the
  * digit rather than being written per joint, tightening a little towards the
@@ -160,10 +161,11 @@ const HANDS: Shape = { ...hand("Left"), ...hand("Right") };
  * Standing there, which is only a pose worth writing because of what a rigged
  * scan arrives as.
  *
- * The placeholder has a recording of somebody standing still and uses that. A
+ * A model exported carrying a recording of somebody standing still uses that. A
  * scan that has been through an auto rigger has no clips at all, and it rests in
  * the T it had to be bound in, so without this its Default would be the T pose
- * under another name. Arms down, elbows soft, and nothing else: the scan's own
+ * under another name. Every figure on the page is such a scan, which makes this
+ * the shape all of them stand in. Arms down, elbows soft, and nothing else: the scan's own
  * stance, the width of its feet and the set of its shoulders, is already in the
  * rig and does not want overriding.
  */
@@ -313,9 +315,10 @@ const MOONWALK: readonly Frame[] = [
  * The poses the buttons offer, in the order they are offered.
  *
  * The first entry is what every figure opens on. It is the model's own idle
- * clip, which on the placeholder is a real recording of somebody standing
- * still, and which no amount of joint rotations written by hand is going to
- * beat. The rest are written here and so belong to no model in particular.
+ * clip where there is one, a real recording of somebody standing still that no
+ * amount of joint rotations written by hand is going to beat, and the shape
+ * written above where there is not, which is every model here today. The rest
+ * are written here and so belong to no model in particular.
  *
  * The T pose is the empty shape, which is not a joke: it is the pose the
  * skeleton was bound in, and the one every rig sits in with nothing applied to
@@ -342,8 +345,8 @@ export const POSES = [
    * cropped off the side of the window for about a fifth of every turn, which
    * is exactly long enough to notice and to be unable to say why.
    *
-   * Measured, the placeholder spans 0.955 of its height and the scan 0.996, so
-   * the ratio Vitruvius gives is both the rounder number and the safer one.
+   * Measured, the rigged scan spans 0.996 of its height, so the ratio Vitruvius
+   * gives is both the rounder number and the safer one.
    */
   {
     id: "t-pose",

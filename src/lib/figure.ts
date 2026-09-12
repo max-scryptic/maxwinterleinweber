@@ -28,15 +28,15 @@ export const HEIGHT = 1.8;
  * Every version is normalised to HEIGHT on load and stood on the plane through
  * the origin, so they can arrive at any size, in any unit and sitting anywhere
  * relative to their own origin, and still land framed the same way. That is
- * what lets a scan be dropped in beside the placeholder without a second set
- * of camera numbers to go with it.
+ * what lets a new scan be dropped in beside the others without a second set of
+ * camera numbers to go with it.
  *
  * shift, rise and yaw are small visual calibrations after that normalisation.
- * Scan 01's exported bounds do not centre its visible head, and its forward
- * axis differs from the mannequin's, so it otherwise lands slightly left and
- * low while facing the wrong way. Keeping those corrections on the version
- * leaves every model aligned at the same shared turntable angle through every
- * framing. Yaw is measured in radians about the vertical axis. All three
+ * Scan 01's exported bounds do not centre its visible head, and it was captured
+ * at an angle to the axis the others face along, so it otherwise lands slightly
+ * left and low while facing the wrong way. Keeping those corrections on the
+ * version leaves every model aligned at the same shared turntable angle through
+ * every framing. Yaw is measured in radians about the vertical axis. All three
  * versions of scan 02 are the one capture, a clean export centred and standing
  * on its own origin, so none of them needs a shift or a rise.
  *
@@ -57,20 +57,6 @@ export const HEIGHT = 1.8;
  * The first figure is what the page opens on, and its first version with it.
  */
 export const FIGURES = [
-  {
-    id: "mannequin",
-    label: "Mannequin",
-    versions: [
-      {
-        id: "mannequin",
-        url: "/models/mannequin.glb",
-        shift: 0,
-        rise: 0,
-        yaw: 0,
-        rigged: true,
-      },
-    ],
-  },
   {
     id: "scan-01",
     label: "Scan 01",
@@ -144,7 +130,8 @@ export type VersionId = Version["id"];
  *
  * Both fall back to the opening figure rather than throwing, because an id that
  * is not in the list is a typo in a prop somewhere and the page standing there
- * showing the placeholder is a better answer to that than a blank canvas.
+ * showing the figure it opens on is a better answer to that than a blank
+ * canvas.
  */
 export function versionOf(id: VersionId): Version {
   for (const figure of FIGURES) {
@@ -194,8 +181,9 @@ export const COLUMN = 0.5;
  * The three framings, as fractions of the figure's height measured from its
  * feet: the band of the body each one has to fit on screen, and how wide that
  * band is at its widest point. Proportions of a standing figure, not of this
- * particular mesh, so they survive the swap to a scan: the hips sit a little
- * above half of a person's height, and the head is the top eighth.
+ * particular mesh, so they survive the swap from one capture to the next: the
+ * hips sit a little above half of a person's height, and the head is the top
+ * eighth.
  */
 export const VIEWS = [
   // Width here is what must not be cropped, which is not always the whole
