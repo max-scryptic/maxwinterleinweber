@@ -125,9 +125,13 @@
    * itself rather than here. The time is one copy's worth of travel, i.e. the
    * speed: slow enough to read a handle as it goes by. It is spelled out rather
    * than handed over the same way because this declaration resolves at the
-   * root, where a value set further down the page is not yet in scope.
+   * root, where a value set further down the page is not yet in scope, and so
+   * it is also the one thing that does not follow a card being added to the row
+   * on its own: a copy that has grown by a card covers more ground in the same
+   * time, so this goes up with it to leave the cards travelling at the pace
+   * they did. Six cards at present, at a little under seven seconds each.
    */
-  --animate-marquee: marquee 34s linear infinite;
+  --animate-marquee: marquee 41s linear infinite;
 
   @keyframes marquee {
     to {

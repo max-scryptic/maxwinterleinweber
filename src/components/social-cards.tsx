@@ -5,11 +5,14 @@ import { MarqueeTrack } from "@/components/marquee-track";
 import { Card, CardContent } from "@/components/ui/card";
 
 /*
- * The three marks are traced off the logo files committed at the repo root
+ * Three of the marks are traced off the logo files committed at the repo root
  * (YouTube.png, SoundCloud.png, X.png): each viewBox is the artwork's own
  * bounding box, scaled, so the geometry below is the measured shape rather
- * than an approximation of it. They are flat white knockouts drawn as a single
- * filled shape, so they sit straight on the card colour with no second tone.
+ * than an approximation of it. The fourth, Instagram, is the one mark whose
+ * artwork is not committed here, so it is laid out from the proportions of the
+ * supplied logo on a square of 100 instead. They are flat white knockouts
+ * drawn as a single filled shape, so they sit straight on the card colour with
+ * no second tone.
  */
 
 function YouTubeIcon(props: React.ComponentProps<"svg">) {
@@ -104,6 +107,65 @@ function XIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
+/*
+ * The Instagram mark is three rings on a square of 100: the rounded square
+ * around the outside, the lens in the middle of it, and the dot up in the top
+ * right corner. Everything below is one wall thickness, 9.2, which is what
+ * sets the second edge of each of the first two.
+ */
+const wall = 9.2;
+const outerCorner = 29.6;
+const lensRadius = 25.7;
+const dot = { x: 76.6, y: 23.3, r: 6 } as const;
+
+/*
+ * A rounded square held the given distance in from the edge of the viewBox.
+ * The corner of the inner edge of a wall is the outer corner less the wall, so
+ * the two squares stay concentric and the stroke keeps an even width round the
+ * turn rather than pinching at the corners.
+ */
+function roundedSquare(inset: number) {
+  const near = inset;
+  const far = 100 - inset;
+  const r = outerCorner - inset;
+  return (
+    `M${near + r} ${near}H${far - r}A${r} ${r} 0 0 1 ${far} ${near + r}` +
+    `V${far - r}A${r} ${r} 0 0 1 ${far - r} ${far}` +
+    `H${near + r}A${r} ${r} 0 0 1 ${near} ${far - r}` +
+    `V${near + r}A${r} ${r} 0 0 1 ${near + r} ${near}Z`
+  );
+}
+
+// A closed circle, drawn as the two half turns a single arc cannot make.
+function circle(cx: number, cy: number, r: number) {
+  return (
+    `M${cx - r} ${cy}A${r} ${r} 0 0 1 ${cx + r} ${cy}` +
+    `A${r} ${r} 0 0 1 ${cx - r} ${cy}Z`
+  );
+}
+
+/*
+ * Under even-odd the five subpaths give three rings without any of them being
+ * drawn as a stroke: the outer square is ink, the square inside it is back to
+ * nothing, and each shape drawn inside that emptiness counts one crossing
+ * further out again, so the lens is ink, the hole in the lens is not, and the
+ * dot, sitting in the emptiness on its own, is ink.
+ */
+const instagram =
+  roundedSquare(0) +
+  roundedSquare(wall) +
+  circle(50, 50, lensRadius) +
+  circle(50, 50, lensRadius - wall) +
+  circle(dot.x, dot.y, dot.r);
+
+function InstagramIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 100 100" fill="currentColor" aria-hidden="true" {...props}>
+      <path fillRule="evenodd" d={instagram} />
+    </svg>
+  );
+}
+
 type SocialLink = {
   name: string;
   platform: string;
@@ -124,9 +186,24 @@ const youTubeCard = "bg-[#FF0000]";
 const soundCloudCard = "bg-[#FF5500]";
 const xCard = "bg-black";
 
+/*
+ * Instagram's is not a colour but the brand ramp, which runs corner to corner
+ * from yellow through orange and magenta to violet and blue. The app icon
+ * pours that out of its bottom left corner, and a card is far wider than it is
+ * tall, so a 45 degree line across one is near enough horizontal: laid out
+ * evenly, the pale end would sit under the mark at the left and take the white
+ * out of it. So the yellow is pulled back into the first tenth, which leaves it
+ * as the corner it is on the icon rather than a band the mark has to sit on,
+ * puts the mark over the same orange the SoundCloud card holds, and gives the
+ * handle beside it the magenta and violet that most of the ramp is anyway.
+ */
+const instagramCard =
+  "bg-[linear-gradient(45deg,#FEDA75_0%,#FA7E1E_10%,#D62976_40%,#962FBF_70%,#4F5BD5_100%)]";
+
 const youTubeIconSize = "h-[18px] w-auto";
 const soundCloudIconSize = "h-auto w-9";
 const xIconSize = "h-[17px] w-auto";
+const instagramIconSize = "h-[18px] w-auto";
 
 const links: SocialLink[] = [
   {
@@ -168,6 +245,14 @@ const links: SocialLink[] = [
     icon: XIcon,
     iconClassName: xIconSize,
     cardClassName: xCard,
+  },
+  {
+    name: "@max_eutonix",
+    platform: "Instagram",
+    href: "https://www.instagram.com/max_eutonix",
+    icon: InstagramIcon,
+    iconClassName: instagramIconSize,
+    cardClassName: instagramCard,
   },
 ];
 
