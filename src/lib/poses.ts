@@ -363,3 +363,17 @@ export type PoseId = (typeof POSES)[number]["id"];
 export function poseOf(id: PoseId): Pose {
   return POSES.find((candidate) => candidate.id === id) ?? POSES[0];
 }
+
+/**
+ * The widest any pose makes the figure, in the same units as a view's own width.
+ *
+ * What the camera's furthest limit has to be set from: the limit has to contain
+ * every framing a button can ask for, and the widest of those is the full body
+ * view of whichever pose reaches furthest. Measured off POSES rather than
+ * written down, so a fifth pose that reaches wider than the T pose does not
+ * quietly end up framed against a limit that was set without it.
+ */
+export const WIDEST = (POSES as readonly Pose[]).reduce(
+  (widest, pose) => Math.max(widest, pose.span ?? 0),
+  0,
+);

@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type RefObject,
 } from "react";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
@@ -28,17 +29,18 @@ import {
   type Transition,
 } from "@/components/figure-particles";
 import {
-  COLUMN,
   FIGURES,
   HEIGHT,
+  HORIZON,
   VIEWS,
   framing,
   versionOf,
+  type Stage as Room,
   type VersionId,
   type ViewId,
 } from "@/lib/figure";
 import { named, poseClips } from "@/lib/pose-clip";
-import { poseOf, type PoseId } from "@/lib/poses";
+import { WIDEST, poseOf, type PoseId } from "@/lib/poses";
 import { sampleSurface } from "@/lib/surface";
 
 /*
@@ -155,6 +157,43 @@ function progress(phase: Phase, age: number) {
   };
 }
 
+/*
+ * The same three numbers again, with the figure scrolled part of the way off the
+ * top of a narrow window.
+ *
+ * The dissolve is the one the figures already leave by, driven by the scroll
+ * position rather than by a clock: the surface crumbles, what comes off it blows
+ * away, and by the time the card has taken the screen there is nothing left to
+ * draw. Reusing the departure rather than fading the whole figure out is what
+ * keeps it in the page's own language, and it is the only dissolve available
+ * anyway, since a model going transparent shows its own inside through its
+ * outside.
+ *
+ * Folded into whatever the figure is doing already rather than replacing it, so
+ * that scrolling during a change of figure takes both of them with it. The cloud
+ * takes the brighter of the two, because the two dissolves are the same cloud and
+ * adding them would double it.
+ *
+ * Under reduced motion there is no cloud to come off: `fade` goes nowhere because
+ * nothing is drawn with it, and the figure is eaten away by the scroll alone,
+ * which is the viewer's own hand rather than something moving on its own.
+ */
+function veiled(at: typeof SETTLED, shown: number) {
+  if (shown >= 1) return at;
+
+  const gone = 1 - shown;
+
+  return {
+    form: at.form * shown * shown * shown,
+    fade: Math.max(
+      at.fade,
+      MathUtils.smoothstep(gone, 0, 0.1) *
+        (1 - MathUtils.smoothstep(gone, 0.42, 1)),
+    ),
+    solid: at.solid * (1 - MathUtils.smoothstep(gone, 0.03, 0.34)),
+  };
+}
+
 function Model({
   url,
   shift,
@@ -163,6 +202,7 @@ function Model({
   pose,
   phase,
   still,
+  veil,
 }: {
   url: string;
   shift: number;
@@ -171,6 +211,7 @@ function Model({
   pose: PoseId;
   phase: Phase;
   still: boolean;
+  veil: RefObject<{ value: number }>;
 }) {
   const { scene, animations } = useGLTF(url);
   const root = useRef<Group>(null);
@@ -332,7 +373,13 @@ function Model({
 
     // Under reduced motion there is no change to be part way through: the
     // figure is simply whole, and the cloud is never built or drawn.
-    const at = still ? SETTLED : progress(phase, phaseAge);
+    //
+    // The scroll is folded in on top of that, and on a wide window sits at full
+    // strength and takes nothing off: there, this is exactly the line it was.
+    const at = veiled(
+      still ? SETTLED : progress(phase, phaseAge),
+      veil.current.value,
+    );
     transition.current.form.value = at.form;
     transition.current.fade.value = at.fade;
     transition.current.solid.value = at.solid;
@@ -374,10 +421,12 @@ function Stage({
   version,
   pose,
   still,
+  veil,
 }: {
   version: VersionId;
   pose: PoseId;
   still: boolean;
+  veil: RefObject<{ value: number }>;
 }) {
   // The turntable belongs to the stage rather than to either model. Both the
   // departing and arriving figures consequently occupy the same angle during
@@ -466,6 +515,7 @@ function Stage({
             pose={pose}
             phase="leaving"
             still={still}
+            veil={veil}
           />
         </Suspense>
       ) : null}
@@ -479,6 +529,7 @@ function Stage({
           pose={pose}
           phase={cast.phase}
           still={still}
+          veil={veil}
         />
       </Suspense>
     </group>
@@ -496,10 +547,12 @@ function Controls({
   view,
   fitId,
   span,
+  room,
 }: {
   view: ViewId;
   fitId: number;
   span: number;
+  room: Room;
 }) {
   const camera = useThree((state) => state.camera);
   const domElement = useThree((state) => state.gl.domElement);
@@ -541,11 +594,7 @@ function Controls({
     orbit.cursor.set(0, HEIGHT / 2, 0);
     orbit.maxTargetRadius = HEIGHT / 2;
 
-    // Wide enough to contain every framing the buttons ask for, with room to
-    // zoom past them in both directions, and far short of the nearest stars so
-    // that the field is never flown into.
     orbit.minDistance = HEIGHT * 0.2;
-    orbit.maxDistance = HEIGHT * 4;
 
     // Stop just short of both poles, where the horizon flips over and the
     // figure is seen from directly overhead or from directly underneath.
@@ -582,9 +631,36 @@ function Controls({
     // the pose itself deliberately: every pose but the T pose leaves it at zero,
     // so moving between the other three does not re-run this and does not take
     // the camera off wherever the viewer has dragged it to.
+    //
+    // The aspect is the figure's own room rather than the canvas's, which covers
+    // the whole window: on a wide one that is the right hand column, and on a
+    // narrow one the band across the top, which is also the only one of the two
+    // that narrows the height and so needs the row passed as well.
+    const aspect = (size.width * room.column) / size.height;
     const preset = VIEWS.find((candidate) => candidate.id === view) ?? VIEWS[0];
-    goal.current = framing(preset, (size.width * COLUMN) / size.height, span);
-  }, [view, fitId, size, span]);
+    goal.current = framing(preset, aspect, span, room.row);
+
+    const orbit = controls.current;
+    if (!orbit) return;
+
+    /*
+     * How far back the camera may be pulled, which has to contain every framing
+     * the buttons can ask for or one of them is clamped short of its own fit.
+     * The furthest of those is the full body view of the widest pose, and the
+     * limit is set past it so there is room to zoom out beyond what any button
+     * gives, up to the point where the nearest stars would start to be flown
+     * into.
+     *
+     * Set here rather than where the controls are built because it depends on
+     * the shape of the figure's room, which the band across the top of a phone
+     * changes: fitting a whole figure into two fifths of the vertical field puts
+     * the camera a good deal further off than the wide layout ever asks for. On
+     * the wide layout the reach works out well inside the old fixed limit, which
+     * is consequently what it still comes to.
+     */
+    const reach = framing(VIEWS[0], aspect, WIDEST, room.row).distance;
+    orbit.maxDistance = Math.min(Math.max(HEIGHT * 4, reach * 1.6), HORIZON);
+  }, [view, fitId, size, span, room]);
 
   useFrame((_, delta) => {
     const orbit = controls.current;
@@ -678,12 +754,16 @@ export default function FigureRig({
   view,
   fitId,
   still,
+  room,
+  veil,
 }: {
   version: VersionId;
   pose: PoseId;
   view: ViewId;
   fitId: number;
   still: boolean;
+  room: Room;
+  veil: RefObject<{ value: number }>;
 }) {
   return (
     <>
@@ -699,15 +779,19 @@ export default function FigureRig({
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
       <Overhead />
 
-      <Stage version={version} pose={pose} still={still} />
-      <Controls view={view} fitId={fitId} span={poseOf(pose).span ?? 0} />
+      <Stage version={version} pose={pose} still={still} veil={veil} />
+      <Controls
+        view={view}
+        fitId={fitId}
+        span={poseOf(pose).span ?? 0}
+        room={room}
+      />
     </>
   );
 }
 
 // Start fetching the figure the page opens on as soon as this chunk is parsed,
 // in parallel with React mounting it, rather than waiting for the first render.
-// The chunk itself is only loaded on a viewport wide enough to show a figure,
-// so a phone never pays for either. The rest are fetched when a tab or a version
-// button for them is hovered, which is the canvas's job rather than this one's.
+// The rest are fetched when a tab or a version button for them is hovered, which
+// is the canvas's job rather than this one's.
 useGLTF.preload(FIGURES[0].versions[0].url);
