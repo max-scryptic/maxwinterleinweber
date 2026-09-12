@@ -43,9 +43,9 @@ import { POSES, type PoseId } from "@/lib/poses";
  * picture of one.
  */
 
-// The figures, three.js's loaders and several megabytes of model, split off so
-// that a phone, which is shown the sky but not the figure, never fetches any of
-// it.
+// The figures, three.js's loaders and several megabytes of model, split off from
+// the chunk that draws the sky, so that the page is up and the sky is on it
+// before any of that has arrived.
 const FigureRig = lazy(() => import("@/components/figure-stage"));
 
 /*
@@ -131,8 +131,11 @@ function Sky({ still }: { still: boolean }) {
 /*
  * Slides the camera's frustum so that the figure, which sits at the origin,
  * projects onto the part of the window its stage gives it rather than into the
- * middle: the right hand half on a wide window, the band across the top on a
- * narrow one.
+ * middle: the right hand half on a wide window. On a narrow one that part is the
+ * whole of the first screen, so the slide comes to nothing and this is left
+ * doing arithmetic that lands back where it started; it is still the one place
+ * that decides where the figure is aimed, and would be needed again by any stage
+ * given less than the window.
  *
  * This is a change to the projection, not a move: the figure holds its place on
  * screen however far the camera is orbited around it. Offsetting the orbit
@@ -292,7 +295,8 @@ export default function SpaceScene() {
    *
    * Both layouts offer exactly the same controls and differ only in where they
    * are put: a wide window has room to hang them off the edges of the figure's
-   * own column, and a narrow one has to fit them into the band across the top.
+   * own column, and a narrow one has to fit them into the screen the figure
+   * stands in.
    * Building the buttons once and arranging them twice is what keeps that a
    * difference of arrangement rather than two rows of buttons that have to be
    * kept saying the same thing.
@@ -461,11 +465,12 @@ export default function SpaceScene() {
         framing, and down the side is the figure itself, which keeps the two axes
         saying what they change.
 
-        A narrow one has only the band, so they are packed into it, and the two
-        that were a column down the side become one line: there is no side to run
-        down when the figure is as wide as the page. They are stacked at the foot
-        of the band rather than spread to its corners so that they stay together
-        and out of the middle, which is where the figure is.
+        A narrow one has the figure standing across the whole of the first
+        screen, so they go round the edges of that instead, and the two that were
+        a column down the side become one line: there is no side to run down when
+        the figure is as wide as the page. They are stacked at the foot of the
+        screen rather than spread to its corners so that they stay together and
+        out of the middle, which is where the figure is.
       */}
       {wide ? (
         <>
@@ -516,9 +521,9 @@ export default function SpaceScene() {
           </div>
         </>
       ) : (
-        /* Exactly the band, so that the buttons are inside the figure's own
-           room rather than over the card below it, and everything in it passes
-           clicks through except the buttons.
+        /* Exactly the figure's own room, which on this layout is the first
+           screen, so that the buttons are inside it rather than over the card
+           below, and everything in it passes clicks through except the buttons.
 
            Faded out with the figure by the hook that measures the scroll,
            written straight onto this element rather than through React: it

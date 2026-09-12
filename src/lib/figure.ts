@@ -165,8 +165,9 @@ export const FOV = 35;
  * camera start to slide against the ones behind them and the sky stops reading
  * as a backdrop. It is a ceiling rather than the limit itself, which is worked
  * out per layout from the framings the buttons can ask for; it only ever binds
- * on the narrow one, where the figure is fitted into a band a fraction of the
- * window's height and so stands a good deal further off.
+ * on the narrow one, where the figure is fitted to the width of a portrait
+ * window a good deal taller than it is wide, and the widest pose consequently
+ * stands a long way off.
  */
 export const HORIZON = 12;
 
@@ -191,21 +192,28 @@ export const CENTRE = 0.75;
 export const COLUMN = 0.5;
 
 /*
- * The share of a narrow window the figure's band takes across the top.
+ * The share of a narrow window the figure is given, measured from the top.
  *
  * On a wide window the page is split sideways and the figure gets a column. A
- * phone has no width to give away, so the split is made the other way and the
- * figure gets a band across the top with the card below it, scrolled up over
- * the sky. This is the height of that band.
+ * phone has no width to give away, so the split is made the other way, and in
+ * depth rather than across the page: the figure has the first screen to itself,
+ * whole, and the card begins at the fold and is scrolled up over the sky.
  *
- * A compromise between two things pulling in opposite directions. The band is
- * the whole of the figure's room, so a taller one shows it bigger; but the band
- * is also what sits between the top of the window and the top of the card, and
- * a taller one pushes more of the card below the fold, where a visitor who
- * never scrolls will not find it. At this height the card's first few lines are
- * on screen at rest, which is what says there is more page under it.
+ * All of it, rather than the two fifths this was. The smaller share kept the
+ * card's first few lines on screen at rest, which said there was more page
+ * underneath; it paid for that hint with both halves of the page, since a figure
+ * fitted into two fifths of the height stands a long way off and looks it, and
+ * the card was read through a letterbox. A screen each is the other way round:
+ * the figure is shown at the size the window can actually hold, and the card is
+ * read at the size it was drawn for. What is given up is the hint, and a swipe
+ * up is the one gesture a phone can be relied on to be given.
+ *
+ * Kept as a fraction rather than folded away now that it is 1, because three
+ * things are set from it and have to agree: the height of the page's first row,
+ * the share of the vertical field the camera frames the figure into, and the
+ * distance the dissolve is measured over.
  */
-export const BAND = 0.44;
+export const BAND = 1;
 
 /*
  * Where on the page the figure is given room to stand, and how much of it.
@@ -231,8 +239,8 @@ export type Stage = {
 /** The right hand half of a wide window, full height. */
 export const WIDE_STAGE: Stage = { x: CENTRE, y: 0.5, column: COLUMN, row: 1 };
 
-/** The band across the top of a narrow one, full width, with the card scrolling
- * up past it. */
+/** The first screen of a narrow one, full width and full height, with the card
+ * scrolling up past it. */
 export const NARROW_STAGE: Stage = {
   x: 0.5,
   y: BAND / 2,
@@ -283,11 +291,12 @@ export type ViewId = View["id"];
  * row is the share of the window's height the figure is being fitted into, and
  * is the vertical counterpart of the aspect above. The field of view belongs to
  * the whole canvas, which covers the window however little of it the figure is
- * standing in, so a figure given a band across the top of a phone is being
- * fitted into that fraction of the vertical field and has to be that much
- * further away. It defaults to the whole height, which is the wide layout: there
- * the figure has a column rather than a band, and the aspect passed in already
- * carries the only narrowing there is.
+ * standing in, so a figure given a strip of it is being fitted into that
+ * fraction of the vertical field and has to be that much further away. It
+ * defaults to the whole height, which is what both of the stages below in fact
+ * ask for: the wide one gives the figure a full-height column, and the narrow
+ * one the whole of the first screen. It is here for a stage that is given less,
+ * which is what the narrow one was.
  */
 export function framing(view: View, aspect: number, span = 0, row = 1) {
   const halfFov = Math.tan((FOV * Math.PI) / 360);
