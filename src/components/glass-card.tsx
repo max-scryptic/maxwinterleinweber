@@ -39,9 +39,11 @@ const SURFACE = `linear-gradient(145deg, rgb(255 255 255 / ${brightFill.toFixed(
 
 export function GlassCard({ children }: { children: ReactNode }) {
   return (
-    /* The shell holds the glass and clips it to the card's shape; the scrolling
-       happens in the column inside, so the pane stays put while its contents
-       move over it.
+    /* The shell holds the glass and clips it to the card's shape. On a wide
+       window the scrolling happens in the column inside, so the pane stays put
+       while its contents move over it; on a narrow one the pane is as tall as
+       what is in it and the page scrolls instead, carrying the whole card up
+       over the sky and past the figure in the band above it.
 
        The hairline of white on the top edge and the ring around it are the lit
        edge of a sheet of glass, and the shadows under them are the pane's
@@ -77,8 +79,14 @@ export function GlassCard({ children }: { children: ReactNode }) {
       {/* Horizontally centred but top aligned: the name and the cards sit at
           the head of the card and grow downwards, rather than riding up and
           down with the height of the window. */}
+      {/* Height, and with it the scrolling, only from md up. Left to grow on a
+          narrow window: the card is as tall as its contents and the page is what
+          scrolls, which is what lets the figure's band sit above it rather than
+          behind it. Taking the height here rather than clamping the card from
+          outside keeps the 10px gutter even on the wide layout, where the pane
+          is exactly the window and its contents move inside it. */}
       <div
-        className={`@container flex h-full min-h-0 flex-col items-center justify-start overflow-y-auto overscroll-contain px-4 pt-10 pb-6 sm:px-6 md:px-10 md:pt-12 ${styles.content}`}
+        className={`@container flex min-h-0 flex-col items-center justify-start px-4 pt-10 pb-6 sm:px-6 md:h-full md:overflow-y-auto md:overscroll-contain md:px-10 md:pt-12 ${styles.content}`}
       >
         {children}
       </div>

@@ -157,6 +157,19 @@ export function figureOf(id: VersionId): Figure {
 // Degrees, vertical.
 export const FOV = 35;
 
+/*
+ * Metres. The furthest the camera may ever be pulled back from the figure.
+ *
+ * The nearest star sits 14 metres out (`src/components/starfield.tsx`), so this
+ * is what keeps the field from being flown into: past it the stars nearest the
+ * camera start to slide against the ones behind them and the sky stops reading
+ * as a backdrop. It is a ceiling rather than the limit itself, which is worked
+ * out per layout from the framings the buttons can ask for; it only ever binds
+ * on the narrow one, where the figure is fitted into a band a fraction of the
+ * window's height and so stands a good deal further off.
+ */
+export const HORIZON = 12;
+
 // The camera sits above whatever it is looking at, angled very slightly down.
 export const CAMERA_RISE = HEIGHT * 0.22;
 
@@ -176,6 +189,56 @@ const MARGIN = 1.3;
  */
 export const CENTRE = 0.75;
 export const COLUMN = 0.5;
+
+/*
+ * The share of a narrow window the figure's band takes across the top.
+ *
+ * On a wide window the page is split sideways and the figure gets a column. A
+ * phone has no width to give away, so the split is made the other way and the
+ * figure gets a band across the top with the card below it, scrolled up over
+ * the sky. This is the height of that band.
+ *
+ * A compromise between two things pulling in opposite directions. The band is
+ * the whole of the figure's room, so a taller one shows it bigger; but the band
+ * is also what sits between the top of the window and the top of the card, and
+ * a taller one pushes more of the card below the fold, where a visitor who
+ * never scrolls will not find it. At this height the card's first few lines are
+ * on screen at rest, which is what says there is more page under it.
+ */
+export const BAND = 0.44;
+
+/*
+ * Where on the page the figure is given room to stand, and how much of it.
+ *
+ * x and y are where the figure lands in the window, as fractions of its width
+ * and height. column and row are the share of the window's width and height it
+ * is fitted into. Between them that is enough both to offset the camera's
+ * frustum onto the right part of the window and to work out how far back the
+ * camera has to stand to fill it.
+ *
+ * Two of these, one per layout, rather than numbers worked out where they are
+ * used: the offset is applied by the canvas and the distance by the controls
+ * inside the figure's own chunk, and those two have to agree about where the
+ * figure is or it is framed for a part of the window it is not in.
+ */
+export type Stage = {
+  x: number;
+  y: number;
+  column: number;
+  row: number;
+};
+
+/** The right hand half of a wide window, full height. */
+export const WIDE_STAGE: Stage = { x: CENTRE, y: 0.5, column: COLUMN, row: 1 };
+
+/** The band across the top of a narrow one, full width, with the card scrolling
+ * up past it. */
+export const NARROW_STAGE: Stage = {
+  x: 0.5,
+  y: BAND / 2,
+  column: 1,
+  row: BAND,
+};
 
 /*
  * The three framings, as fractions of the figure's height measured from its
@@ -216,33 +279,53 @@ export type ViewId = View["id"];
  * A view's width describes a figure standing still, so a pose that reaches wider
  * than that, which is a T pose and nothing else so far, would otherwise be
  * framed by a number that was never about it.
+ *
+ * row is the share of the window's height the figure is being fitted into, and
+ * is the vertical counterpart of the aspect above. The field of view belongs to
+ * the whole canvas, which covers the window however little of it the figure is
+ * standing in, so a figure given a band across the top of a phone is being
+ * fitted into that fraction of the vertical field and has to be that much
+ * further away. It defaults to the whole height, which is the wide layout: there
+ * the figure has a column rather than a band, and the aspect passed in already
+ * carries the only narrowing there is.
  */
-export function framing(view: View, aspect: number, span = 0) {
+export function framing(view: View, aspect: number, span = 0, row = 1) {
   const halfFov = Math.tan((FOV * Math.PI) / 360);
   const height = (view.top - view.bottom) * HEIGHT * MARGIN;
   const width = Math.max(view.width, span) * HEIGHT * MARGIN;
 
   return {
     focus: ((view.top + view.bottom) / 2) * HEIGHT,
-    distance: Math.max(height / 2 / halfFov, width / 2 / (halfFov * aspect)),
+    distance: Math.max(
+      height / 2 / (halfFov * row),
+      width / 2 / (halfFov * aspect),
+    ),
   };
 }
 
 /**
- * The framing to open on, before there is a window to measure. Only has to be
- * close enough not to be seen jumping: the first frame after mount corrects it
- * against the real shape of the column.
- */
-export const OPENING = framing(VIEWS[0], COLUMN);
-
-/**
- * How far the camera is tilted down at that framing, in radians about X.
+ * The framing a stage opens on, before there is a window to measure, and how far
+ * the camera is tilted down at it.
  *
- * The camera has to be handed this rather than left to aim itself. Given no
+ * The aspect is taken to be the stage's own column, which is to say the window
+ * is assumed square. Only has to be close enough not to be seen jumping: the
+ * first frame after mount corrects it against the real shape of the window. It
+ * is closer than it looks, because on both stages it is the height that decides
+ * the distance and the assumed aspect does not enter into it.
+ *
+ * The pitch has to be handed to the camera rather than left to it. Given no
  * rotation, the canvas points a new camera at the origin, which out here is the
- * point between the figure's feet, and the controls then aim it at the middle
- * of the figure the moment they load: a several degree pitch that swings the
- * whole sky with it, arriving a second into the page. Opening at the angle the
+ * point between the figure's feet, and the controls then aim it at the middle of
+ * the figure the moment they load: a several degree pitch that swings the whole
+ * sky with it, arriving a second into the page. Opening at the angle the
  * controls are going to hold means there is nothing to correct.
  */
-export const OPENING_PITCH = -Math.atan2(CAMERA_RISE, OPENING.distance);
+export function opening(stage: Stage) {
+  const fit = framing(VIEWS[0], stage.column, 0, stage.row);
+
+  return {
+    focus: fit.focus,
+    distance: fit.distance,
+    pitch: -Math.atan2(CAMERA_RISE, fit.distance),
+  };
+}
