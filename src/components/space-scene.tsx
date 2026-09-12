@@ -219,7 +219,7 @@ export default function SpaceScene() {
    * Holding the two separately would mean keeping them in step by hand.
    *
    * The page opens on the first version of the first figure, which is the
-   * placeholder every later one is measured against.
+   * earliest capture and the one every later one is measured against.
    */
   const [version, setVersion] = useState<VersionId>(FIGURES[0].versions[0].id);
 
@@ -237,8 +237,8 @@ export default function SpaceScene() {
 
   /*
    * What it is doing, which is kept across a change of figure rather than reset
-   * with it. Switching to a scan and back is then a way of seeing how far the
-   * scan has to go, rather than something that quietly puts the placeholder back
+   * with it. Switching between two captures is then a way of seeing how far the
+   * later one has gone, rather than something that quietly puts one of them back
    * on its feet while nobody is looking.
    */
   const [pose, setPose] = useState<PoseId>(POSES[0].id);

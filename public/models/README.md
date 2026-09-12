@@ -14,28 +14,12 @@ in that tab's `versions` list rather than by anything written down.
 The column down the right hand side, under those, switches between poses
 instead, and is only there for a model with a skeleton in it. See
 [Making one move](#making-one-move) below, which is also where the answer to
-"why can the mannequin do that and a raw scan cannot" lives.
-
-## mannequin.glb
-
-The placeholder every later iteration is measured against.
-
-It is the `Xbot` figure from the three.js example assets
-(`examples/models/gltf/Xbot.glb` in https://github.com/mrdoob/three.js), a
-rigged, untextured humanoid originally rigged through Adobe Mixamo. It carries
-seven animation clips: `agree`, `headShake`, `idle`, `run`, `sad_pose`,
-`sneak_pose` and `walk`. Default plays `idle` and the other four poses are built
-onto its skeleton, so the remaining six clips are sitting there unused and are
-one line each in `POSES` to put on a button.
-
-Its sixty seven joints are a stock Mixamo skeleton, which is the only reason the
-poses in `src/lib/poses.ts` are worth writing: they are addressed to joints
-called `LeftUpLeg` and `RightForeArm`, and anything else that has been through
-the same rigger answers to those names too.
+"why can a rigged scan do that and a raw one cannot" lives.
 
 ## scan-01.glb
 
-The first photogrammetry scan, captured in Polycam and exported through
+The first photogrammetry scan, what the page opens on, and the thing every
+later capture is measured against. Captured in Polycam and exported through
 Blender. Deliberately unretouched: limbs and most of the legs are missing, the
 mesh is torn, and a long shard of jeans hangs below the body.
 
@@ -178,16 +162,18 @@ A figure moves because something is turning its joints. A model with no joints
 has nothing to turn, and no amount of code at this end invents them: posing a
 photogrammetry scan is a thing that happens to the file, before it ever reaches
 this directory. That is the whole of why the pose column is missing on the two
-raw scans and present on the placeholder and on scan 02's v2 and v3, which are
-one of those scans after the thing had happened to it.
+raw scans and present on scan 02's v2 and v3, which are one of those scans after
+the thing had happened to it.
 
 Given a skeleton, there are two ways to drive it, and the viewer treats them as
 the same kind of thing:
 
 - **A clip the model was exported carrying.** Recorded motion, and no
-  substitute for it exists: Default is the placeholder's `idle`, which is a
-  recording of a person standing still and breathing, and it beats anything
-  written by hand.
+  substitute for it exists: a model exported carrying an `idle` clip plays it
+  for Default, and a recording of a person standing still and breathing beats
+  anything written by hand. Nothing here carries one, an auto rigger producing
+  no clips, so this is the branch waiting for a scan that arrives with motion
+  in it.
 - **A pose written in `src/lib/poses.ts`.** A rotation per joint, in degrees,
   measured about the figure's own axes. T-pose, Squat and Moonwalk are these.
   They cost a few hundred bytes rather than a few megabytes, they can be read
@@ -217,8 +203,8 @@ squat does lifts the feet off the floor, and the builder puts them back by
 standing the figure on its own feet. And where the figure ends up, which for the
 squat means the hips travelling backwards over the heels rather than the whole
 body leaning forwards off the axis it is being turned on. A scan with shorter
-legs than the placeholder therefore squats less deeply, correctly, with no
-numbers touched.
+legs than the last one therefore squats less deeply, correctly, with no numbers
+touched.
 
 ### Rigging a scan
 
@@ -325,10 +311,9 @@ each one a band of the figure to fit, as fractions of its height measured up
 from the ground, plus how wide that band is at its widest. Those are
 proportions of a standing person rather than measurements of any one model, so
 a scan of a whole standing figure should need no change: the hips sit a little
-above half of a person's height and the head is the top eighth. The placeholder
-is stylised and has a head nearer a sixth of its height, so its head shot
-includes more shoulder than a scan's would, and `scan-01` is neither, so its
-head shot misses.
+above half of a person's height and the head is the top eighth. Scan 02 is such
+a figure and is framed correctly by them. `scan-01` is not a whole figure at
+all, so its head shot misses.
 
 Three things a scan has to get right, because none of them can be inferred from
 a bounding box:
