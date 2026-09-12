@@ -41,9 +41,10 @@ export function GlassCard({ children }: { children: ReactNode }) {
   return (
     /* The shell holds the glass and clips it to the card's shape. On a wide
        window the scrolling happens in the column inside, so the pane stays put
-       while its contents move over it; on a narrow one the pane is as tall as
-       what is in it and the page scrolls instead, carrying the whole card up
-       over the sky and past the figure in the band above it.
+       while its contents move over it; on a narrow one the pane is a screen
+       tall, or taller if what is in it needs the room, and the page scrolls
+       instead, carrying the whole card up over the sky and past the figure
+       standing on the screen above it.
 
        The hairline of white on the top edge and the ring around it are the lit
        edge of a sheet of glass, and the shadows under them are the pane's
@@ -80,11 +81,12 @@ export function GlassCard({ children }: { children: ReactNode }) {
           the head of the card and grow downwards, rather than riding up and
           down with the height of the window. */}
       {/* Height, and with it the scrolling, only from md up. Left to grow on a
-          narrow window: the card is as tall as its contents and the page is what
-          scrolls, which is what lets the figure's band sit above it rather than
-          behind it. Taking the height here rather than clamping the card from
-          outside keeps the 10px gutter even on the wide layout, where the pane
-          is exactly the window and its contents move inside it. */}
+          narrow window, where the pane is given its height by the row it sits in
+          and the page is what scrolls, which is what lets the figure's own screen
+          sit above the card rather than behind it. Taking the height here rather
+          than clamping the card from outside keeps the 10px gutter even on the
+          wide layout, where the pane is exactly the window and its contents move
+          inside it. */}
       <div
         className={`@container flex min-h-0 flex-col items-center justify-start px-4 pt-10 pb-6 sm:px-6 md:h-full md:overflow-y-auto md:overscroll-contain md:px-10 md:pt-12 ${styles.content}`}
       >

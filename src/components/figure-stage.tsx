@@ -634,8 +634,9 @@ function Controls({
     //
     // The aspect is the figure's own room rather than the canvas's, which covers
     // the whole window: on a wide one that is the right hand column, and on a
-    // narrow one the band across the top, which is also the only one of the two
-    // that narrows the height and so needs the row passed as well.
+    // narrow one the whole of the first screen. The row goes with it, and carries
+    // whatever share of the window's height that room is; as the two stages
+    // stand, both are given all of it.
     const aspect = (size.width * room.column) / size.height;
     const preset = VIEWS.find((candidate) => candidate.id === view) ?? VIEWS[0];
     goal.current = framing(preset, aspect, span, room.row);
@@ -652,11 +653,11 @@ function Controls({
      * into.
      *
      * Set here rather than where the controls are built because it depends on
-     * the shape of the figure's room, which the band across the top of a phone
-     * changes: fitting a whole figure into two fifths of the vertical field puts
-     * the camera a good deal further off than the wide layout ever asks for. On
-     * the wide layout the reach works out well inside the old fixed limit, which
-     * is consequently what it still comes to.
+     * the shape of the figure's room, which is not the same on the two layouts:
+     * a phone gives the figure the full height of a portrait window, and fitting
+     * the widest pose across something that narrow puts the camera further off
+     * than the wide layout ever asks for. There the reach works out well inside
+     * the old fixed limit, which is consequently what it still comes to.
      */
     const reach = framing(VIEWS[0], aspect, WIDEST, room.row).distance;
     orbit.maxDistance = Math.min(Math.max(HEIGHT * 4, reach * 1.6), HORIZON);
