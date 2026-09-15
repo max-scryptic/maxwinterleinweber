@@ -77,7 +77,7 @@ const builds: Build[] = [
   {
     name: "Viewlio",
     description: "Retention insight for YouTube creators",
-    href: "https://hookpointai.vercel.app",
+    href: "https://www.viewlio.cc",
     icon: ViewlioIcon,
     tileClassName: "text-[#fafafa]",
     tileStyle: { backgroundColor: viewlioBlue },
