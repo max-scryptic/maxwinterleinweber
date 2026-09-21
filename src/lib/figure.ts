@@ -34,11 +34,14 @@ export const HEIGHT = 1.8;
  * shift, rise and yaw are small visual calibrations after that normalisation.
  * Scan 01's exported bounds do not centre its visible head, and it was captured
  * at an angle to the axis the others face along, so it otherwise lands slightly
- * left and low while facing the wrong way. Keeping those corrections on the
- * version leaves every model aligned at the same shared turntable angle through
- * every framing. Yaw is measured in radians about the vertical axis. All three
- * versions of scan 02 are the one capture, a clean export centred and standing
- * on its own origin, so none of them needs a shift or a rise.
+ * left and low while facing the wrong way. Scan 03 arrived with the same
+ * rear-facing export convention as the raw Scan 02 capture, so it carries a
+ * half turn, then an 18 degree clockwise nudge to match the other scans
+ * visually. Keeping those corrections on the version leaves every model aligned
+ * at the same shared turntable angle through every framing. Yaw is measured in
+ * radians about the vertical axis. All three versions of scan 02 are the one
+ * capture, a clean export centred and standing on its own origin, so none of
+ * them needs a shift or a rise.
  *
  * rigged says whether the model has a skeleton inside it, which is what decides
  * whether the pose buttons are offered for it at all. It is stated here rather
@@ -124,7 +127,7 @@ export const FIGURES = [
         url: "/models/model3.glb",
         shift: 0,
         rise: 0,
-        yaw: 0,
+        yaw: Math.PI - Math.PI / 10,
         rigged: false,
       },
     ],

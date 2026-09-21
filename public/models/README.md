@@ -163,6 +163,11 @@ is still the one thing to get right for the next one.
 animation clips, so it is listed as one unrigged version in `FIGURES` and does
 not show the pose column.
 
+Like the raw Scan 02 capture, it was exported facing away from the shared
+turntable angle, so its entry carries a half turn of yaw, then an 18 degree
+clockwise nudge. Without that, flipping between the three tabs leaves Scan 03
+out of step while Scan 01 and Scan 02 stay aligned.
+
 ## Making one move
 
 A figure moves because something is turning its joints. A model with no joints
