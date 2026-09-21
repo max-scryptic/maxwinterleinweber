@@ -48,7 +48,7 @@ export const HEIGHT = 1.8;
  * buttons that do not do anything: the figure itself reads the real skeleton and
  * is not fooled by this.
  *
- * It is false for both of the raw scans, and that is not an oversight.
+ * It is false for the raw scans, and that is not an oversight.
  * Photogrammetry produces a single mesh and no bones, and a mesh with no bones
  * cannot be posed by any amount of code at this end; scan-01 has no limbs to rig
  * either. Scan 02's v2 and v3 are its own mesh after `scripts/rig-scan.py`,
@@ -112,6 +112,20 @@ export const FIGURES = [
         rise: 0,
         yaw: 0,
         rigged: true,
+      },
+    ],
+  },
+  {
+    id: "model3",
+    label: "Scan 03",
+    versions: [
+      {
+        id: "model3",
+        url: "/models/model3.glb",
+        shift: 0,
+        rise: 0,
+        yaw: 0,
+        rigged: false,
       },
     ],
   },

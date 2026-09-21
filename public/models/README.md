@@ -7,9 +7,10 @@ on.
 A tab is a capture, not a file. Where the same capture is on the page more than
 once, the takes on it sit behind one tab as its versions, and a row of buttons
 labelled `v1`, `v2`, `v3` appears on the right to choose between them. Scan 02
-is the only one so far: `scan-02.glb` raw as v1, `scan-03.glb` rigged backwards
-as v2, and `scan-04.glb` rigged properly as v3. They are numbered by their order
-in that tab's `versions` list rather than by anything written down.
+is the only multi-version one so far: `scan-02.glb` raw as v1, `scan-03.glb`
+rigged backwards as v2, and `scan-04.glb` rigged properly as v3. They are
+numbered by their order in that tab's `versions` list rather than by anything
+written down.
 
 The column down the right hand side, under those, switches between poses
 instead, and is only there for a model with a skeleton in it. See
@@ -155,6 +156,12 @@ What is not fixed here, because it is not a rigging problem, is the shoulder.
 This is scan-02's mesh, captured arms-down, so it has the same welded armpit and
 the same smear across the chest when the arms come up. Re-capturing in an A-pose
 is still the one thing to get right for the next one.
+
+## model3.glb
+
+**Scan 03.** The third tab's capture. It is a single mesh with no skin and no
+animation clips, so it is listed as one unrigged version in `FIGURES` and does
+not show the pose column.
 
 ## Making one move
 
