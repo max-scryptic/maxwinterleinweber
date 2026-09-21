@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://maxwinterleinweber.com"),
   title: "Max Winter-Leinweber",
   description: "The personal site of Max Winter-Leinweber.",
 };

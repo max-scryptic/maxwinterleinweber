@@ -7,11 +7,20 @@ import {
   useMemo,
   useRef,
   useState,
+  type RefObject,
 } from "react";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Box3, Group, MathUtils, Mesh, Vector3 } from "three";
+import {
+  Box3,
+  Group,
+  MathUtils,
+  Mesh,
+  SpotLight,
+  Vector3,
+  type AnimationAction,
+} from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import {
@@ -20,23 +29,28 @@ import {
   type Transition,
 } from "@/components/figure-particles";
 import {
-  COLUMN,
   FIGURES,
   HEIGHT,
+  HORIZON,
   VIEWS,
   framing,
-  type FigureId,
+  versionOf,
+  type Stage as Room,
+  type VersionId,
   type ViewId,
 } from "@/lib/figure";
+import { named, poseClips } from "@/lib/pose-clip";
+import { WIDEST, poseOf, type PoseId } from "@/lib/poses";
 import { sampleSurface } from "@/lib/surface";
 
 /*
  * The figure adrift on the right hand side of the page, together with the light
  * on it and the camera work that keeps it there.
  *
- * There is more than one figure now, and the tabs swap between them. Adding
- * another is an entry in FIGURES and nothing else: everything below is derived
- * from whichever model is loaded, from its own bounding box rather than from
+ * There is more than one figure now, and the tabs swap between them, as do the
+ * version buttons between the takes on any one of them. Adding either is an
+ * entry in FIGURES and nothing else: everything below is derived from whichever
+ * model is loaded, from its own bounding box rather than from
  * numbers measured against a particular mesh, so a scan exported at a different
  * scale, in different units, or sitting off its own origin still lands upright,
  * centred and framed like the one before it.
@@ -76,6 +90,17 @@ const OPENING_SECONDS = 2.4;
 const GATHER_SECONDS = 1.5;
 const GATHER_DELAY = 0.45;
 const DISPERSE_SECONDS = 1.1;
+
+/*
+ * How long the figure takes to move from one pose into the next.
+ *
+ * A pose change is a blend rather than a cut, and this is short enough to
+ * answer the press immediately while still being a move the eye can follow:
+ * the figure is seen dropping into the squat rather than found already in it,
+ * which is the whole of the joke. Shorter than any of the times above, because
+ * unlike a change of figure this is one body doing one thing.
+ */
+const BLEND_SECONDS = 0.5;
 
 /**
  * Which figures are doing what. A figure is in exactly one of these for the
@@ -132,22 +157,80 @@ function progress(phase: Phase, age: number) {
   };
 }
 
-function source(id: FigureId) {
-  return (FIGURES.find((figure) => figure.id === id) ?? FIGURES[0]).url;
+/*
+ * The same three numbers again, with the figure scrolled part of the way off the
+ * top of a narrow window.
+ *
+ * The dissolve is the one the figures already leave by, driven by the scroll
+ * position rather than by a clock: the surface crumbles, what comes off it blows
+ * away, and by the time the card has taken the screen there is nothing left to
+ * draw. Reusing the departure rather than fading the whole figure out is what
+ * keeps it in the page's own language, and it is the only dissolve available
+ * anyway, since a model going transparent shows its own inside through its
+ * outside.
+ *
+ * Folded into whatever the figure is doing already rather than replacing it, so
+ * that scrolling during a change of figure takes both of them with it. The cloud
+ * takes the brighter of the two, because the two dissolves are the same cloud and
+ * adding them would double it.
+ *
+ * Under reduced motion there is no cloud to come off: `fade` goes nowhere because
+ * nothing is drawn with it, and the figure is eaten away by the scroll alone,
+ * which is the viewer's own hand rather than something moving on its own.
+ */
+function veiled(at: typeof SETTLED, shown: number) {
+  if (shown >= 1) return at;
+
+  const gone = 1 - shown;
+
+  return {
+    form: at.form * shown * shown * shown,
+    fade: Math.max(
+      at.fade,
+      MathUtils.smoothstep(gone, 0, 0.1) *
+        (1 - MathUtils.smoothstep(gone, 0.42, 1)),
+    ),
+    solid: at.solid * (1 - MathUtils.smoothstep(gone, 0.03, 0.34)),
+  };
 }
 
 function Model({
   url,
+  shift,
+  rise,
+  yaw,
+  pose,
   phase,
   still,
+  veil,
 }: {
   url: string;
+  shift: number;
+  rise: number;
+  yaw: number;
+  pose: PoseId;
   phase: Phase;
   still: boolean;
+  veil: RefObject<{ value: number }>;
 }) {
   const { scene, animations } = useGLTF(url);
   const root = useRef<Group>(null);
-  const { actions, names, mixer } = useAnimations(animations, root);
+
+  /*
+   * The clips this figure can be asked for: the ones it was exported carrying,
+   * and the poses in `src/lib/poses.ts` built onto its own skeleton.
+   *
+   * Both go into the one mixer, so a pose written by hand and a recording of
+   * somebody standing still are the same kind of thing by the time anything
+   * here has to choose between them, and blending between the two is no
+   * different from blending between two recordings. A model with no skeleton
+   * contributes nothing to the second list and is left with whatever it
+   * arrived with, which for a photogrammetry scan is nothing at all.
+   */
+  const built = useMemo(() => poseClips(scene), [scene]);
+  const clips = useMemo(() => [...animations, ...built], [animations, built]);
+
+  const { actions, names, mixer } = useAnimations(clips, root);
 
   // Normalise the model: uniform scale to HEIGHT, centred on X and Z, feet on
   // the plane through the origin. The precise bound is important for scans
@@ -198,14 +281,66 @@ function Model({
     });
   }, [scene]);
 
+  /*
+   * Which of those clips the pose being asked for comes down to.
+   *
+   * The clip a pose names wins over the shape it describes, for the one pose
+   * that offers both: a model carrying a recording of somebody standing still
+   * should play it rather than hold a standing shape written by hand. A rigged
+   * scan carries no recordings at all, so it takes the shape. Failing both,
+   * whatever clip the model does have, and failing that nothing, which is a
+   * scan with no skeleton standing there as it was going to anyway.
+   */
+  const clip = useMemo(() => {
+    const wanted = poseOf(pose);
+    const shaped = wanted.frames ? named(wanted.id) : null;
+
+    if (wanted.clip && names.includes(wanted.clip)) return wanted.clip;
+    if (shaped && names.includes(shaped)) return shaped;
+    return names[0];
+  }, [pose, names]);
+
+  // What the figure is holding now, so the next pose has something to blend out
+  // of. A ref rather than state because nothing renders differently for it, and
+  // because the blend below has to see the value the last press left rather than
+  // the one this render was given.
+  const holding = useRef<AnimationAction | null>(null);
+
   useLayoutEffect(() => {
-    // The placeholder carries a set of Mixamo clips. "idle" is the standing
-    // one, which is the only one that suits a figure at rest; any other model
-    // falls back to its first clip, and a model with no clips, which is every
-    // photogrammetry scan, just stands still.
-    const clip = names.includes("idle") ? "idle" : names[0];
     const action = clip ? actions[clip] : undefined;
     if (!action) return;
+
+    const previous = holding.current;
+    holding.current = action;
+
+    /*
+     * Already in this pose and still holding it, so there is nothing to do.
+     *
+     * Asking whether it is running, rather than trusting the ref alone, is what
+     * makes a second run of this repair the first rather than assume it. React
+     * runs an effect, tears it down and runs it again on mount in development,
+     * and the teardown in between is the one belonging to the hook above, which
+     * stops every action on the mixer. Returning on the ref by itself left the
+     * figure stopped in its bind pose with this convinced it was mid idle.
+     */
+    if (previous === action && action.isRunning()) return;
+
+    if (previous && previous !== action && !still) {
+      // Out of the pose it was in and into the new one over the same moment, so
+      // the figure travels between the two rather than being replaced by itself.
+      // Not warped: these clips are of quite different lengths, and stretching a
+      // two second idle onto a one second squat to match them up would slow the
+      // breathing to a halt on the way out of it.
+      //
+      // The outgoing action is faded rather than stopped, and is left running at
+      // no weight afterwards. There are four poses, so that is at most four
+      // silent actions on a mixer that drops all of them together when the
+      // figure leaves the stage. Stopping it here instead would take its own
+      // fade out with it and cut the figure to the new pose on the frame of the
+      // press, which is the thing this is here to avoid.
+      action.reset().play().crossFadeFrom(previous, BLEND_SECONDS, false);
+      return;
+    }
 
     // Straight in at full weight, and the first frame of it written onto the
     // skeleton here rather than at the next tick of the render loop. Until a
@@ -215,83 +350,62 @@ function Model({
     // one. Starting already in the pose the figure is going to hold is what
     // standing there looks like. A layout effect, so this lands before the
     // first painted frame rather than one frame into it.
+    //
+    // Also the whole of a pose change under reduced motion, where a press is
+    // answered with the figure already in the pose rather than with a move into
+    // it. There the outgoing action is stopped outright, because there is no
+    // fade left for it to be doing.
+    previous?.stop();
     action.reset().play();
     mixer.update(0);
-
-    return () => {
-      action.stop();
-    };
-  }, [actions, mixer, names]);
+  }, [actions, mixer, clip, still]);
 
   // The clock has been running since the canvas was created, which is a second
-  // or so of loading before this figure exists. The lifetime is measured from
-  // the first frame it is actually drawn on, so its turn and drift remain
-  // continuous for as long as this instance stays on stage.
-  const born = useRef<number | null>(null);
+  // or so of loading before this figure exists. Transition progress is
+  // therefore measured from the first frame of the current phase rather than
+  // from the canvas clock's origin.
+  const phaseStarted = useRef<{ phase: Phase; at: number } | null>(null);
 
-  // A figure can change phase without changing instance: the settled arrival
-  // becomes the departure on the next selection. Keep a separate clock for
-  // that phase so its dispersal starts at zero without resetting the lifetime
-  // clock, and therefore without resetting where the figure has turned or
-  // drifted to.
-  const phaseStarted = useRef<number | null>(null);
-  const previousPhase = useRef(phase);
-
-  useFrame((state, delta) => {
-    const spin = root.current;
-    if (!spin) return;
-
+  useFrame((state) => {
     const now = state.clock.elapsedTime;
-    if (born.current === null) born.current = now;
-    if (phaseStarted.current === null || previousPhase.current !== phase) {
-      phaseStarted.current = now;
-      previousPhase.current = phase;
+    if (!phaseStarted.current || phaseStarted.current.phase !== phase) {
+      phaseStarted.current = { phase, at: now };
     }
 
-    const age = now - born.current;
-    const phaseAge = now - phaseStarted.current;
+    const phaseAge = now - phaseStarted.current.at;
 
     // Under reduced motion there is no change to be part way through: the
     // figure is simply whole, and the cloud is never built or drawn.
-    const at = still ? SETTLED : progress(phase, phaseAge);
+    //
+    // The scroll is folded in on top of that, and on a wide window sits at full
+    // strength and takes nothing off: there, this is exactly the line it was.
+    const at = veiled(
+      still ? SETTLED : progress(phase, phaseAge),
+      veil.current.value,
+    );
     transition.current.form.value = at.form;
     transition.current.fade.value = at.fade;
     transition.current.solid.value = at.solid;
-
-    if (still) return;
-
-    // Turning the figure rather than the camera. Orbiting the camera instead
-    // would drag the framing and the lighting around with it; this way the key
-    // light stays put and the turn is what reveals the form. It also leaves
-    // the camera free for the buttons to drive.
-    //
-    // Negative is clockwise seen from above. Delta is clamped because a tab
-    // returning from the background reports the whole time it was away, which
-    // would arrive as a jump.
-    const step = (Math.PI * 2) / TURN_SECONDS;
-    spin.rotation.y -= step * Math.min(delta, 0.1);
-
-    // There is nothing under the feet out here, so the figure rises and falls
-    // rather than standing. Set from the clock rather than accumulated, so a
-    // long pause cannot leave it drifted somewhere odd, and from the figure's
-    // own age so that it starts at rest and drifts from there rather than
-    // appearing part way up a swing it was never seen taking.
-    const cycle = (Math.PI * 2) / DRIFT_SECONDS;
-    spin.position.y = Math.sin(age * cycle) * DRIFT;
   });
 
   return (
-    <group ref={root}>
-      <group scale={scale}>
-        <group position={offset}>
-          <primitive object={scene} />
+    // Inside the shared turntable but outside the normalised model, so this
+    // figure-specific alignment follows the common motion without being scaled.
+    <group position={[shift, rise, 0]} rotation={[0, yaw, 0]}>
+      <group ref={root}>
+        <group scale={scale}>
+          <group position={offset}>
+            <primitive object={scene} />
 
-          {/* Beside the model rather than around it, and under the same two
-              groups, so that a cloud with no skeleton to carry it is scaled and
-              stood on the ground plane with the figure it was taken off. A
-              skinned one is carried by the bones instead, which are inside this
-              same pair and so end up in the same place. */}
-          {surface ? <Cloud surface={surface} transition={transition} /> : null}
+            {/* Beside the model rather than around it, and under the same two
+                groups, so that a cloud with no skeleton to carry it is scaled and
+                stood on the ground plane with the figure it was taken off. A
+                skinned one is carried by the bones instead, which are inside this
+                same pair and so end up in the same place. */}
+            {surface ? (
+              <Cloud surface={surface} transition={transition} />
+            ) : null}
+          </group>
         </group>
       </group>
     </group>
@@ -306,21 +420,57 @@ function Model({
  * figure being replaced has to outlive the press that replaced it, and once
  * the prop has changed the only record of what was showing is here.
  */
-function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
+function Stage({
+  version,
+  pose,
+  still,
+  veil,
+}: {
+  version: VersionId;
+  pose: PoseId;
+  still: boolean;
+  veil: RefObject<{ value: number }>;
+}) {
+  // The turntable belongs to the stage rather than to either model. Both the
+  // departing and arriving figures consequently occupy the same angle during
+  // a swap, and the next figure continues the exact tempo and position of the
+  // one it replaces instead of mounting at its own zero rotation.
+  const turntable = useRef<Group>(null);
+  const age = useRef(0);
+
+  useFrame((_, delta) => {
+    const root = turntable.current;
+    if (still || !root) return;
+
+    // Turning the figures rather than the camera keeps the framing and light
+    // fixed. Negative is clockwise seen from above. Delta is clamped because
+    // a tab returning from the background reports the whole time it was away,
+    // which would otherwise arrive as a jump.
+    const elapsed = Math.min(delta, 0.1);
+    const step = (Math.PI * 2) / TURN_SECONDS;
+    age.current += elapsed;
+    root.rotation.y -= step * elapsed;
+
+    // There is nothing under the feet out here, so the stage rises and falls.
+    // Driving every figure from this same age keeps their drift aligned too.
+    const cycle = (Math.PI * 2) / DRIFT_SECONDS;
+    root.position.y = Math.sin(age.current * cycle) * DRIFT;
+  });
+
   const [cast, setCast] = useState<{
-    arriving: FigureId;
-    leaving: FigureId | null;
+    arriving: VersionId;
+    leaving: VersionId | null;
     phase: Phase;
-  }>({ arriving: figure, leaving: null, phase: "opening" });
+  }>({ arriving: version, leaving: null, phase: "opening" });
 
   // Adjusted while rendering rather than from an effect. The swap is not a
   // synchronisation with anything outside React, it is the direct consequence
   // of the prop changing, and React re-runs this component with the new state
   // before it commits anything: the departing figure is never drawn a frame
   // still standing in its place.
-  if (cast.arriving !== figure) {
+  if (cast.arriving !== version) {
     setCast({
-      arriving: figure,
+      arriving: version,
       // Under reduced motion the swap is a cut. Nothing comes apart; the new
       // figure is simply the one that is there.
       leaving: still ? null : cast.arriving,
@@ -343,32 +493,49 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
     return () => clearTimeout(timer);
   }, [cast.leaving]);
 
+  const arriving = versionOf(cast.arriving);
+  const leaving = cast.leaving ? versionOf(cast.leaving) : null;
+
   return (
-    <>
+    <group ref={turntable}>
       {/* A boundary each, not one around the pair. The arriving figure
           suspends on its model, and a boundary shared with the departing one
           would replace both with the fallback: the figure being replaced would
-          vanish on the press instead of coming apart. */}
-      {cast.leaving ? (
-        <Suspense key={cast.leaving} fallback={null}>
+          vanish on the press instead of coming apart. The key belongs on the
+          boundary rather than on Model: when an active figure moves into the
+          leaving slot, React must move that whole boundary and preserve the
+          live model instance. Remounting it here would restart its animation
+          and transition and, because useGLTF shares the scene, could measure
+          its normalisation while it was still parented under the previous
+          instance's transforms. */}
+      {leaving ? (
+        <Suspense key={leaving.id} fallback={null}>
           <Model
-            key={cast.leaving}
-            url={source(cast.leaving)}
+            url={leaving.url}
+            shift={leaving.shift}
+            rise={leaving.rise}
+            yaw={leaving.yaw}
+            pose={pose}
             phase="leaving"
             still={still}
+            veil={veil}
           />
         </Suspense>
       ) : null}
 
-      <Suspense key={cast.arriving} fallback={null}>
+      <Suspense key={arriving.id} fallback={null}>
         <Model
-          key={cast.arriving}
-          url={source(cast.arriving)}
+          url={arriving.url}
+          shift={arriving.shift}
+          rise={arriving.rise}
+          yaw={arriving.yaw}
+          pose={pose}
           phase={cast.phase}
           still={still}
+          veil={veil}
         />
       </Suspense>
-    </>
+    </group>
   );
 }
 
@@ -379,7 +546,17 @@ function Stage({ figure, still }: { figure: FigureId; still: boolean }) {
  * drei's come from three-stdlib, a fork that predates the target clamping this
  * relies on to keep the figure on screen.
  */
-function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
+function Controls({
+  view,
+  fitId,
+  span,
+  room,
+}: {
+  view: ViewId;
+  fitId: number;
+  span: number;
+  room: Room;
+}) {
   const camera = useThree((state) => state.camera);
   const domElement = useThree((state) => state.gl.domElement);
   const size = useThree((state) => state.size);
@@ -420,11 +597,7 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
     orbit.cursor.set(0, HEIGHT / 2, 0);
     orbit.maxTargetRadius = HEIGHT / 2;
 
-    // Wide enough to contain every framing the buttons ask for, with room to
-    // zoom past them in both directions, and far short of the nearest stars so
-    // that the field is never flown into.
     orbit.minDistance = HEIGHT * 0.2;
-    orbit.maxDistance = HEIGHT * 4;
 
     // Stop just short of both poles, where the horizon flips over and the
     // figure is seen from directly overhead or from directly underneath.
@@ -455,9 +628,43 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
     // fitId changes on every press, including a press of the button that is
     // already active, so a viewer who has dragged somewhere odd can press it
     // again to be put back.
+    //
+    // span is here so that pressing for a pose the current framing cannot hold
+    // steps the camera back far enough to hold it. It is a number rather than
+    // the pose itself deliberately: every pose but the T pose leaves it at zero,
+    // so moving between the other three does not re-run this and does not take
+    // the camera off wherever the viewer has dragged it to.
+    //
+    // The aspect is the figure's own room rather than the canvas's, which covers
+    // the whole window: on a wide one that is the right hand column, and on a
+    // narrow one the whole of the first screen. The row goes with it, and carries
+    // whatever share of the window's height that room is; as the two stages
+    // stand, both are given all of it.
+    const aspect = (size.width * room.column) / size.height;
     const preset = VIEWS.find((candidate) => candidate.id === view) ?? VIEWS[0];
-    goal.current = framing(preset, (size.width * COLUMN) / size.height);
-  }, [view, fitId, size]);
+    goal.current = framing(preset, aspect, span, room.row);
+
+    const orbit = controls.current;
+    if (!orbit) return;
+
+    /*
+     * How far back the camera may be pulled, which has to contain every framing
+     * the buttons can ask for or one of them is clamped short of its own fit.
+     * The furthest of those is the full body view of the widest pose, and the
+     * limit is set past it so there is room to zoom out beyond what any button
+     * gives, up to the point where the nearest stars would start to be flown
+     * into.
+     *
+     * Set here rather than where the controls are built because it depends on
+     * the shape of the figure's room, which is not the same on the two layouts:
+     * a phone gives the figure the full height of a portrait window, and fitting
+     * the widest pose across something that narrow puts the camera further off
+     * than the wide layout ever asks for. There the reach works out well inside
+     * the old fixed limit, which is consequently what it still comes to.
+     */
+    const reach = framing(VIEWS[0], aspect, WIDEST, room.row).distance;
+    orbit.maxDistance = Math.min(Math.max(HEIGHT * 4, reach * 1.6), HORIZON);
+  }, [view, fitId, size, span, room]);
 
   useFrame((_, delta) => {
     const orbit = controls.current;
@@ -488,38 +695,107 @@ function Controls({ view, fitId }: { view: ViewId; fitId: number }) {
   return null;
 }
 
+/*
+ * The light hung above the stage.
+ *
+ * A spot rather than a bare point source, so it arrives as a cone aimed down
+ * the figure instead of spilling evenly in every direction: the head and
+ * shoulders take the hot middle of it and it falls away towards the feet, which
+ * is what something lit from above looks like. Being a cone is also what lets it
+ * be this bright without flattening the figure, since none of it goes anywhere
+ * except onto the figure.
+ *
+ * Hung forward of the figure and off to one side rather than straight overhead,
+ * where it would light the top of the head and leave the face in shadow. It
+ * sits on the same side as the warm key below, so the two agree about where the
+ * light in this scene is coming from.
+ */
+const OVERHEAD = [-1.3, HEIGHT * 2.05, 1.5] as const;
+
+// What it is pointed at: the middle of the chest, a little above the halfway
+// mark, so the brightest part of the cone lands on the part of the figure the
+// framings are usually centred on.
+const AIM = [0, HEIGHT * 0.55, 0] as const;
+
+function Overhead() {
+  const light = useRef<SpotLight>(null);
+
+  // A spot light aims at a target object that three keeps beside the light
+  // rather than inside it, and that by default is never added to the scene at
+  // all. Nothing is going to compute a world matrix for an object that is not
+  // in the graph, so it is written here, once, before the first frame.
+  useLayoutEffect(() => {
+    const spot = light.current;
+    if (!spot) return;
+
+    spot.target.position.set(...AIM);
+    spot.target.updateMatrixWorld();
+  }, []);
+
+  return (
+    <spotLight
+      ref={light}
+      position={OVERHEAD}
+      // Wide enough to hold the whole figure at every framing, with the feet
+      // well inside it: the edge of the cone is never a line drawn across the
+      // model. The penumbra is what does the visible work, taking the light
+      // down gradually over most of that width rather than at the rim.
+      angle={0.52}
+      penumbra={0.75}
+      intensity={44}
+      // Inverse square falloff, cut off far enough out that the window three
+      // applies at the limit takes nothing off the figure itself.
+      distance={12}
+      decay={2}
+      color="#fff1dc"
+    />
+  );
+}
+
 export default function FigureRig({
-  figure,
+  version,
+  pose,
   view,
   fitId,
   still,
+  room,
+  veil,
 }: {
-  figure: FigureId;
+  version: VersionId;
+  pose: PoseId;
   view: ViewId;
   fitId: number;
   still: boolean;
+  room: Room;
+  veil: RefObject<{ value: number }>;
 }) {
   return (
     <>
       {/* The figure is the only lit thing in the scene: the sky and the stars
           draw themselves. A warm key from the front left, a violet fill from
           the opposite side so the shadowed half picks up the colour of the
-          cloud it is floating in rather than going black, and a cool rim from
+          cloud it is floating in rather than going black, a warm spot hung
+          above the stage and aimed down at the figure, and a cool rim from
           behind to hold the silhouette off a background of a similar value. */}
       <ambientLight intensity={0.5} color="#b9a8f0" />
       <directionalLight position={[3, 4, 4]} intensity={2.6} color="#fff4ea" />
       <directionalLight position={[-4, 2, -1]} intensity={0.9} color="#7b5ad6" />
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
+      <Overhead />
 
-      <Stage figure={figure} still={still} />
-      <Controls view={view} fitId={fitId} />
+      <Stage version={version} pose={pose} still={still} veil={veil} />
+      <Controls
+        view={view}
+        fitId={fitId}
+        span={poseOf(pose).span ?? 0}
+        room={room}
+      />
     </>
   );
 }
 
 // Start fetching the figure the page opens on as soon as this chunk is parsed,
 // in parallel with React mounting it, rather than waiting for the first render.
-// The chunk itself is only loaded on a viewport wide enough to show a figure,
-// so a phone never pays for either. The rest are fetched when a tab for them is
-// hovered, which is the canvas's job rather than this one's.
-useGLTF.preload(FIGURES[0].url);
+// The rest are fetched when a tab or a version button for them is hovered, which
+// is the canvas's job rather than this one's.
+useGLTF.preload(FIGURES[0].versions[0].url);

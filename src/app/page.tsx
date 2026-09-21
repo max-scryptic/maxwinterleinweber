@@ -1,57 +1,66 @@
-import { Grandstander } from "next/font/google";
+import type { CSSProperties } from "react";
 
-import { SaasCards } from "@/components/saas-cards";
-import { SocialCards } from "@/components/social-cards";
+import { LeftCard } from "@/components/left-card";
 import { SpaceBackdrop } from "@/components/space-backdrop";
-
-const grandstander = Grandstander({ subsets: ["latin"], weight: "700" });
+import { BAND } from "@/lib/figure";
 
 export default function Home() {
   return (
     <>
       <SpaceBackdrop />
 
-      {/* The window, exactly: the sky behind is pinned to it, so the page
-          cannot be allowed to grow past it and drag the card off the bottom.
-          Anything longer than the card scrolls inside the card instead, which
-          is also what keeps the 10px of space around it the same 10px all the
-          way down.
+      {/* Two equal columns from md up, the card on the left and the figure's
+          half of the sky left clear on the right. There the page is the window
+          exactly: the sky behind is pinned to it, so it cannot be allowed to
+          grow past it and drag the card off the bottom, and anything longer
+          than the card scrolls inside the card instead, which is also what
+          keeps the gutter around it the same gutter all the way down.
 
-          Two equal columns from md up, the card on the left and the figure's
-          half of the sky left clear on the right. Narrower than that there is
-          no room to split the screen, so the card takes the full width and the
-          figure is dropped rather than squeezed.
+          Narrower than that there is no width to split, so the split is made
+          the other way, and the page is two screens: the figure has the first
+          one and the card is the second. It is the page that scrolls rather than
+          the card's contents, so a swipe up carries the card over the sky while
+          the figure dissolves behind it, and ends with the card held in the
+          window exactly as the wide layout holds it.
 
-          Nothing here takes the pointer except the card itself: a drag anywhere
-          on the right hand side has to reach the canvas underneath to turn the
-          figure. */}
-      <div className="pointer-events-none relative z-10 grid h-svh grid-cols-1 grid-rows-1 p-[10px] md:grid-cols-2">
-        {/* A query container, so the name below can size itself against this
-            card's content box rather than the viewport, and keeps fitting if
-            the split between the two halves ever changes. */}
-        {/* Horizontally centred but top aligned: the name and the cards sit at
-            the head of the card and grow downwards, rather than riding up and
-            down with the height of the window. */}
-        <div className="@container pointer-events-auto flex min-h-0 flex-col items-center justify-start overflow-y-auto overscroll-contain rounded-2xl bg-[#f4f4f4] px-4 pt-10 pb-10 sm:px-6 md:px-10 md:pt-12 md:pb-10">
-          {/* The name is set on one line at any width: "Max Winter-Leinweber"
-              in Grandstander 700 measures 9.375% of its own font size per
-              character of column width, i.e. it exactly fills the column at
-              9.375cqi, so 9cqi fits it with a little air at both ends. The cap
-              stops it growing without limit on very wide displays. */}
-          <h1
-            className={`${grandstander.className} text-[min(5rem,9cqi)] leading-tight whitespace-nowrap text-neutral-900`}
-          >
-            Max Winter-Leinweber
-          </h1>
-          <div className="mt-8 w-full md:mt-10">
-            <SocialCards />
-          </div>
-          {/* The builds sit well clear of the social row, so the two read as
-              separate groups rather than one block of cards. */}
-          <div className="mt-16 w-full md:mt-20">
-            <SaasCards />
-          </div>
-        </div>
+          The first row is BAND in `src/lib/figure.ts`, which is also what the
+          camera is framed against and what the dissolve is measured over, so it
+          is stated here as the same number rather than a second one that has to
+          be kept in step by hand. The second is at least a screen less its
+          gutters, which is what makes it a screen: the card is shorter than that
+          and would otherwise be a short row near the bottom of a page that ran
+          out of scroll with the figure still half dissolved above it. It is a
+          minimum rather than a height so that the card can still grow past the
+          window as things are added to it.
+
+          The top gutter is dropped on that layout, and only there. It is the
+          card's own margin from the edge of the window, and above the card on
+          this layout there is nothing to hold off: the row is empty sky, since
+          the figure standing in it is on the canvas behind rather than in the
+          grid. Left in, it would take the figure's screen a gutter short of one
+          and push the card's top edge a gutter below the fold, so that the first
+          thing a swipe revealed was the gap.
+
+          Nothing here takes the pointer except the card itself: a drag
+          anywhere the card is not has to reach the canvas underneath to turn
+          the figure. */}
+      <div
+        className="pointer-events-none relative z-10 grid min-h-svh grid-cols-1 grid-rows-[var(--band)_minmax(var(--screen),auto)] px-[var(--gutter)] pb-[var(--gutter)] md:h-svh md:min-h-0 md:grid-cols-2 md:grid-rows-1 md:pt-[var(--gutter)]"
+        style={
+          {
+            "--gutter": "10px",
+            "--band": `${BAND * 100}svh`,
+            "--screen": "calc(100svh - 2 * var(--gutter))",
+          } as CSSProperties
+        }
+      >
+        {/* The figure's row is empty: what stands in it is the figure, which is
+            on the canvas behind this grid rather than in it. This is only the
+            hole in the layout that the card is kept out of, and it collapses
+            to nothing on the wide layout, where the rows are one. */}
+        <div aria-hidden="true" className="md:hidden" />
+
+        <LeftCard />
       </div>
     </>
   );
