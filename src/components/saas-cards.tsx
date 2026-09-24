@@ -143,6 +143,35 @@ function MarketingArenaIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
+/*
+ * The Pretty Metrics mark: a four-pointed sparkle over three rising bars, in
+ * white on the product's indigo. It is drawn on the same 512 grid as the app
+ * icon it comes from, so filling the tile with it keeps the icon's own clear
+ * space rather than one picked here. The bars are round-capped strokes, which
+ * is how they read in the icon: pills of one width standing on one baseline.
+ *
+ * Its colour is hardcoded for the reason the others' are.
+ */
+
+const prettyMetricsIndigo = "#4f46e5";
+
+function PrettyMetricsIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 512 512" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M192 121 C197 152 216 171 247 176 C216 181 197 200 192 231 C187 200 168 181 137 176 C168 171 187 152 192 121 Z"
+        fill="currentColor"
+      />
+      <path
+        d="M192 304 V366 M272 238 V366 M352 159 V366"
+        stroke="currentColor"
+        strokeWidth="44"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 type Build = {
   name: string;
   description: string;
@@ -185,6 +214,17 @@ const builds: Build[] = [
     iconClassName: "h-[33px] w-auto",
     tileStyle: { backgroundColor: arenaPurple },
     tileClassName: "",
+  },
+  {
+    name: "Pretty Metrics",
+    description: "Your metrics, made pretty",
+    href: "https://www.prettymetrics.cc",
+    icon: PrettyMetricsIcon,
+    // The whole tile: the mark is drawn with the app icon's clear space
+    // already around it.
+    iconClassName: "size-full",
+    tileClassName: "text-white",
+    tileStyle: { backgroundColor: prettyMetricsIndigo },
   },
 ];
 
