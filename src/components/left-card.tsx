@@ -2,6 +2,7 @@ import { Orbitron } from "next/font/google";
 
 import { GlassCard } from "@/components/glass-card";
 import { SaasCards } from "@/components/saas-cards";
+import { ServiceCards } from "@/components/service-cards";
 import { SocialCards } from "@/components/social-cards";
 
 const orbitron = Orbitron({ subsets: ["latin"], weight: "800" });
@@ -28,10 +29,23 @@ const ETCHED = "0 1px 0 rgb(255 255 255 / 0.9), 0 -1px 0 rgb(10 4 40 / 0.18)";
 
 /*
  * What the card says, as opposed to what it is made of. The glass and the light
- * on it are both in GlassCard; everything here is the name and the two groups
+ * on it are both in GlassCard; everything here is the name and the three groups
  * of cards, which stay rendered on the server since none of this changes once
  * it is drawn.
  */
+
+/*
+ * The two headings over the groups below the social row, cut into the glass
+ * the same way the name is, and for the same reason: they sit on bare glass
+ * with the cloud swinging behind them, so they need the hairlines to hold an
+ * edge. Sized at about three quarters of the name, which keeps them clearly
+ * under it while carrying more weight over the titles on the cards beneath, and
+ * tracked a little wider because Orbitron's counters close up as it comes down
+ * in size. Even at the cap the longer of the two still fits the column with air
+ * at both ends: twenty one characters against the name's twenty, but at three
+ * quarters the size, so about three quarters of the width the name takes.
+ */
+const SECTION_HEADING = `${orbitron.className} mb-5 text-center text-[min(3rem,5.4cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-6`;
 export function LeftCard() {
   return (
     <GlassCard>
@@ -55,28 +69,31 @@ export function LeftCard() {
         Max Winter-Leinweber
       </h1>
 
-      <div className="mt-8 w-full md:mt-10">
+      {/* The social row sits close under the name, so the two read as one
+          header: the name, and the handles it goes by. Only enough room is
+          left for the carve's hairline above the pills to clear the name's
+          descenders. */}
+      <div className="mt-4 w-full md:mt-5">
         <SocialCards />
       </div>
 
-      {/* The builds sit well clear of the social row, so the two read as
+      {/* The projects sit well clear of the social row, so the two read as
           separate groups rather than one block of cards. */}
       <div className="mt-16 w-full md:mt-20">
-        {/* Cut into the glass the same way the name is, and for the same
-            reason: it sits on bare glass with the cloud swinging behind it, so
-            it needs the hairlines to hold an edge. Sized at about three fifths
-            of the name, which keeps it clearly under the name while carrying
-            more weight over the titles on the cards below, and tracked a little
-            wider because Orbitron's counters close up as it comes down in size.
-            Even at the cap the line is nowhere near the width of the column:
-            eleven characters against the name's twenty. */}
-        <h2
-          className={`${orbitron.className} mb-5 text-center text-[min(2.4rem,4.3cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-6`}
-          style={{ textShadow: ETCHED }}
-        >
-          SaaS Builds
+        <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
+          SaaS Projects
         </h2>
         <SaasCards />
+      </div>
+
+      {/* The services are held the same distance off the projects as the
+          projects are off the social row, so the groups fall down the card at
+          one steady beat. */}
+      <div className="mt-16 w-full md:mt-20">
+        <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
+          Professional Services
+        </h2>
+        <ServiceCards />
       </div>
     </GlassCard>
   );
