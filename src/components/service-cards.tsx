@@ -63,11 +63,11 @@ function ServiceCard({ service }: { service: Service }) {
       aria-label={`${service.name}: ${service.description}`}
       className={`group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
-      {/* Cut into the pane to the same depth as the build cards, being the
-          same height, and rising to the face of the glass under a pointer the
-          same way. */}
+      {/* Cut into the pane to the same depth as the build cards, padded the
+          same way for the same reason, and rising to the face of the glass
+          under a pointer the same way. */}
       <Card
-        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-4 transition duration-200 ${carved.carved} ${carved.deep}`}
+        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
       >
         <CardContent className="flex items-center gap-4 px-5">
           {/* The tile is the page's own ink, since there is no product here

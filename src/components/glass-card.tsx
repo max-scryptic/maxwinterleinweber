@@ -86,9 +86,14 @@ export function GlassCard({ children }: { children: ReactNode }) {
           sit above the card rather than behind it. Taking the height here rather
           than clamping the card from outside keeps the 10px gutter even on the
           wide layout, where the pane is exactly the window and its contents move
-          inside it. */}
+          inside it.
+
+          The scrolling is there as a safety net rather than a plan: everything
+          on the card is meant to fit the window at once, so the head room above
+          the name is only what the rim's highlight needs to clear it, and the
+          rest of the height is left to the cards. */}
       <div
-        className={`@container flex min-h-0 flex-col items-center justify-start px-4 pt-10 pb-6 sm:px-6 md:h-full md:overflow-y-auto md:overscroll-contain md:px-10 md:pt-12 ${styles.content}`}
+        className={`@container flex min-h-0 flex-col items-center justify-start px-4 pt-8 pb-6 sm:px-6 md:h-full md:overflow-y-auto md:overscroll-contain md:px-10 ${styles.content}`}
       >
         {children}
       </div>

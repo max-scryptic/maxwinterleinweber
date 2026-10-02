@@ -45,7 +45,20 @@ const ETCHED = "0 1px 0 rgb(255 255 255 / 0.9), 0 -1px 0 rgb(10 4 40 / 0.18)";
  * at both ends: twenty one characters against the name's twenty, but at three
  * quarters the size, so about three quarters of the width the name takes.
  */
-const SECTION_HEADING = `${orbitron.className} mb-5 text-center text-[min(3rem,5.4cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-6`;
+const SECTION_HEADING = `${orbitron.className} mb-3 text-center text-[min(3rem,5.4cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-4`;
+
+/*
+ * The room above each of the two groups. On the wide layout the card is the
+ * window, and the whole of it, name to last card, is meant to be in view at
+ * once rather than scrolled to, so the gap is measured off the window's height
+ * and comes in on a short one: four hundredths of the window, between a floor
+ * that keeps the groups readable as groups and a cap that stops a tall display
+ * from spreading them out again. Measured against a 48px tile and 8px between
+ * cards, the floor is still twice the gap within a group, which is what keeps
+ * the heading reading as the start of something new rather than another card.
+ */
+const SECTION_GAP = "mt-[clamp(1.5rem,4svh,2.5rem)]";
+
 export function LeftCard() {
   return (
     <GlassCard>
@@ -73,13 +86,15 @@ export function LeftCard() {
           header: the name, and the handles it goes by. Only enough room is
           left for the carve's hairline above the pills to clear the name's
           descenders. */}
-      <div className="mt-4 w-full md:mt-5">
+      <div className="mt-4 w-full">
         <SocialCards />
       </div>
 
-      {/* The projects sit well clear of the social row, so the two read as
-          separate groups rather than one block of cards. */}
-      <div className="mt-16 w-full md:mt-20">
+      {/* The projects sit close under the social row: far enough off it that
+          the heading reads as the start of a new group rather than a caption
+          on the pills, and no further, since every pixel between the two is a
+          pixel the last card below has to find at the bottom of the window. */}
+      <div className={`${SECTION_GAP} w-full`}>
         <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
           SaaS Projects
         </h2>
@@ -89,7 +104,7 @@ export function LeftCard() {
       {/* The services are held the same distance off the projects as the
           projects are off the social row, so the groups fall down the card at
           one steady beat. */}
-      <div className="mt-16 w-full md:mt-20">
+      <div className={`${SECTION_GAP} w-full`}>
         <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
           Professional Services
         </h2>
