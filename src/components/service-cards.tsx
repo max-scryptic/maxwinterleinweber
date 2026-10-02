@@ -11,15 +11,46 @@ import { Card, CardContent } from "@/components/ui/card";
  * the work and a way to start a conversation about it, and the conversation
  * starts in mail. There is no site to send anyone to, so the marks are not
  * traced off a product's artwork but drawn from the icon set the page already
- * carries, on a tile in the page's own ink rather than a brand colour.
+ * carries, on a tile coloured from the sky behind the glass rather than from a
+ * brand.
  */
 
 const CONTACT = "mailto:maxwinterleinweber@gmail.com";
+
+/*
+ * The tile the mark sits on. Each product above borrows its own brand colour,
+ * and a service has no brand to borrow, so the tile takes its colour from the
+ * one thing every card on this page shares: the nebula behind the pane. The
+ * two stops are the cloud's own deep and bright tones, the uDeep and uBright
+ * uniforms in nebula.tsx, run corner to corner the way the light crosses the
+ * glass. Set in a gradient rather than a flat fill so it reads as a piece of
+ * the sky let through the card, not a fourth product in the row above.
+ *
+ * Both services sit on the same tile. They are one kind of thing, a line of
+ * work and a way to ask about it, and giving each its own colour would say
+ * there were two brands here when there are none.
+ */
+const nebulaDeep = "#33206e";
+const nebulaBright = "#7d5bcf";
+const skyTile: React.CSSProperties = {
+  backgroundImage: `linear-gradient(135deg, ${nebulaDeep} 0%, ${nebulaBright} 100%)`,
+};
+
+/*
+ * Wider than the build cards, which are 26rem. Each of these carries a full
+ * sentence and a question where a build carries a tagline, and at the builds'
+ * width the longer line runs to three rows and the card stands half again as
+ * tall as its neighbours above. At 34rem both lines settle at two rows. The
+ * cards still give way to a narrower column through max-w-full.
+ */
+const CARD_WIDTH = "w-[34rem]";
 
 type Service = {
   name: string;
   description: string;
   icon: React.ComponentType<React.ComponentProps<"svg">>;
+  /** The rounded tile the mark sits on. */
+  tileStyle: React.CSSProperties;
 };
 
 const services: Service[] = [
@@ -28,12 +59,14 @@ const services: Service[] = [
     description:
       "Looking to bring a product idea to life and take it to market? Contact me here.",
     icon: Rocket,
+    tileStyle: skyTile,
   },
   {
     name: "AI Automations",
     description:
       "Spending too much time on manual bottlenecks within your business? Contact me here.",
     icon: Workflow,
+    tileStyle: skyTile,
   },
 ];
 
@@ -61,7 +94,7 @@ function ServiceCard({ service }: { service: Service }) {
     <a
       href={CONTACT}
       aria-label={`${service.name}: ${service.description}`}
-      className={`group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      className={`group flex ${CARD_WIDTH} max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       {/* Cut into the pane to the same depth as the build cards, padded the
           same way for the same reason, and rising to the face of the glass
@@ -70,11 +103,14 @@ function ServiceCard({ service }: { service: Service }) {
         className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
       >
         <CardContent className="flex items-center gap-4 px-5">
-          {/* The tile is the page's own ink, since there is no product here
-              whose colour it could borrow. The mark is a stroked icon rather
-              than a filled one, so it is set a little smaller than the filled
-              product marks to keep the same visual weight on the tile. */}
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
+          {/* The mark in white on the sky tile, as the product marks are white
+              on theirs. It is a stroked icon rather than a filled one, so it
+              is set a little smaller than the filled product marks to keep the
+              same visual weight on the tile. */}
+          <span
+            className="flex size-12 shrink-0 items-center justify-center rounded-xl text-white"
+            style={service.tileStyle}
+          >
             <Icon aria-hidden="true" className="size-6" />
           </span>
           <span className="min-w-0 flex-1">
