@@ -266,9 +266,14 @@ function BuildCard({ build }: { build: Build }) {
           Its border goes with the carve: the edge of a trough is drawn by the
           light falling into it, and a drawn line around the outside of that is
           a second edge in the wrong place, reading on a white card as a grey
-          outline laid over the shading rather than as part of it. */}
+          outline laid over the shading rather than as part of it.
+
+          12px above and below the tile rather than 16: five of these cards
+          stand in one column that has to fit the window, and the tile already
+          holds the name and its line with air to spare, so the padding is
+          only what keeps the tile off the carve's shaded wall. */}
       <Card
-        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-4 transition duration-200 ${carved.carved} ${carved.deep}`}
+        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
       >
         {/* The mark on the left, the name and the line about the app stacked
             beside it, and the arrow held out at the far edge. */}
