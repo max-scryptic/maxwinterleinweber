@@ -19,22 +19,37 @@ const CONTACT = "mailto:maxwinterleinweber@gmail.com";
 
 /*
  * The tile the mark sits on. Each product above borrows its own brand colour,
- * and a service has no brand to borrow, so the tile takes its colour from the
- * one thing every card on this page shares: the nebula behind the pane. The
- * two stops are the cloud's own deep and bright tones, the uDeep and uBright
- * uniforms in nebula.tsx, run corner to corner the way the light crosses the
- * glass. Set in a gradient rather than a flat fill so it reads as a piece of
- * the sky let through the card, not a fourth product in the row above.
+ * and a service has no brand to borrow, so the tile takes its colours from the
+ * one thing every card on this page shares: the nebula behind the pane. All
+ * three are the cloud's own tones, the uVoid, uBright and uHot uniforms in
+ * nebula.tsx.
+ *
+ * It is the sky in miniature: the empty void for the tile, and a pool of the
+ * cloud's bright violet gathered behind the middle of it, so the mark stands
+ * in front of a glow rather than on a flat fill. The pool is centred a little
+ * below the middle, where the mark's weight is, and fades out before it meets
+ * the tile's edge so the corners stay dark and the tile keeps its shape.
  *
  * Both services sit on the same tile. They are one kind of thing, a line of
  * work and a way to ask about it, and giving each its own colour would say
  * there were two brands here when there are none.
  */
-const nebulaDeep = "#33206e";
-const nebulaBright = "#7d5bcf";
+const nebulaVoid = "#0e0930";
+// The bright tone #7d5bcf, written out in channels so it can carry an alpha.
+const nebulaBrightPool = "rgb(125 91 207 / 0.75)";
 const skyTile: React.CSSProperties = {
-  backgroundImage: `linear-gradient(135deg, ${nebulaDeep} 0%, ${nebulaBright} 100%)`,
+  backgroundColor: nebulaVoid,
+  backgroundImage: `radial-gradient(60% 60% at 50% 55%, ${nebulaBrightPool} 0%, transparent 100%)`,
 };
+
+/*
+ * The mark is not white but the cloud's hot lavender, pulled a little towards
+ * white so it keeps its edge against the glow behind it: a white mark on this
+ * tile would read as cut out of it, where a lavender one reads as lit by what
+ * is behind it. Against the void it measures about 12:1, and against the
+ * centre of the pool, the lightest the tile gets, still better than 5:1.
+ */
+const markLavender = "#dcc8f5";
 
 /*
  * Wider than the build cards, which are 26rem. Each of these carries a full
@@ -103,13 +118,12 @@ function ServiceCard({ service }: { service: Service }) {
         className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
       >
         <CardContent className="flex items-center gap-4 px-5">
-          {/* The mark in white on the sky tile, as the product marks are white
-              on theirs. It is a stroked icon rather than a filled one, so it
-              is set a little smaller than the filled product marks to keep the
+          {/* The mark is a stroked icon rather than a filled one, so it is
+              set a little smaller than the filled product marks to keep the
               same visual weight on the tile. */}
           <span
-            className="flex size-12 shrink-0 items-center justify-center rounded-xl text-white"
-            style={service.tileStyle}
+            className="flex size-12 shrink-0 items-center justify-center rounded-xl"
+            style={{ ...service.tileStyle, color: markLavender }}
           >
             <Icon aria-hidden="true" className="size-6" />
           </span>
