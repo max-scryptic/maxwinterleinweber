@@ -172,6 +172,39 @@ function PrettyMetricsIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
+/*
+ * The UntilThen mark: a "U" holding a dot inside a speech bubble, the U a
+ * vessel and the dot a message kept in it until its day comes. Unlike the
+ * others it is not a glyph set on a tile but the tile itself: the bubble, with
+ * its tail at the bottom left, is the outline. So it fills the whole 48px slot
+ * and the slot is given no colour of its own. Same geometry as the app's
+ * public/logo.svg, on the same 32 grid.
+ *
+ * Its colours are hardcoded for the reason the others' are: the rose bubble
+ * and the near-black U are the product's fixed brand colours.
+ */
+
+const untilThenRose = "#e9b6b1";
+const untilThenInk = "#2b1213";
+
+function UntilThenIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M7 0h18a7 7 0 0 1 7 7v14a7 7 0 0 1-7 7H7c-2.5 0-5 2-7 4V7a7 7 0 0 1 7-7Z"
+        fill={untilThenRose}
+      />
+      <path
+        d="M10 6.5v9a6 6 0 0 0 12 0v-9"
+        stroke={untilThenInk}
+        strokeWidth="2.75"
+        strokeLinecap="round"
+      />
+      <circle cx="16" cy="15.5" r="2.5" fill={untilThenInk} />
+    </svg>
+  );
+}
+
 type Build = {
   name: string;
   description: string;
@@ -226,6 +259,15 @@ const builds: Build[] = [
     tileClassName: "text-white",
     tileStyle: { backgroundColor: prettyMetricsIndigo },
   },
+  {
+    name: "UntilThen",
+    description: "Messages for the future",
+    href: "https://www.until-then.cc",
+    icon: UntilThenIcon,
+    // The whole slot, with no tile behind it: the bubble is the tile.
+    iconClassName: "size-full",
+    tileClassName: "",
+  },
 ];
 
 export function SaasCards() {
@@ -268,7 +310,7 @@ function BuildCard({ build }: { build: Build }) {
           a second edge in the wrong place, reading on a white card as a grey
           outline laid over the shading rather than as part of it.
 
-          12px above and below the tile rather than 16: five of these cards
+          12px above and below the tile rather than 16: six of these cards
           stand in one column that has to fit the window, and the tile already
           holds the name and its line with air to spare, so the padding is
           only what keeps the tile off the carve's shaded wall. */}
