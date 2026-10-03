@@ -261,7 +261,7 @@ const builds: Build[] = [
   },
   {
     name: "UntilThen",
-    description: "Messages sent on the day you choose",
+    description: "Messages for the future",
     href: "https://www.until-then.cc",
     icon: UntilThenIcon,
     // The whole slot, with no tile behind it: the bubble is the tile.
