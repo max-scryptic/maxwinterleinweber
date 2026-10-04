@@ -173,15 +173,15 @@ function PrettyMetricsIcon(props: React.ComponentProps<"svg">) {
 }
 
 /*
- * The UntilThen mark: a "U" holding a dot inside a speech bubble, the U a
- * vessel and the dot a message kept in it until its day comes. Unlike the
- * others it is not a glyph set on a tile but the tile itself: the bubble, with
- * its tail at the bottom left, is the outline. So it fills the whole 48px slot
- * and the slot is given no colour of its own. Same geometry as the app's
- * public/logo.svg, on the same 32 grid.
+ * The UntilThen mark: an ellipsis fading in inside a speech bubble. Three dots
+ * are a message on its way; the ink comes up to full strength on the last one,
+ * the day it arrives. Unlike the others it is not a glyph set on a tile but the
+ * tile itself: the bubble, with its tail at the bottom left, is the outline. So
+ * it fills the whole 48px slot and the slot is given no colour of its own. Same
+ * geometry as the app's public/logo.svg, on the same 32 grid.
  *
  * Its colours are hardcoded for the reason the others' are: the rose bubble
- * and the near-black U are the product's fixed brand colours.
+ * and the near-black ink are the product's fixed brand colours.
  */
 
 const untilThenRose = "#e9b6b1";
@@ -194,13 +194,11 @@ function UntilThenIcon(props: React.ComponentProps<"svg">) {
         d="M7 0h18a7 7 0 0 1 7 7v14a7 7 0 0 1-7 7H7c-2.5 0-5 2-7 4V7a7 7 0 0 1 7-7Z"
         fill={untilThenRose}
       />
-      <path
-        d="M10 6.5v9a6 6 0 0 0 12 0v-9"
-        stroke={untilThenInk}
-        strokeWidth="2.75"
-        strokeLinecap="round"
-      />
-      <circle cx="16" cy="15.5" r="2.5" fill={untilThenInk} />
+      <g fill={untilThenInk}>
+        <circle cx="9" cy="14" r="2.6" opacity="0.35" />
+        <circle cx="16" cy="14" r="2.6" opacity="0.65" />
+        <circle cx="23" cy="14" r="2.6" />
+      </g>
     </svg>
   );
 }
