@@ -205,17 +205,20 @@ function UntilThenIcon(props: React.ComponentProps<"svg">) {
 
 /*
  * The ReelEstate mark: a house with three film sprocket holes down its left
- * wall, a listing turned into a reel. It is set in white on a coral tile, so
- * it sits in the same rounded square as the other marks. The holes are cut
- * out with a mask rather than drawn in coral, so the tile shows through them.
- * Same geometry as the app's src/app/icon.svg, on the same 512 grid, and like
- * Pretty Metrics it is drawn in the whole of that frame so the tile keeps the
- * icon's own clear space.
+ * wall, a listing turned into a reel. It is set in the logo's coral on the
+ * app's dark theme background, the way it sits on the app in dark mode, in
+ * the same rounded square as the other marks. The holes are cut out with a
+ * mask rather than drawn in, so the tile shows through them. Same geometry as
+ * the app's src/app/icon.svg, on the same 512 grid, and like Pretty Metrics it
+ * is drawn in the whole of that frame so the tile keeps the icon's own clear
+ * space.
  *
- * Its colour is hardcoded for the reason the others' are.
+ * Its colours are hardcoded for the reason the others' are.
  */
 
 const reelEstateCoral = "#f0543c";
+// The app's dark theme --background, oklch(0.145 0 0).
+const reelEstateDark = "#0a0a0a";
 
 function ReelEstateIcon(props: React.ComponentProps<"svg">) {
   return (
@@ -326,8 +329,8 @@ const builds: Build[] = [
     // The whole tile: the mark is drawn with the app icon's clear space
     // already around it.
     iconClassName: "size-full",
-    tileClassName: "text-white",
-    tileStyle: { backgroundColor: reelEstateCoral },
+    tileClassName: "",
+    tileStyle: { backgroundColor: reelEstateDark, color: reelEstateCoral },
   },
 ];
 
