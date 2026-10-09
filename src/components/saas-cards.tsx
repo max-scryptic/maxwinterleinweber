@@ -205,12 +205,12 @@ function UntilThenIcon(props: React.ComponentProps<"svg">) {
 
 /*
  * The ReelEstate mark: a house with three film sprocket holes down its left
- * wall, a listing turned into a reel. Like UntilThen's bubble it is the tile
- * rather than a glyph on one, coral on the white card the way the app's own
- * icon is coral on white, so the slot is given no colour of its own. The holes
- * are cut out with a mask rather than drawn in white, so the card shows through
- * them as it does in the app. Same geometry and square frame as the app's
- * src/app/icon.svg, on the same 512 grid.
+ * wall, a listing turned into a reel. It is set in white on a coral tile, so
+ * it sits in the same rounded square as the other marks. The holes are cut
+ * out with a mask rather than drawn in coral, so the tile shows through them.
+ * Same geometry as the app's src/app/icon.svg, on the same 512 grid, and like
+ * Pretty Metrics it is drawn in the whole of that frame so the tile keeps the
+ * icon's own clear space.
  *
  * Its colour is hardcoded for the reason the others' are.
  */
@@ -219,7 +219,7 @@ const reelEstateCoral = "#f0543c";
 
 function ReelEstateIcon(props: React.ComponentProps<"svg">) {
   return (
-    <svg viewBox="94 94 324 324" fill="none" aria-hidden="true" {...props}>
+    <svg viewBox="0 0 512 512" fill="none" aria-hidden="true" {...props}>
       <defs>
         <mask
           id="reelestate-holes"
@@ -245,8 +245,8 @@ function ReelEstateIcon(props: React.ComponentProps<"svg">) {
       </defs>
       <path
         d="M256 104 L400 224 L400 408 L112 408 L112 224 Z"
-        fill={reelEstateCoral}
-        stroke={reelEstateCoral}
+        fill="currentColor"
+        stroke="currentColor"
         strokeWidth="20"
         strokeLinejoin="round"
         mask="url(#reelestate-holes)"
@@ -323,9 +323,11 @@ const builds: Build[] = [
     description: "Property videos from listing photos",
     href: "https://reelestate.cc",
     icon: ReelEstateIcon,
-    // The whole slot, with no tile behind it: the house is the tile.
+    // The whole tile: the mark is drawn with the app icon's clear space
+    // already around it.
     iconClassName: "size-full",
-    tileClassName: "",
+    tileClassName: "text-white",
+    tileStyle: { backgroundColor: reelEstateCoral },
   },
 ];
 
