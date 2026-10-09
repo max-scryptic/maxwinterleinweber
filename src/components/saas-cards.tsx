@@ -203,6 +203,58 @@ function UntilThenIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
+/*
+ * The ReelEstate mark: a house with three film sprocket holes down its left
+ * wall, a listing turned into a reel. Like UntilThen's bubble it is the tile
+ * rather than a glyph on one, coral on the white card the way the app's own
+ * icon is coral on white, so the slot is given no colour of its own. The holes
+ * are cut out with a mask rather than drawn in white, so the card shows through
+ * them as it does in the app. Same geometry and square frame as the app's
+ * src/app/icon.svg, on the same 512 grid.
+ *
+ * Its colour is hardcoded for the reason the others' are.
+ */
+
+const reelEstateCoral = "#f0543c";
+
+function ReelEstateIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg viewBox="94 94 324 324" fill="none" aria-hidden="true" {...props}>
+      <defs>
+        <mask
+          id="reelestate-holes"
+          maskUnits="userSpaceOnUse"
+          x="0"
+          y="0"
+          width="512"
+          height="512"
+        >
+          <rect width="512" height="512" fill="#FFFFFF" />
+          {[230, 288, 346].map((y) => (
+            <rect
+              key={y}
+              x="120"
+              y={y}
+              width="42"
+              height="44"
+              rx="10"
+              fill="#000000"
+            />
+          ))}
+        </mask>
+      </defs>
+      <path
+        d="M256 104 L400 224 L400 408 L112 408 L112 224 Z"
+        fill={reelEstateCoral}
+        stroke={reelEstateCoral}
+        strokeWidth="20"
+        strokeLinejoin="round"
+        mask="url(#reelestate-holes)"
+      />
+    </svg>
+  );
+}
+
 type Build = {
   name: string;
   description: string;
@@ -266,6 +318,15 @@ const builds: Build[] = [
     iconClassName: "size-full",
     tileClassName: "",
   },
+  {
+    name: "ReelEstate",
+    description: "Property videos from listing photos",
+    href: "https://reelestate.cc",
+    icon: ReelEstateIcon,
+    // The whole slot, with no tile behind it: the house is the tile.
+    iconClassName: "size-full",
+    tileClassName: "",
+  },
 ];
 
 export function SaasCards() {
@@ -308,7 +369,7 @@ function BuildCard({ build }: { build: Build }) {
           a second edge in the wrong place, reading on a white card as a grey
           outline laid over the shading rather than as part of it.
 
-          12px above and below the tile rather than 16: six of these cards
+          12px above and below the tile rather than 16: seven of these cards
           stand in one column that has to fit the window, and the tile already
           holds the name and its line with air to spare, so the padding is
           only what keeps the tile off the carve's shaded wall. */}
