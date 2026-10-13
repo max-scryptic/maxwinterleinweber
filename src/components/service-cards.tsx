@@ -67,9 +67,11 @@ const scryptic: Service = {
 export function ServiceCards() {
   return (
     // The same centred row the builds sit in, so the one card lines up under
-    // them rather than hanging off the left of the column.
+    // them rather than hanging off the left of the column. Where the builds go
+    // two to a row it spans the both of them, so its edges are theirs and its
+    // line has the room to stay on one row.
     <ul className="flex flex-wrap justify-center gap-2">
-      <li className="flex min-w-0">
+      <li className="flex min-w-0 @lg:basis-full">
         <ServiceCard service={scryptic} />
       </li>
     </ul>
@@ -85,7 +87,7 @@ function ServiceCard({ service }: { service: Service }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${service.name}: ${service.description}`}
-      className={`group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      className={`group flex w-[26rem] max-w-full rounded-2xl @lg:w-auto @lg:flex-1 transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       {/* Cut into the pane to the same depth as the build cards, padded the
           same way for the same reason, and rising to the face of the glass

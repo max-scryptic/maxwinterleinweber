@@ -336,16 +336,28 @@ const builds: Build[] = [
 
 export function SaasCards() {
   return (
-    // Same wrapping, centred row as the social cards: the builds sit side by
-    // side where the column is wide enough for both and stack where it is not,
-    // and a short last row stays centred under the full ones above it.
+    // Same wrapping, centred row as the social cards, and a short last row
+    // stays centred under the full ones above it.
+    //
+    // Two to a row once the card's column is 32rem across, which is every
+    // desktop window. Stacked one under another, five builds are most of the
+    // window's height on their own, and on a laptop screen they ran the last
+    // card off the bottom of the glass; side by side they take three rows
+    // rather than five. Each takes half the row less half the gap between, and
+    // gives up its fixed 26rem to fill that half, so the two columns of cards
+    // share edges with each other and with the Scryptic card above. Narrower
+    // than that the page scrolls rather than the card, so the builds stack at
+    // 26rem as they always did.
     <ul className="flex flex-wrap justify-center gap-2">
       {/* min-w-0 on the item: the card below asks for 26rem and settles for
           less, but a flex item will not go below its own content width without
           being told it may, and in a column narrower than that it would
           otherwise push a horizontal scrollbar into the page. */}
       {builds.map((build) => (
-        <li key={build.href} className="flex min-w-0">
+        <li
+          key={build.href}
+          className="flex min-w-0 @lg:basis-[calc(50%-0.25rem)]"
+        >
           <BuildCard build={build} />
         </li>
       ))}
@@ -362,7 +374,7 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className={`group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      className={`group flex w-[26rem] max-w-full rounded-2xl @lg:w-auto @lg:flex-1 transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       {/* Cut into the pane like the row of handles above it and the name above
           that, and coming up to the face of the glass under a pointer. It is
@@ -374,10 +386,10 @@ function BuildCard({ build }: { build: Build }) {
           a second edge in the wrong place, reading on a white card as a grey
           outline laid over the shading rather than as part of it.
 
-          12px above and below the tile rather than 16: seven of these cards
-          stand in one column that has to fit the window, and the tile already
-          holds the name and its line with air to spare, so the padding is
-          only what keeps the tile off the carve's shaded wall. */}
+          12px above and below the tile rather than 16: these cards and the
+          Scryptic one stand in a column that has to fit the window, and the
+          tile already holds the name and its line with air to spare, so the
+          padding is only what keeps the tile off the carve's shaded wall. */}
       <Card
         className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
       >
