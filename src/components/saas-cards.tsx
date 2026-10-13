@@ -336,28 +336,30 @@ const builds: Build[] = [
 
 export function SaasCards() {
   return (
-    // Same wrapping, centred row as the social cards, and a short last row
-    // stays centred under the full ones above it.
+    // Every build the same size, and that size the smallest that keeps each
+    // one's line about the app on one row. A grid does that on its own when it
+    // is only as wide as its contents: its columns are equal shares, and an
+    // equal share of a grid sizing itself to fit is as wide as the widest card
+    // in it wants to be, so the longest line (Viewlio's) sets the width and the
+    // rest take it. Centred in the column, and held to it, so that in a column
+    // too narrow for even that the cards give the width back and fold their
+    // lines rather than push a scrollbar into the page.
     //
     // Two to a row once the card's column is 42rem across, which is a laptop
     // window and up. Stacked one under another, five builds are most of the
     // window's height on their own, and on a laptop screen they ran the last
     // card off the bottom of the glass; side by side they take three rows
-    // rather than five. Each takes half the row less half the gap between, and
-    // gives up its fixed 26rem to fill that half, so the two columns of cards
-    // share edges with each other and with the Scryptic card above. 42rem is
-    // what leaves each half wide enough for a name and its line to stay on one
-    // row apiece; any narrower and they fold into tall, uneven cards, so below
-    // it the builds stack at 26rem as they always did.
-    <ul className="flex flex-wrap justify-center gap-2">
-      {/* min-w-0 on the item: the card below asks for 26rem and settles for
-          less, but a flex item will not go below its own content width without
-          being told it may, and in a column narrower than that it would
-          otherwise push a horizontal scrollbar into the page. */}
+    // rather than five. Below 42rem there is no room for two of them side by
+    // side, so they stack, still all the one width.
+    <ul className="mx-auto grid w-fit max-w-full grid-cols-1 gap-2 @2xl:grid-cols-2">
+      {/* The odd build at the foot of two columns spans both and is held in
+          the middle of them at the width of one, rather than sitting under the
+          left hand column with a hole beside it. min-w-0 lets an item give up
+          width it has not got rather than overflow the grid. */}
       {builds.map((build) => (
         <li
           key={build.href}
-          className="flex min-w-0 @2xl:basis-[calc(50%-0.25rem)]"
+          className="flex min-w-0 @2xl:last:odd:col-span-2 @2xl:last:odd:w-[calc(50%-0.25rem)] @2xl:last:odd:justify-self-center"
         >
           <BuildCard build={build} />
         </li>
@@ -375,7 +377,7 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className={`group flex w-[26rem] max-w-full rounded-2xl @2xl:w-auto @2xl:flex-1 transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      className={`group flex flex-1 rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       {/* Cut into the pane like the row of handles above it and the name above
           that, and coming up to the face of the glass under a pointer. It is
@@ -396,7 +398,7 @@ function BuildCard({ build }: { build: Build }) {
       >
         {/* The mark on the left, the name and the line about the app stacked
             beside it, and the arrow held out at the far edge. */}
-        <CardContent className="flex items-center gap-4 px-5">
+        <CardContent className="flex items-center gap-3.5 px-5">
           <span
             className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${build.tileClassName}`}
             style={build.tileStyle}
