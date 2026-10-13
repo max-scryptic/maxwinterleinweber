@@ -339,15 +339,16 @@ export function SaasCards() {
     // Same wrapping, centred row as the social cards, and a short last row
     // stays centred under the full ones above it.
     //
-    // Two to a row once the card's column is 32rem across, which is every
-    // desktop window. Stacked one under another, five builds are most of the
+    // Two to a row once the card's column is 42rem across, which is a laptop
+    // window and up. Stacked one under another, five builds are most of the
     // window's height on their own, and on a laptop screen they ran the last
     // card off the bottom of the glass; side by side they take three rows
     // rather than five. Each takes half the row less half the gap between, and
     // gives up its fixed 26rem to fill that half, so the two columns of cards
-    // share edges with each other and with the Scryptic card above. Narrower
-    // than that the page scrolls rather than the card, so the builds stack at
-    // 26rem as they always did.
+    // share edges with each other and with the Scryptic card above. 42rem is
+    // what leaves each half wide enough for a name and its line to stay on one
+    // row apiece; any narrower and they fold into tall, uneven cards, so below
+    // it the builds stack at 26rem as they always did.
     <ul className="flex flex-wrap justify-center gap-2">
       {/* min-w-0 on the item: the card below asks for 26rem and settles for
           less, but a flex item will not go below its own content width without
@@ -356,7 +357,7 @@ export function SaasCards() {
       {builds.map((build) => (
         <li
           key={build.href}
-          className="flex min-w-0 @lg:basis-[calc(50%-0.25rem)]"
+          className="flex min-w-0 @2xl:basis-[calc(50%-0.25rem)]"
         >
           <BuildCard build={build} />
         </li>
@@ -374,7 +375,7 @@ function BuildCard({ build }: { build: Build }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.description}`}
-      className={`group flex w-[26rem] max-w-full rounded-2xl @lg:w-auto @lg:flex-1 transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      className={`group flex w-[26rem] max-w-full rounded-2xl @2xl:w-auto @2xl:flex-1 transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       {/* Cut into the pane like the row of handles above it and the name above
           that, and coming up to the face of the glass under a pointer. It is
