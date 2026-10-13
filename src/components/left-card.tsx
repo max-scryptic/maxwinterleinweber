@@ -38,14 +38,18 @@ const ETCHED = "0 1px 0 rgb(255 255 255 / 0.9), 0 -1px 0 rgb(10 4 40 / 0.18)";
  * The two headings over the groups below the social row, cut into the glass
  * the same way the name is, and for the same reason: they sit on bare glass
  * with the cloud swinging behind them, so they need the hairlines to hold an
- * edge. Sized at about three quarters of the name, which keeps them clearly
- * under it while carrying more weight over the titles on the cards beneath, and
- * tracked a little wider because Orbitron's counters close up as it comes down
- * in size. Even at the cap the longer of the two still fits the column with air
- * at both ends: twenty one characters against the name's twenty, but at three
- * quarters the size, so about three quarters of the width the name takes.
+ * edge. Sized at nine tenths of the name, both the fluid size and the cap,
+ * which keeps them just under it while being large enough that the strokes
+ * stay readable where the darker part of the cloud passes behind; at three
+ * quarters they were thin enough to be lost there. Tracked a touch wider than
+ * the name because Orbitron's counters close up as it comes down in size.
+ *
+ * Set on one line, like the name, and that is what bounds the size. At this
+ * tracking "Professional Services" measures 12.94 times its font size, so at
+ * 6.4cqi it takes about 83% of the column, against the name's 93%, leaving air
+ * at both ends for the same pixel rounding the name has to allow for.
  */
-const SECTION_HEADING = `${orbitron.className} mb-3 text-center text-[min(3rem,5.4cqi)] leading-tight tracking-[0.04em] text-neutral-900 md:mb-4`;
+const SECTION_HEADING = `${orbitron.className} mb-3 text-center text-[min(4.5rem,6.4cqi)] leading-tight tracking-[0.02em] whitespace-nowrap text-neutral-900 md:mb-4`;
 
 /*
  * The room above each of the two groups. On the wide layout the card is the
@@ -90,25 +94,25 @@ export function LeftCard() {
         <SocialCards />
       </div>
 
-      {/* The projects sit close under the social row: far enough off it that
+      {/* The services sit close under the social row: far enough off it that
           the heading reads as the start of a new group rather than a caption
           on the pills, and no further, since every pixel between the two is a
           pixel the last card below has to find at the bottom of the window. */}
       <div className={`${SECTION_GAP} w-full`}>
         <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
-          SaaS Projects
-        </h2>
-        <SaasCards />
-      </div>
-
-      {/* The services are held the same distance off the projects as the
-          projects are off the social row, so the groups fall down the card at
-          one steady beat. */}
-      <div className={`${SECTION_GAP} w-full`}>
-        <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
           Professional Services
         </h2>
         <ServiceCards />
+      </div>
+
+      {/* The projects are held the same distance off the services as the
+          services are off the social row, so the groups fall down the card at
+          one steady beat. */}
+      <div className={`${SECTION_GAP} w-full`}>
+        <h2 className={SECTION_HEADING} style={{ textShadow: ETCHED }}>
+          SaaS Projects
+        </h2>
+        <SaasCards />
       </div>
     </GlassCard>
   );
