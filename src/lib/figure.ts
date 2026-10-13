@@ -197,16 +197,20 @@ const MARGIN = 1.3;
 
 /*
  * The figure does not stand in the middle of the page: the card takes the left
- * half, so it is framed into the middle of the right half instead. The canvas
- * still covers the whole window, because the sky has to, so this is done by
- * offsetting the camera's frustum rather than by moving anything.
+ * of it, so it is framed into the middle of what is left on the right instead.
+ * The canvas still covers the whole window, because the sky has to, so this is
+ * done by offsetting the camera's frustum rather than by moving anything.
  *
- * CENTRE is where the figure lands across the viewport, and COLUMN is the share
- * of the viewport width it is fitted into. Together they put it centred in the
- * right hand half and sized to it.
+ * COLUMN is the share of the viewport width the figure is fitted into, and
+ * CENTRE, where it lands across the viewport, is the middle of that column. The
+ * card has the rest, which the page's grid reads off this same number. Two
+ * fifths rather than half: a person standing is far taller than wide, so the
+ * figure is framed by the window's height and gives up nothing it shows to a
+ * narrower column, while the card's projects need the width to sit two to a
+ * row without their lines folding up.
  */
-export const CENTRE = 0.75;
-export const COLUMN = 0.5;
+export const COLUMN = 0.4;
+export const CENTRE = 1 - COLUMN / 2;
 
 /*
  * The share of a narrow window the figure is given, measured from the top.
@@ -253,7 +257,7 @@ export type Stage = {
   row: number;
 };
 
-/** The right hand half of a wide window, full height. */
+/** The right hand column of a wide window, full height. */
 export const WIDE_STAGE: Stage = { x: CENTRE, y: 0.5, column: COLUMN, row: 1 };
 
 /** The first screen of a narrow one, full width and full height, with the card

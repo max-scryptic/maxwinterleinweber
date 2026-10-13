@@ -85,17 +85,18 @@ function ServiceCard({ service }: { service: Service }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${service.name}: ${service.description}`}
-      className={`group flex w-[26rem] max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      className={`group flex max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
     >
       {/* Cut into the pane to the same depth as the build cards, padded the
           same way for the same reason, and rising to the face of the glass
-          under a pointer the same way. The same 26rem as the builds too: it
-          carries a single line now rather than a sentence and a question,
-          which settles at two rows at that width as the taglines above do. */}
+          under a pointer the same way. No width of its own: it is only as
+          wide as its name and line need, so the card sits tight around the
+          text, and the line stays on one row wherever the column has room
+          for it and folds only where it does not. */}
       <Card
         className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
       >
-        <CardContent className="flex items-center gap-4 px-5">
+        <CardContent className="flex items-center gap-3.5 px-5">
           <span
             className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${service.tileClassName}`}
             style={service.tileStyle}

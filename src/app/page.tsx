@@ -2,15 +2,17 @@ import type { CSSProperties } from "react";
 
 import { LeftCard } from "@/components/left-card";
 import { SpaceBackdrop } from "@/components/space-backdrop";
-import { BAND } from "@/lib/figure";
+import { BAND, COLUMN } from "@/lib/figure";
 
 export default function Home() {
   return (
     <>
       <SpaceBackdrop />
 
-      {/* Two equal columns from md up, the card on the left and the figure's
-          half of the sky left clear on the right. There the page is the window
+      {/* Two columns from md up, the card on the left and the figure's share
+          of the sky left clear on the right. The figure's share is COLUMN in
+          `src/lib/figure.ts`, which the camera is framed against, so the split
+          is read off it here rather than written down a second time. There the page is the window
           exactly: the sky behind is pinned to it, so it cannot be allowed to
           grow past it and drag the card off the bottom, and anything longer
           than the card scrolls inside the card instead, which is also what
@@ -45,12 +47,13 @@ export default function Home() {
           anywhere the card is not has to reach the canvas underneath to turn
           the figure. */}
       <div
-        className="pointer-events-none relative z-10 grid min-h-svh grid-cols-1 grid-rows-[var(--band)_minmax(var(--screen),auto)] px-[var(--gutter)] pb-[var(--gutter)] md:h-svh md:min-h-0 md:grid-cols-2 md:grid-rows-1 md:pt-[var(--gutter)]"
+        className="pointer-events-none relative z-10 grid min-h-svh grid-cols-1 grid-rows-[var(--band)_minmax(var(--screen),auto)] px-[var(--gutter)] pb-[var(--gutter)] md:h-svh md:min-h-0 md:grid-cols-[var(--split)] md:grid-rows-1 md:pt-[var(--gutter)]"
         style={
           {
             "--gutter": "10px",
             "--band": `${BAND * 100}svh`,
             "--screen": "calc(100svh - 2 * var(--gutter))",
+            "--split": `${1 - COLUMN}fr ${COLUMN}fr`,
           } as CSSProperties
         }
       >

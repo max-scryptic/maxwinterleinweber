@@ -21,6 +21,7 @@ import { REDUCED_MOTION, WIDE, useMediaQuery } from "@/hooks/use-media-query";
 import {
   BAND,
   CAMERA_RISE,
+  COLUMN,
   FIGURES,
   FOV,
   NARROW_STAGE,
@@ -474,10 +475,13 @@ export default function SpaceScene() {
       */}
       {wide ? (
         <>
-          {/* Which iteration is showing, over the right hand half where it is.
+          {/* Which iteration is showing, over the figure's column where it is.
               Above the figure rather than below it, so the two rows read as what
               is on stage and how it is being looked at, in that order. */}
-          <div className="pointer-events-none absolute top-8 right-0 flex w-1/2 justify-center gap-2">
+          <div
+            className="pointer-events-none absolute top-8 right-0 flex justify-center gap-2"
+            style={{ width: `${COLUMN * 100}%` }}
+          >
             {tabs}
           </div>
 
@@ -512,11 +516,14 @@ export default function SpaceScene() {
             </div>
           ) : null}
 
-          {/* Over the right hand half, where the figure is. The row spans that
-              half so it passes clicks through everywhere the buttons themselves
+          {/* Over the figure's column, where the figure is. The row spans that
+              column so it passes clicks through everywhere the buttons themselves
               are not; otherwise it would swallow drags along the whole width of
               the strip. */}
-          <div className="pointer-events-none absolute right-0 bottom-8 flex w-1/2 justify-center gap-2">
+          <div
+            className="pointer-events-none absolute right-0 bottom-8 flex justify-center gap-2"
+            style={{ width: `${COLUMN * 100}%` }}
+          >
             {framings}
           </div>
         </>
