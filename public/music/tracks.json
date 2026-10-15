@@ -1,8 +1,20 @@
 [
   {
+    "title": "Daybreak",
+    "audio": "eutonix. - daybreak.m4a",
+    "cover": "Daybreak Square.png",
+    "soundcloud": "https://on.soundcloud.com/GhhfGfShjFdpeI1qOT"
+  },
+  {
     "title": "Dispatch (feat. Franco)",
     "audio": "eutonix. - Dispatch [feat. Franco].m4a",
     "cover": "Dispatch Art.png",
     "soundcloud": "https://soundcloud.com/eutonix/dispatch-feat-franco?si=025625b147044d299c1a44429ec07bec&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"
+  },
+  {
+    "title": "Flower Power",
+    "audio": "eutonix. - Flower Power.m4a",
+    "cover": "Flower Power Art.jpg",
+    "soundcloud": "https://on.soundcloud.com/eAirj5g5jQkYS0IEiU"
   }
 ]
