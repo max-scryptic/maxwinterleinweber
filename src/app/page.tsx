@@ -13,7 +13,7 @@ import { getTracks } from "@/lib/music";
 import type { SectionId } from "@/lib/sections";
 
 const NAME = "Max Winter-Leinweber";
-const ROLE = "Creative cultivist";
+const ROLE = "Chronic creator";
 
 /*
  * One page, read top to bottom: who Max is, then the work he sells, the
