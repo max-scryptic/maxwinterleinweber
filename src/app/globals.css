@@ -123,6 +123,14 @@
     @apply bg-background text-foreground font-sans;
   }
 
+  /* Tailwind 4 leaves buttons with the arrow cursor, as browsers do, but on
+     this site every button does something when pressed, so it gets the same
+     pointing hand as a link. A disabled one keeps the arrow. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
   /* The nav and the button under the introduction are links to places on this
      one page, so following one glides there rather than cutting, for anyone
      who has not asked for less motion. */
