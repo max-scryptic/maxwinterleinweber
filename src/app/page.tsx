@@ -115,7 +115,7 @@ export default function Home() {
           <Section
             id="creative"
             title="Creative"
-            lede="Outside of work, I make videos about crypto, gaming and anything else, and music as eutonix."
+            lede="Outside of work, I make videos about crypto, gaming and anything else, and music under the alias eutonix."
           >
             <Subheading>Videos</Subheading>
             <CreativeCards />
