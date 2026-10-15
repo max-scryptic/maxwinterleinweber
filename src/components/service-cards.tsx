@@ -1,16 +1,11 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import * as React from "react";
-
-import carved from "@/components/carved.module.css";
-import { Card, CardContent } from "@/components/ui/card";
 
 /*
  * The services offered off the page, as opposed to the products built from it.
- * They are all sold through one studio now, so where there used to be a card
- * per line of work and a mail link behind each, there is one card for the
- * studio and it goes to the studio's own site. It is laid out as the SaaS
- * cards are, mark on a tile, name and line beside it, arrow at the edge, so
- * the two groups read as the same kind of thing.
+ * They are all sold through one studio, so there is one card, for the studio,
+ * and it says enough about the work that a visitor knows whether to book the
+ * call before they leave for the studio's own site.
  */
 
 /*
@@ -39,86 +34,121 @@ function ScrypticIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
-type Service = {
-  name: string;
-  description: string;
-  href: string;
-  icon: React.ComponentType<React.ComponentProps<"svg">>;
-  iconClassName: string;
-  /** The rounded tile the mark sits on, in the studio's own brand colour. */
-  tileClassName: string;
-  tileStyle?: React.CSSProperties;
-};
+/*
+ * The studio's own words, from its site: the one service it sells, the stages
+ * every build goes through, and the three numbers a founder asks about first.
+ * Kept here as the studio states them, so this card cannot promise something
+ * the studio's own pages do not.
+ */
+const SITE = "https://www.scryptic.co.uk";
 
-const scryptic: Service = {
-  name: "Scryptic",
-  // The studio's own headline, as its landing page leads with it.
-  description: "From idea to launched app, without hiring a dev team",
-  href: "https://www.scryptic.co.uk",
-  icon: ScrypticIcon,
-  // The mark is 21 units across a 24 unit frame, so 60% of the tile puts it
-  // at about half the tile's width, which is the clear space the brand's own
-  // avatars give it.
-  iconClassName: "size-[60%]",
-  tileClassName: "text-white",
-  tileStyle: { backgroundColor: scrypticLapis },
-};
+const stages = [
+  "Discovery",
+  "Design",
+  "Development",
+  "Deployment",
+  "Launch",
+];
+
+const facts = [
+  { label: "Typical build", value: "One to two months" },
+  { label: "Progress reviews", value: "Every Friday" },
+  { label: "Builds from", value: "£10,000" },
+];
 
 export function ServiceCards() {
   return (
-    // The same centred row the builds sit in, so the one card lines up under
-    // them rather than hanging off the left of the column.
-    <ul className="flex flex-wrap justify-center gap-2">
-      <li className="flex min-w-0">
-        <ServiceCard service={scryptic} />
-      </li>
-    </ul>
-  );
-}
-
-function ServiceCard({ service }: { service: Service }) {
-  const Icon = service.icon;
-
-  return (
-    <a
-      href={service.href}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={`${service.name}: ${service.description}`}
-      className={`group flex max-w-full rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
-    >
-      {/* Cut into the pane to the same depth as the build cards, padded the
-          same way for the same reason, and rising to the face of the glass
-          under a pointer the same way. No width of its own: it is only as
-          wide as its name and line need, so the card sits tight around the
-          text, and the line stays on one row wherever the column has room
-          for it and folds only where it does not. */}
-      <Card
-        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
-      >
-        <CardContent className="flex items-center gap-3.5 px-5">
+    <article className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
+      <div className="p-6 sm:p-10">
+        <div className="flex items-center gap-4">
+          {/* The mark is 21 units across a 24 unit frame, so 55% of the tile
+              puts it at about half the tile's width, which is the clear space
+              the brand's own avatars give it. */}
           <span
-            className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${service.tileClassName}`}
-            style={service.tileStyle}
+            className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-white"
+            style={{ backgroundColor: scrypticLapis }}
           >
-            <Icon className={service.iconClassName} />
+            <ScrypticIcon className="size-[55%]" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-lg leading-tight font-semibold text-neutral-900">
-              {service.name}
-            </span>
-            <span className="mt-1 block text-sm leading-snug text-neutral-500">
-              {service.description}
-            </span>
-          </span>
-          {/* An arrow where these cards used to carry an envelope, because it
-              no longer opens mail but another site, the same as the builds. */}
-          <ArrowUpRight
-            aria-hidden="true"
-            className="size-5 shrink-0 text-neutral-400 transition duration-200 group-hover:text-neutral-900"
-          />
-        </CardContent>
-      </Card>
-    </a>
+          <div>
+            <h3 className="text-xl font-semibold text-neutral-900">Scryptic</h3>
+            <p className="text-sm text-neutral-500">
+              MVP and app development studio
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-8 max-w-2xl font-serif text-3xl leading-tight text-neutral-900 sm:text-4xl">
+          From idea to launched app, without hiring a dev team.
+        </p>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
+          I run Scryptic, a small studio that takes founders from a rough idea
+          to a live product, with one team from the first call to launch day.
+          I also take apps made with no-code and AI builders through to
+          production.
+        </p>
+
+        {/* The stages, in order, as one line that wraps rather than a list
+            that stacks: it is a sequence to be read across, and the arrows
+            between the steps are what say so. */}
+        <ol className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-neutral-600">
+          {stages.map((stage, index) => (
+            <li key={stage} className="flex items-center gap-2">
+              <span className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1">
+                {stage}
+              </span>
+              {index < stages.length - 1 ? (
+                <ArrowRight
+                  aria-hidden="true"
+                  className="size-3.5 text-neutral-300"
+                />
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* The numbers, ruled off from the pitch above as a strip of their own,
+          and the two ways onward beside them. */}
+      <div className="border-t border-neutral-200 bg-neutral-50/70">
+        <dl className="grid grid-cols-1 divide-y divide-neutral-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          {facts.map((fact) => (
+            <div key={fact.label} className="px-6 py-5 sm:px-10">
+              <dt className="text-sm text-neutral-500">{fact.label}</dt>
+              <dd className="mt-1 text-lg font-semibold text-neutral-900">
+                {fact.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="flex flex-wrap gap-3 border-t border-neutral-200 px-6 py-6 sm:px-10">
+          <a
+            href={`${SITE}/book-a-call`}
+            target="_blank"
+            rel="noreferrer"
+            className="group inline-flex h-11 items-center gap-2 rounded-full bg-neutral-900 px-5 text-sm font-medium text-white transition hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            Book a discovery call
+            <ArrowRight
+              aria-hidden="true"
+              className="size-4 transition-transform group-hover:translate-x-0.5"
+            />
+          </a>
+          <a
+            href={SITE}
+            target="_blank"
+            rel="noreferrer"
+            className="group inline-flex h-11 items-center gap-2 rounded-full border border-neutral-200 bg-white px-5 text-sm font-medium text-neutral-900 transition hover:border-neutral-300 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            Visit scryptic.co.uk
+            <ArrowUpRight
+              aria-hidden="true"
+              className="size-4 text-neutral-400 transition group-hover:text-neutral-900"
+            />
+          </a>
+        </div>
+      </div>
+    </article>
   );
 }

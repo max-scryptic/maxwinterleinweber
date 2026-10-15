@@ -1,32 +1,9 @@
-"use client";
-
-import dynamic from "next/dynamic";
-
 /*
- * WebGL, the three.js runtime and the sky itself only exist on the client, so
- * the scene is split into its own chunk and loaded with SSR off.
- */
-const SpaceScene = dynamic(() => import("@/components/space-scene"), {
-  ssr: false,
-});
-
-/*
- * A still of the sky, in CSS, painted with the rest of the markup.
- *
- * The canvas cannot be there on the first paint: the chunk it lives in is
- * fetched after hydration, and the sky is not drawn until WebGL has compiled
- * the shaders that draw it. That is most of a second of the page being up with
- * nothing behind it, and a flat colour there is read as the background rather
- * than as the sky not having arrived: the page opened black and then turned
- * purple.
- *
- * So this stands in. It is the same colours the nebula shader mixes, banked
- * where the cloud actually falls in the opening frame, which the sky is: the
- * noise is fixed, the sky starts unturned and the camera opens on the same
- * spot, so every visitor gets the same first picture and it can be matched
- * once. Close enough that the canvas fading up over it reads as the sky coming
- * into focus rather than as one picture replacing another. It is also what is
- * left if WebGL is unavailable.
+ * A still of the sky, in CSS: the same colours the nebula shader mixes, banked
+ * where the cloud fell in the opening frame back when the sky covered the whole
+ * window. The home page now holds the sky in a small frame of its own, so this
+ * is only the backdrop for the font showcase, which was made to be judged
+ * against it.
  */
 const OPENING_SKY = [
   // The three banks of lit cloud, read off where they actually fall in the
@@ -50,10 +27,9 @@ const OPENING_SKY = [
 export function SpaceBackdrop() {
   return (
     <div
+      aria-hidden="true"
       className="fixed inset-0 z-0 bg-[#0e0930]"
       style={{ backgroundImage: OPENING_SKY }}
-    >
-      <SpaceScene />
-    </div>
+    />
   );
 }

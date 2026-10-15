@@ -5,7 +5,7 @@
  * Kept apart from the components that use them because they are needed on both
  * sides of a split: the canvas has to set up its camera and draw its buttons
  * from these, while the figure itself, three.js and a three megabyte model are
- * a separate chunk that narrow screens never load.
+ * a separate chunk that is only fetched once the model view is asked for.
  */
 
 // Metres. The model is rescaled to this, so it also sets the scale of every
@@ -181,10 +181,9 @@ export const FOV = 35;
  * is what keeps the field from being flown into: past it the stars nearest the
  * camera start to slide against the ones behind them and the sky stops reading
  * as a backdrop. It is a ceiling rather than the limit itself, which is worked
- * out per layout from the framings the buttons can ask for; it only ever binds
- * on the narrow one, where the figure is fitted to the width of a portrait
- * window a good deal taller than it is wide, and the widest pose consequently
- * stands a long way off.
+ * out from the framings the buttons can ask for and the shape of the frame; it
+ * only binds when the frame is a good deal taller than it is wide, where the
+ * widest pose has to stand a long way off to fit across it.
  */
 export const HORIZON = 12;
 
@@ -192,82 +191,22 @@ export const HORIZON = 12;
 export const CAMERA_RISE = HEIGHT * 0.22;
 
 // How much of the frame is left empty around the part being shown. 1 would
-// crop to it exactly.
-const MARGIN = 1.3;
+// crop to it exactly. Generous, because the frame is small and its buttons are
+// not: a row of them stands across the top and the bottom at a fixed size, and
+// at 1.3 the head of a figure that has drifted up its full height reached them.
+const MARGIN = 1.45;
 
 /*
- * The figure does not stand in the middle of the page: the card takes the left
- * of it, so it is framed into the middle of what is left on the right instead.
- * The canvas still covers the whole window, because the sky has to, so this is
- * done by offsetting the camera's frustum rather than by moving anything.
+ * The figure has a frame of its own on the page: a small rectangle beside the
+ * introduction, taller than it is wide, which the canvas fills exactly. So it
+ * stands in the middle of the canvas, and the camera only has to be far enough
+ * back to fit it, with nothing to offset.
  *
- * COLUMN is the share of the viewport width the figure is fitted into, and
- * CENTRE, where it lands across the viewport, is the middle of that column. The
- * card has the rest, which the page's grid reads off this same number. Two
- * fifths rather than half: a person standing is far taller than wide, so the
- * figure is framed by the window's height and gives up nothing it shows to a
- * narrower column, while the card's projects need the width to sit two to a
- * row without their lines folding up.
+ * ASPECT is that frame's width over its height. The frame is drawn from this
+ * same number, so the camera's opening distance and the box it is opening in
+ * cannot drift apart.
  */
-export const COLUMN = 0.4;
-export const CENTRE = 1 - COLUMN / 2;
-
-/*
- * The share of a narrow window the figure is given, measured from the top.
- *
- * On a wide window the page is split sideways and the figure gets a column. A
- * phone has no width to give away, so the split is made the other way, and in
- * depth rather than across the page: the figure has the first screen to itself,
- * whole, and the card begins at the fold and is scrolled up over the sky.
- *
- * All of it, rather than the two fifths this was. The smaller share kept the
- * card's first few lines on screen at rest, which said there was more page
- * underneath; it paid for that hint with both halves of the page, since a figure
- * fitted into two fifths of the height stands a long way off and looks it, and
- * the card was read through a letterbox. A screen each is the other way round:
- * the figure is shown at the size the window can actually hold, and the card is
- * read at the size it was drawn for. What is given up is the hint, and a swipe
- * up is the one gesture a phone can be relied on to be given.
- *
- * Kept as a fraction rather than folded away now that it is 1, because three
- * things are set from it and have to agree: the height of the page's first row,
- * the share of the vertical field the camera frames the figure into, and the
- * distance the dissolve is measured over.
- */
-export const BAND = 1;
-
-/*
- * Where on the page the figure is given room to stand, and how much of it.
- *
- * x and y are where the figure lands in the window, as fractions of its width
- * and height. column and row are the share of the window's width and height it
- * is fitted into. Between them that is enough both to offset the camera's
- * frustum onto the right part of the window and to work out how far back the
- * camera has to stand to fill it.
- *
- * Two of these, one per layout, rather than numbers worked out where they are
- * used: the offset is applied by the canvas and the distance by the controls
- * inside the figure's own chunk, and those two have to agree about where the
- * figure is or it is framed for a part of the window it is not in.
- */
-export type Stage = {
-  x: number;
-  y: number;
-  column: number;
-  row: number;
-};
-
-/** The right hand column of a wide window, full height. */
-export const WIDE_STAGE: Stage = { x: CENTRE, y: 0.5, column: COLUMN, row: 1 };
-
-/** The first screen of a narrow one, full width and full height, with the card
- * scrolling up past it. */
-export const NARROW_STAGE: Stage = {
-  x: 0.5,
-  y: BAND / 2,
-  column: 1,
-  row: BAND,
-};
+export const ASPECT = 4 / 5;
 
 /*
  * The three framings, as fractions of the figure's height measured from its
@@ -280,7 +219,7 @@ export const NARROW_STAGE: Stage = {
 export const VIEWS = [
   // Width here is what must not be cropped, which is not always the whole
   // silhouette: the full-body view has to hold the arms, but a torso shot that
-  // loses the hands at the edges of a narrow column is still a torso shot, and
+  // loses the hands at the edges of a narrow frame is still a torso shot, and
   // insisting on the arm span there would pull the camera back far enough to
   // show the knees.
   { id: "full", label: "Full body", bottom: 0, top: 1, width: 0.44 },
@@ -296,30 +235,16 @@ export type ViewId = View["id"];
  * view is fixed, so the distance that fits the band's height is fixed too; the
  * distance that fits its width depends on the shape of the space the figure is
  * given. Taking the larger of the two is what keeps a head from being cropped
- * down the sides in a narrow column, where fitting the height alone is not
+ * down the sides in a narrow frame, where fitting the height alone is not
  * enough.
- *
- * The aspect passed in is the figure's own column, not the canvas: the canvas
- * covers the whole window, and fitting to that would size the figure as though
- * it had the card's half to spread into as well.
  *
  * span is how wide the figure is being made by whatever it is doing, in the same
  * units as a view's own width, and is taken instead of it when it is the larger.
  * A view's width describes a figure standing still, so a pose that reaches wider
  * than that, which is a T pose and nothing else so far, would otherwise be
  * framed by a number that was never about it.
- *
- * row is the share of the window's height the figure is being fitted into, and
- * is the vertical counterpart of the aspect above. The field of view belongs to
- * the whole canvas, which covers the window however little of it the figure is
- * standing in, so a figure given a strip of it is being fitted into that
- * fraction of the vertical field and has to be that much further away. It
- * defaults to the whole height, which is what both of the stages below in fact
- * ask for: the wide one gives the figure a full-height column, and the narrow
- * one the whole of the first screen. It is here for a stage that is given less,
- * which is what the narrow one was.
  */
-export function framing(view: View, aspect: number, span = 0, row = 1) {
+export function framing(view: View, aspect: number, span = 0) {
   const halfFov = Math.tan((FOV * Math.PI) / 360);
   const height = (view.top - view.bottom) * HEIGHT * MARGIN;
   const width = Math.max(view.width, span) * HEIGHT * MARGIN;
@@ -327,21 +252,20 @@ export function framing(view: View, aspect: number, span = 0, row = 1) {
   return {
     focus: ((view.top + view.bottom) / 2) * HEIGHT,
     distance: Math.max(
-      height / 2 / (halfFov * row),
+      height / 2 / halfFov,
       width / 2 / (halfFov * aspect),
     ),
   };
 }
 
 /**
- * The framing a stage opens on, before there is a window to measure, and how far
+ * The framing the canvas opens on, before it has measured itself, and how far
  * the camera is tilted down at it.
  *
- * The aspect is taken to be the stage's own column, which is to say the window
- * is assumed square. Only has to be close enough not to be seen jumping: the
- * first frame after mount corrects it against the real shape of the window. It
- * is closer than it looks, because on both stages it is the height that decides
- * the distance and the assumed aspect does not enter into it.
+ * The aspect is the one the frame is drawn at. It only has to be close enough
+ * not to be seen jumping: the first frame after mount corrects it against the
+ * canvas's real size. At this shape it is the height that decides the distance
+ * anyway, so the two agree exactly.
  *
  * The pitch has to be handed to the camera rather than left to it. Given no
  * rotation, the canvas points a new camera at the origin, which out here is the
@@ -350,8 +274,8 @@ export function framing(view: View, aspect: number, span = 0, row = 1) {
  * sky with it, arriving a second into the page. Opening at the angle the
  * controls are going to hold means there is nothing to correct.
  */
-export function opening(stage: Stage) {
-  const fit = framing(VIEWS[0], stage.column, 0, stage.row);
+export function opening(aspect = ASPECT) {
+  const fit = framing(VIEWS[0], aspect);
 
   return {
     focus: fit.focus,

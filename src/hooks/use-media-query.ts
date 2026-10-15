@@ -2,10 +2,6 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-// Tailwind's md breakpoint, which is where the page splits into two columns and
-// the figure gets a side of its own to float in.
-export const WIDE = "(min-width: 48rem)";
-
 export const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
 /**

@@ -7,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type RefObject,
 } from "react";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
@@ -35,7 +34,6 @@ import {
   VIEWS,
   framing,
   versionOf,
-  type Stage as Room,
   type VersionId,
   type ViewId,
 } from "@/lib/figure";
@@ -44,8 +42,8 @@ import { WIDEST, poseOf, type PoseId } from "@/lib/poses";
 import { sampleSurface } from "@/lib/surface";
 
 /*
- * The figure adrift on the right hand side of the page, together with the light
- * on it and the camera work that keeps it there.
+ * The figure adrift in its frame beside the introduction, together with the
+ * light on it and the camera work that keeps it there.
  *
  * There is more than one figure now, and the tabs swap between them, as do the
  * version buttons between the takes on any one of them. Adding either is an
@@ -157,43 +155,6 @@ function progress(phase: Phase, age: number) {
   };
 }
 
-/*
- * The same three numbers again, with the figure scrolled part of the way off the
- * top of a narrow window.
- *
- * The dissolve is the one the figures already leave by, driven by the scroll
- * position rather than by a clock: the surface crumbles, what comes off it blows
- * away, and by the time the card has taken the screen there is nothing left to
- * draw. Reusing the departure rather than fading the whole figure out is what
- * keeps it in the page's own language, and it is the only dissolve available
- * anyway, since a model going transparent shows its own inside through its
- * outside.
- *
- * Folded into whatever the figure is doing already rather than replacing it, so
- * that scrolling during a change of figure takes both of them with it. The cloud
- * takes the brighter of the two, because the two dissolves are the same cloud and
- * adding them would double it.
- *
- * Under reduced motion there is no cloud to come off: `fade` goes nowhere because
- * nothing is drawn with it, and the figure is eaten away by the scroll alone,
- * which is the viewer's own hand rather than something moving on its own.
- */
-function veiled(at: typeof SETTLED, shown: number) {
-  if (shown >= 1) return at;
-
-  const gone = 1 - shown;
-
-  return {
-    form: at.form * shown * shown * shown,
-    fade: Math.max(
-      at.fade,
-      MathUtils.smoothstep(gone, 0, 0.1) *
-        (1 - MathUtils.smoothstep(gone, 0.42, 1)),
-    ),
-    solid: at.solid * (1 - MathUtils.smoothstep(gone, 0.03, 0.34)),
-  };
-}
-
 function Model({
   url,
   shift,
@@ -202,7 +163,6 @@ function Model({
   pose,
   phase,
   still,
-  veil,
 }: {
   url: string;
   shift: number;
@@ -211,7 +171,6 @@ function Model({
   pose: PoseId;
   phase: Phase;
   still: boolean;
-  veil: RefObject<{ value: number }>;
 }) {
   const { scene, animations } = useGLTF(url);
   const root = useRef<Group>(null);
@@ -376,13 +335,7 @@ function Model({
 
     // Under reduced motion there is no change to be part way through: the
     // figure is simply whole, and the cloud is never built or drawn.
-    //
-    // The scroll is folded in on top of that, and on a wide window sits at full
-    // strength and takes nothing off: there, this is exactly the line it was.
-    const at = veiled(
-      still ? SETTLED : progress(phase, phaseAge),
-      veil.current.value,
-    );
+    const at = still ? SETTLED : progress(phase, phaseAge);
     transition.current.form.value = at.form;
     transition.current.fade.value = at.fade;
     transition.current.solid.value = at.solid;
@@ -424,12 +377,10 @@ function Stage({
   version,
   pose,
   still,
-  veil,
 }: {
   version: VersionId;
   pose: PoseId;
   still: boolean;
-  veil: RefObject<{ value: number }>;
 }) {
   // The turntable belongs to the stage rather than to either model. Both the
   // departing and arriving figures consequently occupy the same angle during
@@ -518,7 +469,6 @@ function Stage({
             pose={pose}
             phase="leaving"
             still={still}
-            veil={veil}
           />
         </Suspense>
       ) : null}
@@ -532,7 +482,6 @@ function Stage({
           pose={pose}
           phase={cast.phase}
           still={still}
-          veil={veil}
         />
       </Suspense>
     </group>
@@ -550,12 +499,10 @@ function Controls({
   view,
   fitId,
   span,
-  room,
 }: {
   view: ViewId;
   fitId: number;
   span: number;
-  room: Room;
 }) {
   const camera = useThree((state) => state.camera);
   const domElement = useThree((state) => state.gl.domElement);
@@ -635,14 +582,11 @@ function Controls({
     // so moving between the other three does not re-run this and does not take
     // the camera off wherever the viewer has dragged it to.
     //
-    // The aspect is the figure's own room rather than the canvas's, which covers
-    // the whole window: on a wide one that is the right hand column, and on a
-    // narrow one the whole of the first screen. The row goes with it, and carries
-    // whatever share of the window's height that room is; as the two stages
-    // stand, both are given all of it.
-    const aspect = (size.width * room.column) / size.height;
+    // The canvas is the figure's frame and nothing else, so its own shape is the
+    // shape the figure is being fitted into.
+    const aspect = size.width / size.height;
     const preset = VIEWS.find((candidate) => candidate.id === view) ?? VIEWS[0];
-    goal.current = framing(preset, aspect, span, room.row);
+    goal.current = framing(preset, aspect, span);
 
     const orbit = controls.current;
     if (!orbit) return;
@@ -656,15 +600,12 @@ function Controls({
      * into.
      *
      * Set here rather than where the controls are built because it depends on
-     * the shape of the figure's room, which is not the same on the two layouts:
-     * a phone gives the figure the full height of a portrait window, and fitting
-     * the widest pose across something that narrow puts the camera further off
-     * than the wide layout ever asks for. There the reach works out well inside
-     * the old fixed limit, which is consequently what it still comes to.
+     * the shape of the frame: fitting the widest pose across a narrow one puts
+     * the camera further off than a wide one ever asks for.
      */
-    const reach = framing(VIEWS[0], aspect, WIDEST, room.row).distance;
+    const reach = framing(VIEWS[0], aspect, WIDEST).distance;
     orbit.maxDistance = Math.min(Math.max(HEIGHT * 4, reach * 1.6), HORIZON);
-  }, [view, fitId, size, span, room]);
+  }, [view, fitId, size, span]);
 
   useFrame((_, delta) => {
     const orbit = controls.current;
@@ -758,16 +699,12 @@ export default function FigureRig({
   view,
   fitId,
   still,
-  room,
-  veil,
 }: {
   version: VersionId;
   pose: PoseId;
   view: ViewId;
   fitId: number;
   still: boolean;
-  room: Room;
-  veil: RefObject<{ value: number }>;
 }) {
   return (
     <>
@@ -783,13 +720,8 @@ export default function FigureRig({
       <directionalLight position={[0, 3, -5]} intensity={1.4} color="#cbb6ff" />
       <Overhead />
 
-      <Stage version={version} pose={pose} still={still} veil={veil} />
-      <Controls
-        view={view}
-        fitId={fitId}
-        span={poseOf(pose).span ?? 0}
-        room={room}
-      />
+      <Stage version={version} pose={pose} still={still} />
+      <Controls view={view} fitId={fitId} span={poseOf(pose).span ?? 0} />
     </>
   );
 }
