@@ -1,12 +1,13 @@
 import { ArrowUpRight } from "lucide-react";
 import { Press_Start_2P } from "next/font/google";
-import Image, { type StaticImageData } from "next/image";
+import type { StaticImageData } from "next/image";
 import * as React from "react";
 
 import prettyMetricsShot from "@/assets/work/prettymetrics.webp";
 import reelEstateShot from "@/assets/work/reelestate.webp";
 import untilThenShot from "@/assets/work/until-then.webp";
 import viewlioShot from "@/assets/work/viewlio.webp";
+import { FadeImage } from "@/components/fade-image";
 
 /*
  * The Viewlio mark, drawn the way the app itself draws it: a chevron stroked
@@ -439,11 +440,10 @@ function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
         className={`relative aspect-[16/10] shrink-0 overflow-hidden border-b border-border bg-muted ${lead ? "xl:w-1/2 xl:border-r xl:border-b-0" : ""}`}
       >
         {build.shot ? (
-          <Image
+          <FadeImage
             src={build.shot}
             alt=""
             fill
-            placeholder="blur"
             sizes={
               lead
                 ? "(min-width: 1280px) 30vw, (min-width: 768px) 60vw, 100vw"

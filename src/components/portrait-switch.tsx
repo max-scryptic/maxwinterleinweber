@@ -2,10 +2,10 @@
 
 import { Box, Camera } from "lucide-react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import portrait from "@/assets/max.png";
+import { FadeImage } from "@/components/fade-image";
 import { ASPECT, FIGURES } from "@/lib/figure";
 import { warm } from "@/lib/warm";
 
@@ -124,18 +124,19 @@ export function PortraitSwitch() {
         ) : null}
 
         {/* The photo on top, faded away rather than removed, and out of the
-            pointer's way while it is, so a drag reaches the canvas beneath. */}
+            pointer's way while it is, so a drag reaches the canvas beneath.
+            On the way in it fades up over its own backdrop, which is there
+            from the first paint. */}
         <div
           aria-hidden={model}
           className={`absolute inset-0 transition-opacity ${model ? "pointer-events-none opacity-0" : "opacity-100"}`}
           style={{ background: PHOTO_BACKDROP, transitionDuration: `${SWAP_MS}ms` }}
         >
-          <Image
+          <FadeImage
             src={portrait}
             alt="Max Winter-Leinweber"
             fill
             preload
-            placeholder="blur"
             sizes="22rem"
             className="scale-[1.06] object-cover object-top"
           />

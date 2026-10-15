@@ -9,7 +9,6 @@ import {
   SkipForward,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import {
   useEffect,
   useRef,
@@ -19,6 +18,7 @@ import {
 } from "react";
 
 import eutonix from "@/assets/creative/eutonix.png";
+import { FadeImage } from "@/components/fade-image";
 import { SoundCloudMark } from "@/components/marks";
 import styles from "@/components/music-player.module.css";
 import type { Track } from "@/lib/music";
@@ -63,16 +63,19 @@ function Cover({
   /** Anything laid over the cover, such as a play button. */
   children?: ReactNode;
 }) {
+  // The slot is the page's quiet grey until the cover fades up into it. The
+  // near-black is the cover's own, behind the art and fading with it, since
+  // some of the artwork is drawn partly see-through on black.
   return (
     <span
-      className={`relative block shrink-0 overflow-hidden bg-neutral-900 ${className}`}
+      className={`relative block shrink-0 overflow-hidden bg-muted ${className}`}
     >
-      <Image
+      <FadeImage
         src={track.cover ?? eutonix}
         alt=""
         fill
         sizes={`${size}px`}
-        className="object-cover"
+        className="bg-neutral-900 object-cover"
       />
       {children}
     </span>
@@ -315,11 +318,10 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
         className="scroll-mt-8 overflow-hidden rounded-3xl border border-border bg-card"
       >
         <div className="flex flex-wrap items-center gap-4 p-5 sm:p-6">
-          <span className="relative shrink-0">
-            <Image
+          <span className="relative shrink-0 rounded-full bg-muted">
+            <FadeImage
               src={eutonix}
               alt=""
-              placeholder="blur"
               sizes="64px"
               className="size-14 rounded-full object-cover ring-1 ring-black/5 xl:size-16"
             />
