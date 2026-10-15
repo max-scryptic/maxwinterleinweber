@@ -8,6 +8,7 @@ import { SaasCards } from "@/components/saas-cards";
 import { ServiceCards } from "@/components/service-cards";
 import { SiteNav } from "@/components/site-nav";
 import { SocialLinks } from "@/components/social-links";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getTracks } from "@/lib/music";
 import type { SectionId } from "@/lib/sections";
 
@@ -27,28 +28,32 @@ const ROLE = "Founder of Scryptic";
 export default function Home() {
   return (
     <div className="flex w-full flex-col lg:flex-row">
-      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-80 lg:shrink-0 lg:flex-col lg:border-r lg:border-neutral-200 lg:px-12 lg:py-14">
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-80 lg:shrink-0 lg:flex-col lg:border-r lg:border-border lg:px-12 lg:py-14">
         <a
           href="#about"
-          className="font-serif text-[1.75rem] leading-none text-neutral-900"
+          className="font-serif text-[1.75rem] leading-none text-foreground"
         >
           {NAME}
         </a>
-        <p className="mt-2 text-[15px] text-neutral-500">{ROLE}</p>
+        <p className="mt-2 text-[15px] text-muted-foreground">{ROLE}</p>
 
         <div className="mt-12">
           <SiteNav />
         </div>
 
-        <Colophon className="mt-auto" />
+        <ThemeToggle className="mt-auto" />
+        <Colophon className="mt-6" />
       </aside>
 
       <div className="min-w-0 flex-1">
-        <header className="px-6 pt-8 sm:px-10 lg:hidden">
-          <p className="font-serif text-2xl leading-none text-neutral-900">
-            {NAME}
-          </p>
-          <p className="mt-1.5 text-sm text-neutral-500">{ROLE}</p>
+        <header className="flex items-center justify-between gap-4 px-6 pt-8 sm:px-10 lg:hidden">
+          <div>
+            <p className="font-serif text-2xl leading-none text-foreground">
+              {NAME}
+            </p>
+            <p className="mt-1.5 text-sm text-muted-foreground">{ROLE}</p>
+          </div>
+          <ThemeToggle />
         </header>
 
         <main className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-16">
@@ -62,12 +67,12 @@ export default function Home() {
               <PortraitSwitch />
 
               <div className="text-center md:text-left">
-                <h1 className="font-serif text-[clamp(3.5rem,7vw,6rem)] leading-[0.95] tracking-tight text-neutral-900">
+                <h1 className="font-serif text-[clamp(3.5rem,7vw,6rem)] leading-[0.95] tracking-tight text-foreground">
                   Hey, I&apos;m <em>Max</em>
                 </h1>
-                <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-neutral-600 md:mx-0 md:text-xl">
+                <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-subtle-foreground md:mx-0 md:text-xl">
                   Full-stack developer and founder of{" "}
-                  <strong className="font-semibold text-neutral-900">
+                  <strong className="font-semibold text-foreground">
                     Scryptic
                   </strong>
                   . I&apos;ve spent five years building software for enterprise
@@ -79,7 +84,7 @@ export default function Home() {
 
                 <a
                   href="#services"
-                  className="group mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-neutral-900 px-6 text-base font-medium text-white transition hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  className="group mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-base font-medium text-primary-foreground transition hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
                 >
                   View my work
                   <ArrowRight
@@ -121,7 +126,7 @@ export default function Home() {
         </main>
 
         <footer className="mx-auto max-w-5xl px-6 pb-10 sm:px-10 lg:hidden">
-          <Colophon className="border-t border-neutral-200 pt-8" />
+          <Colophon className="border-t border-border pt-8" />
         </footer>
       </div>
     </div>
@@ -142,10 +147,10 @@ function Section({
   return (
     <section id={id} className="py-16 lg:py-24">
       <div className="mb-10 max-w-2xl">
-        <h2 className="font-serif text-4xl leading-tight text-neutral-900 sm:text-5xl">
+        <h2 className="font-serif text-4xl leading-tight text-foreground sm:text-5xl">
           {title}
         </h2>
-        <p className="mt-3 text-lg text-neutral-500">{lede}</p>
+        <p className="mt-3 text-lg text-muted-foreground">{lede}</p>
       </div>
       {children}
     </section>
@@ -164,7 +169,7 @@ function Subheading({
 }) {
   return (
     <h3
-      className={`mb-4 text-xs font-semibold tracking-[0.14em] text-neutral-400 uppercase ${className}`}
+      className={`mb-4 text-xs font-semibold tracking-[0.14em] text-faint-foreground uppercase ${className}`}
     >
       {children}
     </h3>
@@ -174,8 +179,8 @@ function Subheading({
 function Colophon({ className = "" }: { className?: string }) {
   return (
     <div className={`text-sm ${className}`}>
-      <p className="text-neutral-500">Building things on the internet.</p>
-      <p className="mt-1 text-neutral-400">
+      <p className="text-muted-foreground">Building things on the internet.</p>
+      <p className="mt-1 text-faint-foreground">
         &copy; {new Date().getFullYear()} {NAME}
       </p>
     </div>

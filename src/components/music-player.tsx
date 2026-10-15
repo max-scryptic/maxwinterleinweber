@@ -103,7 +103,7 @@ function IconButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`flex shrink-0 items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none ${className}`}
     >
       {children}
     </button>
@@ -308,7 +308,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
       <div
         id="music"
         ref={panel}
-        className="scroll-mt-8 overflow-hidden rounded-3xl border border-neutral-200 bg-white"
+        className="scroll-mt-8 overflow-hidden rounded-3xl border border-border bg-card"
       >
         <div className="flex flex-wrap items-center gap-4 p-5 sm:p-6">
           <span className="relative shrink-0">
@@ -321,7 +321,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
             />
             <span
               aria-hidden="true"
-              className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full text-white ring-2 ring-white"
+              className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full text-white ring-2 ring-card"
               style={{ backgroundColor: soundCloudOrange }}
             >
               <SoundCloudMark className="h-auto w-4" />
@@ -331,8 +331,8 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
           {/* At least 10rem, so on a phone it is the button that moves onto a
               line of its own rather than the name that is squeezed to fit. */}
           <div className="min-w-40 flex-1">
-            <p className="text-lg font-semibold text-neutral-900">eutonix</p>
-            <p className="text-sm text-neutral-500">
+            <p className="text-lg font-semibold text-foreground">eutonix</p>
+            <p className="text-sm text-muted-foreground">
               @eutonix · Music on SoundCloud
             </p>
           </div>
@@ -341,12 +341,12 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
             href="https://soundcloud.com/eutonix"
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-10 items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 transition hover:border-neutral-300 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none max-sm:w-full"
+            className="group inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none max-sm:w-full"
           >
             Follow on SoundCloud
             <ArrowUpRight
               aria-hidden="true"
-              className="size-4 text-neutral-400 transition group-hover:text-neutral-900"
+              className="size-4 text-faint-foreground transition group-hover:text-foreground"
             />
           </a>
         </div>
@@ -356,7 +356,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
             {/* The song on show: its cover, its name, the transport and the
                 seek bar. Before anything has played it is the first song,
                 ready to go. */}
-            <div className="flex flex-col gap-5 border-t border-neutral-200 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-6">
+            <div className="flex flex-col gap-5 border-t border-border p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-6">
               <Cover
                 track={track}
                 size={128}
@@ -366,10 +366,10 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
               <div className="min-w-0 flex-1">
                 {/* Two lines before it gives up, since a title with a feature
                     and a "free download" on the end is a long one. */}
-                <p className="line-clamp-2 text-center text-xl leading-snug font-semibold text-neutral-900 sm:text-left">
+                <p className="line-clamp-2 text-center text-xl leading-snug font-semibold text-foreground sm:text-left">
                   {track.title}
                 </p>
-                <p className="text-center text-sm text-neutral-500 sm:text-left">
+                <p className="text-center text-sm text-muted-foreground sm:text-left">
                   eutonix
                 </p>
 
@@ -377,14 +377,14 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                   <IconButton
                     label="Previous song"
                     onClick={previous}
-                    className="size-10 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                    className="size-10 text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <SkipBack aria-hidden="true" className="size-4 fill-current" />
                   </IconButton>
                   <IconButton
                     label={playing ? "Pause" : "Play"}
                     onClick={toggle}
-                    className="size-12 bg-neutral-900 text-white hover:bg-neutral-700"
+                    className="size-12 bg-primary text-primary-foreground hover:bg-primary/80"
                   >
                     {playing ? (
                       <Pause aria-hidden="true" className="size-5 fill-current" />
@@ -398,7 +398,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                   <IconButton
                     label="Next song"
                     onClick={next}
-                    className="size-10 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                    className="size-10 text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     <SkipForward
                       aria-hidden="true"
@@ -407,7 +407,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                   </IconButton>
                 </div>
 
-                <div className="mt-4 flex items-center gap-3 text-xs text-neutral-500 tabular-nums">
+                <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground tabular-nums">
                   <span className="w-9 text-right">{clock(time)}</span>
                   <input
                     type="range"
@@ -432,14 +432,14 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
 
             {/* Every song, in the order tracks.json lists them. A row plays
                 its song, or pauses it if it is the one playing. */}
-            <ol className="border-t border-neutral-200 p-2">
+            <ol className="border-t border-border p-2">
               {tracks.map((song, at) => {
                 const current = at === index && started;
 
                 return (
                   <li
                     key={song.src}
-                    className={`flex items-center gap-1 rounded-2xl pr-2 transition-colors ${current ? "bg-neutral-100" : "hover:bg-neutral-50"}`}
+                    className={`flex items-center gap-1 rounded-2xl pr-2 transition-colors ${current ? "bg-muted" : "hover:bg-muted/50"}`}
                   >
                     <button
                       type="button"
@@ -449,11 +449,11 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                           ? `Pause ${song.title}`
                           : `Play ${song.title}`
                       }
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                     >
-                      <span className="flex w-5 shrink-0 justify-center text-sm text-neutral-400 tabular-nums">
+                      <span className="flex w-5 shrink-0 justify-center text-sm text-faint-foreground tabular-nums">
                         {current && playing ? (
-                          <span className="text-neutral-900">
+                          <span className="text-foreground">
                             <Bars />
                           </span>
                         ) : (
@@ -462,11 +462,11 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                       </span>
                       <Cover track={song} size={40} className="size-10 rounded-lg" />
                       <span
-                        className={`min-w-0 flex-1 truncate text-[15px] font-medium ${current ? "text-neutral-900" : "text-neutral-700"}`}
+                        className={`min-w-0 flex-1 truncate text-[15px] font-medium ${current ? "text-foreground" : "text-subtle-foreground"}`}
                       >
                         {song.title}
                       </span>
-                      <span className="shrink-0 text-sm text-neutral-400 tabular-nums">
+                      <span className="shrink-0 text-sm text-faint-foreground tabular-nums">
                         {clock(durations[at])}
                       </span>
                     </button>
@@ -478,7 +478,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                         rel="noreferrer"
                         aria-label={`Open ${song.title} on SoundCloud`}
                         title="Open on SoundCloud"
-                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-300 transition hover:bg-white hover:text-[#ff5500] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-faint-foreground transition hover:bg-card hover:text-[#ff5500] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                       >
                         <SoundCloudMark className="h-auto w-5" />
                       </a>
@@ -528,21 +528,21 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
           inert={!barShown}
           className={`fixed inset-x-3 bottom-3 z-50 transition duration-300 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[23rem] ${barShown ? "opacity-100 motion-safe:translate-y-0" : "pointer-events-none opacity-0 motion-safe:translate-y-3"}`}
         >
-          <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white/90 shadow-[0_24px_48px_-20px_rgba(20,16,40,0.4)] backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card/90 shadow-[0_24px_48px_-20px_rgba(20,16,40,0.4)] backdrop-blur-xl">
             <div className="flex items-center gap-3 p-2.5 pr-2">
               <Cover track={track} size={44} className="size-11 rounded-xl" />
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-neutral-900">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {track.title}
                 </p>
-                <p className="truncate text-xs text-neutral-500">eutonix</p>
+                <p className="truncate text-xs text-muted-foreground">eutonix</p>
               </div>
 
               <IconButton
                 label={playing ? "Pause" : "Play"}
                 onClick={toggle}
-                className="size-10 bg-neutral-900 text-white hover:bg-neutral-700"
+                className="size-10 bg-primary text-primary-foreground hover:bg-primary/80"
               >
                 {playing ? (
                   <Pause aria-hidden="true" className="size-4 fill-current" />
@@ -558,7 +558,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                 href="#music"
                 aria-label="Show the player"
                 title="Show the player"
-                className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
               >
                 <ListMusic aria-hidden="true" className="size-4" />
               </a>
@@ -566,7 +566,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
               <IconButton
                 label="Stop and close"
                 onClick={close}
-                className="size-9 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                className="size-9 text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <X aria-hidden="true" className="size-4" />
               </IconButton>
@@ -575,10 +575,10 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
             {/* How far through the song it is, along the bottom edge. */}
             <span
               aria-hidden="true"
-              className="absolute inset-x-0 bottom-0 h-0.5 bg-neutral-100"
+              className="absolute inset-x-0 bottom-0 h-0.5 bg-muted"
             >
               <span
-                className="block h-full origin-left bg-neutral-900 transition-transform duration-300 ease-linear"
+                className="block h-full origin-left bg-foreground transition-transform duration-300 ease-linear"
                 style={{ transform: `scaleX(${fill / 100})` }}
               />
             </span>

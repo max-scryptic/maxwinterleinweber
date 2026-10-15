@@ -86,14 +86,14 @@ export function SiteNav() {
               <a
                 href={`#${section.id}`}
                 aria-current={current ? "location" : undefined}
-                className="group flex items-center gap-3 rounded-md py-1.5 text-[15px] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+                className="group flex items-center gap-3 rounded-md py-1.5 text-[15px] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
               >
                 <span
                   aria-hidden="true"
-                  className={`size-1.5 rounded-full bg-neutral-900 transition duration-300 ${current ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
+                  className={`size-1.5 rounded-full bg-foreground transition duration-300 ${current ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
                 />
                 <span
-                  className={`transition-colors ${current ? "text-neutral-900" : "text-neutral-500 group-hover:text-neutral-900"}`}
+                  className={`transition-colors ${current ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
                 >
                   {section.label}
                 </span>

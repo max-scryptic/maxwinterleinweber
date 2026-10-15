@@ -59,10 +59,10 @@ const FRAME_SKY = [
 type Mode = "photo" | "model";
 
 function segment(active: boolean) {
-  return `inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none ${
+  return `inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none ${
     active
-      ? "bg-neutral-900 text-white"
-      : "text-neutral-500 hover:text-neutral-900"
+      ? "bg-primary text-primary-foreground"
+      : "text-muted-foreground hover:text-foreground"
   }`;
 }
 
@@ -145,7 +145,7 @@ export function PortraitSwitch() {
       <div
         role="group"
         aria-label="Portrait"
-        className="inline-flex items-center rounded-full border border-neutral-200 bg-white p-1 shadow-xs"
+        className="inline-flex items-center rounded-full border border-border bg-card p-1 shadow-xs"
       >
         <button
           type="button"
