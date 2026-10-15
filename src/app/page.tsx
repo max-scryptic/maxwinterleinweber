@@ -1,70 +1,158 @@
-import type { CSSProperties } from "react";
+import { ArrowRight } from "lucide-react";
+import type { ReactNode } from "react";
 
-import { LeftCard } from "@/components/left-card";
-import { SpaceBackdrop } from "@/components/space-backdrop";
-import { BAND, COLUMN } from "@/lib/figure";
+import { CreativeCards } from "@/components/creative-cards";
+import { PortraitSwitch } from "@/components/portrait-switch";
+import { SaasCards } from "@/components/saas-cards";
+import { ServiceCards } from "@/components/service-cards";
+import { SiteNav } from "@/components/site-nav";
+import { SocialLinks } from "@/components/social-links";
+import type { SectionId } from "@/lib/sections";
 
+const NAME = "Max Winter-Leinweber";
+const ROLE = "Founder of Scryptic";
+
+/*
+ * One page, read top to bottom: who Max is, then the work he sells, the
+ * products he has built, and what he makes outside of both.
+ *
+ * From lg up the name and the list of sections stand in a column down the left
+ * that stays put while the page scrolls past it, so where you are and how to
+ * get anywhere else are always in view. Narrower than that there is no width
+ * to give a column, so the name heads the page and the sections simply follow
+ * one another.
+ */
 export default function Home() {
   return (
-    <>
-      <SpaceBackdrop />
+    <div className="flex w-full flex-col lg:flex-row">
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-80 lg:shrink-0 lg:flex-col lg:border-r lg:border-neutral-200 lg:px-12 lg:py-14">
+        <a
+          href="#about"
+          className="font-serif text-[1.75rem] leading-none text-neutral-900"
+        >
+          {NAME}
+        </a>
+        <p className="mt-2 text-[15px] text-neutral-500">{ROLE}</p>
 
-      {/* Two columns from md up, the card on the left and the figure's share
-          of the sky left clear on the right. The figure's share is COLUMN in
-          `src/lib/figure.ts`, which the camera is framed against, so the split
-          is read off it here rather than written down a second time. There the page is the window
-          exactly: the sky behind is pinned to it, so it cannot be allowed to
-          grow past it and drag the card off the bottom, and anything longer
-          than the card scrolls inside the card instead, which is also what
-          keeps the gutter around it the same gutter all the way down.
+        <div className="mt-12">
+          <SiteNav />
+        </div>
 
-          Narrower than that there is no width to split, so the split is made
-          the other way, and the page is two screens: the figure has the first
-          one and the card is the second. It is the page that scrolls rather than
-          the card's contents, so a swipe up carries the card over the sky while
-          the figure dissolves behind it, and ends with the card held in the
-          window exactly as the wide layout holds it.
+        <Colophon className="mt-auto" />
+      </aside>
 
-          The first row is BAND in `src/lib/figure.ts`, which is also what the
-          camera is framed against and what the dissolve is measured over, so it
-          is stated here as the same number rather than a second one that has to
-          be kept in step by hand. The second is at least a screen less its
-          gutters, which is what makes it a screen: the card is shorter than that
-          and would otherwise be a short row near the bottom of a page that ran
-          out of scroll with the figure still half dissolved above it. It is a
-          minimum rather than a height so that the card can still grow past the
-          window as things are added to it.
+      <div className="min-w-0 flex-1">
+        <header className="px-6 pt-8 sm:px-10 lg:hidden">
+          <p className="font-serif text-2xl leading-none text-neutral-900">
+            {NAME}
+          </p>
+          <p className="mt-1.5 text-sm text-neutral-500">{ROLE}</p>
+        </header>
 
-          The top gutter is dropped on that layout, and only there. It is the
-          card's own margin from the edge of the window, and above the card on
-          this layout there is nothing to hold off: the row is empty sky, since
-          the figure standing in it is on the canvas behind rather than in the
-          grid. Left in, it would take the figure's screen a gutter short of one
-          and push the card's top edge a gutter below the fold, so that the first
-          thing a swipe revealed was the gap.
+        <main className="mx-auto max-w-5xl px-6 sm:px-10 lg:px-16">
+          {/* The introduction has the first screen to itself on a wide
+              window, centred in it, with the work starting below the fold. */}
+          <section
+            id="about"
+            className="flex items-center py-14 lg:min-h-svh lg:py-20"
+          >
+            <div className="grid w-full items-center gap-10 md:grid-cols-[auto_minmax(0,1fr)] md:gap-12 xl:gap-16">
+              <PortraitSwitch />
 
-          Nothing here takes the pointer except the card itself: a drag
-          anywhere the card is not has to reach the canvas underneath to turn
-          the figure. */}
-      <div
-        className="pointer-events-none relative z-10 grid min-h-svh grid-cols-1 grid-rows-[var(--band)_minmax(var(--screen),auto)] px-[var(--gutter)] pb-[var(--gutter)] md:h-svh md:min-h-0 md:grid-cols-[var(--split)] md:grid-rows-1 md:pt-[var(--gutter)]"
-        style={
-          {
-            "--gutter": "10px",
-            "--band": `${BAND * 100}svh`,
-            "--screen": "calc(100svh - 2 * var(--gutter))",
-            "--split": `${1 - COLUMN}fr ${COLUMN}fr`,
-          } as CSSProperties
-        }
-      >
-        {/* The figure's row is empty: what stands in it is the figure, which is
-            on the canvas behind this grid rather than in it. This is only the
-            hole in the layout that the card is kept out of, and it collapses
-            to nothing on the wide layout, where the rows are one. */}
-        <div aria-hidden="true" className="md:hidden" />
+              <div className="text-center md:text-left">
+                <h1 className="font-serif text-[clamp(3.5rem,7vw,6rem)] leading-[0.95] tracking-tight text-neutral-900">
+                  Hey, I&apos;m <em>Max</em>
+                </h1>
+                <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-neutral-600 md:mx-0 md:text-xl">
+                  Full-stack developer and founder of{" "}
+                  <strong className="font-semibold text-neutral-900">
+                    Scryptic
+                  </strong>
+                  . I&apos;ve spent five years building software for enterprise
+                  clients and startups, and I ship my own SaaS products along
+                  the way.
+                </p>
 
-        <LeftCard />
+                <SocialLinks className="mt-8 justify-center md:justify-start" />
+
+                <a
+                  href="#services"
+                  className="group mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-neutral-900 px-6 text-base font-medium text-white transition hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  View my work
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="size-4 transition-transform group-hover:translate-x-0.5"
+                  />
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <Section
+            id="services"
+            title="Professional services"
+            lede="I build apps for founders through my studio."
+          >
+            <ServiceCards />
+          </Section>
+
+          <Section
+            id="projects"
+            title="SaaS projects"
+            lede="Products I've designed, built and run myself."
+          >
+            <SaasCards />
+          </Section>
+
+          <Section
+            id="creative"
+            title="Creative"
+            lede="Outside of work, I make videos and music."
+          >
+            <CreativeCards />
+          </Section>
+        </main>
+
+        <footer className="mx-auto max-w-5xl px-6 pb-10 sm:px-10 lg:hidden">
+          <Colophon className="border-t border-neutral-200 pt-8" />
+        </footer>
       </div>
-    </>
+    </div>
+  );
+}
+
+function Section({
+  id,
+  title,
+  lede,
+  children,
+}: {
+  id: SectionId;
+  title: string;
+  lede: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className="py-16 lg:py-24">
+      <div className="mb-10 max-w-2xl">
+        <h2 className="font-serif text-4xl leading-tight text-neutral-900 sm:text-5xl">
+          {title}
+        </h2>
+        <p className="mt-3 text-lg text-neutral-500">{lede}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Colophon({ className = "" }: { className?: string }) {
+  return (
+    <div className={`text-sm ${className}`}>
+      <p className="text-neutral-500">Building things on the internet.</p>
+      <p className="mt-1 text-neutral-400">
+        &copy; {new Date().getFullYear()} {NAME}
+      </p>
+    </div>
   );
 }

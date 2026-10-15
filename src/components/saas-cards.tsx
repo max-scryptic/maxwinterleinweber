@@ -1,8 +1,12 @@
 import { ArrowUpRight } from "lucide-react";
+import { Press_Start_2P } from "next/font/google";
+import Image, { type StaticImageData } from "next/image";
 import * as React from "react";
 
-import carved from "@/components/carved.module.css";
-import { Card, CardContent } from "@/components/ui/card";
+import prettyMetricsShot from "@/assets/work/prettymetrics.webp";
+import reelEstateShot from "@/assets/work/reelestate.webp";
+import untilThenShot from "@/assets/work/until-then.webp";
+import viewlioShot from "@/assets/work/viewlio.webp";
 
 /*
  * The Viewlio mark, drawn the way the app itself draws it: a chevron stroked
@@ -258,10 +262,51 @@ function ReelEstateIcon(props: React.ComponentProps<"svg">) {
   );
 }
 
+/*
+ * The Marketing Arena's own arcade face, for the one build that has no
+ * screenshot to show: its preview is drawn instead, in the app's colours and
+ * lettering, so it sits among the others as a picture of the product rather
+ * than as a gap where one should be.
+ */
+const pressStart = Press_Start_2P({ subsets: ["latin"], weight: "400" });
+
+function ArenaPreview() {
+  return (
+    <div
+      className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-6 text-center"
+      style={{
+        backgroundColor: arenaPurple,
+        // A glow of the skull's own gold behind it, and the faint scan lines
+        // of the screen the app is styled after.
+        backgroundImage: [
+          "radial-gradient(55% 55% at 50% 42%, rgba(255, 207, 51, 0.14), transparent 70%)",
+          "repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 4px)",
+        ].join(", "),
+      }}
+    >
+      {/* Four and five pixels a cell, whole numbers for the same reason the
+          tile's mark is set at 33px: 22 rows that each want the same height. */}
+      <MarketingArenaIcon className="h-[88px] w-auto sm:h-[110px]" />
+      <p
+        className={`${pressStart.className} text-[11px] leading-relaxed tracking-wide text-[#ffcf33] sm:text-sm`}
+      >
+        The Marketing Arena
+      </p>
+    </div>
+  );
+}
+
 type Build = {
   name: string;
-  description: string;
+  /** What kind of product it is, in a few words, under the name. */
+  category: string;
+  /** What it does and who it is for, in a sentence or two. */
+  summary: string;
   href: string;
+  /** The address as it is shown, without the scheme or the www. */
+  domain: string;
+  /** A screenshot of the product, or nothing for one drawn in its place. */
+  shot: StaticImageData | null;
   icon: React.ComponentType<React.ComponentProps<"svg">>;
   /**
    * Each mark is sized on its own, as the social marks are: one is a square
@@ -274,11 +319,19 @@ type Build = {
   tileStyle?: React.CSSProperties;
 };
 
+/*
+ * The screenshots and the lines about each product are the ones the studio's
+ * case studies use, so the two sites describe the same products the same way.
+ */
 const builds: Build[] = [
   {
     name: "Viewlio",
-    description: "Retention insight for YouTube creators",
+    category: "AI analytics for YouTube creators",
+    summary:
+      "Reads a video's audience retention curve against the video itself, frame by frame, and explains why viewers left and what to change in the next upload.",
     href: "https://www.viewlio.cc",
+    domain: "viewlio.cc",
+    shot: viewlioShot,
     icon: ViewlioIcon,
     // 70% of the tile, which is the clear space the mark is drawn with in the
     // app itself.
@@ -288,8 +341,12 @@ const builds: Build[] = [
   },
   {
     name: "The Marketing Arena",
-    description: "Turn marketing into a game",
+    category: "Marketing, as a game",
+    summary:
+      "Turns your marketing routine into a game: commit to the work you mean to do, answer for it as it comes due, and build the record of a champion.",
     href: "https://www.themarketingarena.cc",
+    domain: "themarketingarena.cc",
+    shot: null,
     icon: MarketingArenaIcon,
     // Set by height, the skull being the taller way round, and at 33px rather
     // than the 70% of 48 that Viewlio's mark takes because 22 rows want a whole
@@ -303,8 +360,12 @@ const builds: Build[] = [
   },
   {
     name: "Pretty Metrics",
-    description: "Your metrics, made pretty",
+    category: "Shareable revenue charts",
+    summary:
+      "Reads a founder's revenue from Stripe and six other payment providers and turns it into polished share cards and looping videos for X, LinkedIn and investor updates.",
     href: "https://www.prettymetrics.cc",
+    domain: "prettymetrics.cc",
+    shot: prettyMetricsShot,
     icon: PrettyMetricsIcon,
     // The whole tile: the mark is drawn with the app icon's clear space
     // already around it.
@@ -314,8 +375,12 @@ const builds: Build[] = [
   },
   {
     name: "UntilThen",
-    description: "Messages for the future",
+    category: "Scheduled messages",
+    summary:
+      "Write a letter or record a voice or video message today, and have it emailed to the people you choose on a date you set, even years from now.",
     href: "https://www.until-then.cc",
+    domain: "until-then.cc",
+    shot: untilThenShot,
     icon: UntilThenIcon,
     // The whole slot, with no tile behind it: the bubble is the tile.
     iconClassName: "size-full",
@@ -323,8 +388,12 @@ const builds: Build[] = [
   },
   {
     name: "ReelEstate",
-    description: "Property videos from listing photos",
+    category: "AI video for estate agents",
+    summary:
+      "Turns the listing photos estate agents already have into branded property videos, reels and carousels for every social platform. No filming, no editing.",
     href: "https://reelestate.cc",
+    domain: "reelestate.cc",
+    shot: reelEstateShot,
     icon: ReelEstateIcon,
     // The whole tile: the mark is drawn with the app icon's clear space
     // already around it.
@@ -336,39 +405,21 @@ const builds: Build[] = [
 
 export function SaasCards() {
   return (
-    // Every build the same size, and that size the smallest that keeps each
-    // one's line about the app on one row. A grid does that on its own when it
-    // is only as wide as its contents: its columns are equal shares, and an
-    // equal share of a grid sizing itself to fit is as wide as the widest card
-    // in it wants to be, so the longest line (Viewlio's) sets the width and the
-    // rest take it. Centred in the column, and held to it, so that in a column
-    // too narrow for even that the cards give the width back and fold their
-    // lines rather than push a scrollbar into the page.
-    //
-    // Two to a row once the card's column is 42rem across, which is a laptop
-    // window and up. Stacked one under another, five builds are most of the
-    // window's height on their own, and on a laptop screen they ran the last
-    // card off the bottom of the glass; side by side they take three rows
-    // rather than five. Below 42rem there is no room for two of them side by
-    // side, so they stack, still all the one width.
-    <ul className="mx-auto grid w-fit max-w-full grid-cols-1 gap-2 @2xl:grid-cols-2">
-      {/* The odd build at the foot of two columns spans both and is held in
-          the middle of them at the width of one, rather than sitting under the
-          left hand column with a hole beside it. min-w-0 lets an item give up
-          width it has not got rather than overflow the grid. */}
-      {builds.map((build) => (
-        <li
-          key={build.href}
-          className="flex min-w-0 @2xl:last:odd:col-span-2 @2xl:last:odd:w-[calc(50%-0.25rem)] @2xl:last:odd:justify-self-center"
-        >
-          <BuildCard build={build} />
+    // Two to a row, with the first build across the top of both and laid on
+    // its side: it is the one the list opens on, and five cards in a grid of
+    // two leave one over, so the odd one out is made the lead rather than left
+    // hanging at the bottom.
+    <ul className="grid gap-6 md:grid-cols-2">
+      {builds.map((build, index) => (
+        <li key={build.href} className={index === 0 ? "md:col-span-2" : ""}>
+          <BuildCard build={build} lead={index === 0} />
         </li>
       ))}
     </ul>
   );
 }
 
-function BuildCard({ build }: { build: Build }) {
+function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
   const Icon = build.icon;
 
   return (
@@ -376,29 +427,39 @@ function BuildCard({ build }: { build: Build }) {
       href={build.href}
       target="_blank"
       rel="noreferrer"
-      aria-label={`${build.name}: ${build.description}`}
-      className={`group flex flex-1 rounded-2xl transition duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${carved.link}`}
+      aria-label={`${build.name}: ${build.category}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white transition duration-300 hover:border-neutral-300 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none ${lead ? "xl:flex-row" : ""}`}
     >
-      {/* Cut into the pane like the row of handles above it and the name above
-          that, and coming up to the face of the glass under a pointer. It is
-          the deeper of the two carves, being a card rather than a pill and so
-          tall enough to see down into.
-
-          Its border goes with the carve: the edge of a trough is drawn by the
-          light falling into it, and a drawn line around the outside of that is
-          a second edge in the wrong place, reading on a white card as a grey
-          outline laid over the shading rather than as part of it.
-
-          12px above and below the tile rather than 16: these cards and the
-          Scryptic one stand in a column that has to fit the window, and the
-          tile already holds the name and its line with air to spare, so the
-          padding is only what keeps the tile off the carve's shaded wall. */}
-      <Card
-        className={`flex-1 gap-0 rounded-2xl border-transparent bg-white py-3 transition duration-200 ${carved.carved} ${carved.deep}`}
+      {/* The product as it looks, cropped from the top, which is where every
+          one of these screenshots has its headline. The lead card lays its
+          picture beside its words only from xl, and gives each half the row:
+          any narrower and the words are squeezed into a column a few words
+          wide, so below that it stands like the others, only wider. */}
+      <div
+        className={`relative aspect-[16/10] shrink-0 overflow-hidden border-b border-neutral-200 bg-neutral-100 ${lead ? "xl:w-1/2 xl:border-r xl:border-b-0" : ""}`}
       >
-        {/* The mark on the left, the name and the line about the app stacked
-            beside it, and the arrow held out at the far edge. */}
-        <CardContent className="flex items-center gap-3.5 px-5">
+        {build.shot ? (
+          <Image
+            src={build.shot}
+            alt=""
+            fill
+            placeholder="blur"
+            sizes={
+              lead
+                ? "(min-width: 1280px) 30vw, (min-width: 768px) 60vw, 100vw"
+                : "(min-width: 768px) 30vw, 100vw"
+            }
+            className="object-cover object-top transition duration-500 group-hover:scale-[1.015]"
+          />
+        ) : (
+          <ArenaPreview />
+        )}
+      </div>
+
+      <div
+        className={`flex flex-1 flex-col p-6 ${lead ? "xl:justify-center xl:p-10" : ""}`}
+      >
+        <div className="flex items-center gap-3.5">
           <span
             className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${build.tileClassName}`}
             style={build.tileStyle}
@@ -406,26 +467,35 @@ function BuildCard({ build }: { build: Build }) {
             <Icon className={build.iconClassName} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-lg leading-tight font-semibold text-neutral-900">
+            <span
+              className={`block font-semibold text-neutral-900 ${lead ? "text-lg xl:text-2xl" : "text-lg"}`}
+            >
               {build.name}
             </span>
-            <span className="mt-1 block text-sm leading-snug text-neutral-500">
-              {build.description}
+            <span className="block text-sm text-neutral-500">
+              {build.category}
             </span>
           </span>
           {/* The arrow leans the way the link goes, which is the one bit of
-              the card that says it opens somewhere else. It does not travel
-              when the card is hovered, it only darkens: the card coming up to
-              the face of the glass is the whole of what the hover says, and a
-              mark sliding about on top of it is a second thing happening at
-              the same time. Darkening over the same 200ms carries it up with
-              the card rather than beside it. */}
+              the card that says it opens somewhere else. */}
           <ArrowUpRight
             aria-hidden="true"
-            className="size-5 shrink-0 text-neutral-400 transition duration-200 group-hover:text-neutral-900"
+            className="size-5 shrink-0 self-start text-neutral-300 transition duration-200 group-hover:text-neutral-900"
           />
-        </CardContent>
-      </Card>
+        </div>
+
+        <p
+          className={`mt-4 leading-relaxed text-neutral-600 ${lead ? "text-[15px] xl:text-lg" : "text-[15px]"}`}
+        >
+          {build.summary}
+        </p>
+
+        <p
+          className={`pt-5 text-sm font-medium text-neutral-400 transition-colors group-hover:text-neutral-900 ${lead ? "xl:mt-0" : "mt-auto"}`}
+        >
+          {build.domain}
+        </p>
+      </div>
     </a>
   );
 }

@@ -5,100 +5,53 @@ import {
   lazy,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Group, PerspectiveCamera } from "three";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Group } from "three";
 
 import { Nebula } from "@/components/nebula";
 import { Starfield } from "@/components/starfield";
 import { Button } from "@/components/ui/button";
-import { useBandVeil } from "@/hooks/use-band-veil";
-import { REDUCED_MOTION, WIDE, useMediaQuery } from "@/hooks/use-media-query";
+import { REDUCED_MOTION, useMediaQuery } from "@/hooks/use-media-query";
 import {
-  BAND,
   CAMERA_RISE,
-  COLUMN,
   FIGURES,
   FOV,
-  NARROW_STAGE,
   VIEWS,
-  WIDE_STAGE,
   figureOf,
   opening,
   versionOf,
   type Figure,
-  type Stage,
   type VersionId,
   type ViewId,
 } from "@/lib/figure";
 import { POSES, type PoseId } from "@/lib/poses";
+import { warm } from "@/lib/warm";
 
 /*
- * The one canvas the whole page sits on. It covers the window rather than a
- * column, so the sky is continuous behind the card as well as beside it, and
- * the figure is in the same scene as the sky rather than composited over a
- * picture of one.
+ * The model view: the figure adrift in its own patch of sky, held in a small
+ * frame beside the introduction. The canvas fills whatever box it is put in,
+ * and the figure stands in the middle of it.
  */
 
 // The figures, three.js's loaders and several megabytes of model, split off from
-// the chunk that draws the sky, so that the page is up and the sky is on it
-// before any of that has arrived.
+// the chunk that draws the sky, so that the frame has a sky in it before any of
+// that has arrived.
 const FigureRig = lazy(() => import("@/components/figure-stage"));
 
-/*
- * Pulls a figure's model into the browser cache when its tab is hovered or
- * focused, so that pressing it starts the swap against a file already on the
- * machine rather than one still on its way.
- *
- * A plain fetch, rather than drei's own preloader, because reaching for that
- * here would mean importing three.js into the bundle this page is split to
- * avoid loading in the first place.
- */
-const warmed = new Set<string>();
-
-function warm(url: string) {
-  if (warmed.has(url)) return;
-  warmed.add(url);
-
-  // A failure here costs nothing: the model is fetched again, for real, when
-  // the figure is actually asked for. Forgetting it means a later hover tries
-  // again rather than the file never being warmed at all.
-  void fetch(url).catch(() => warmed.delete(url));
-}
-
-// Both rows of controls are the same object: a row of alternatives with one of
-// them current. The current one is solid white, the rest are glass over the sky.
+// Every row of controls is the same object: a row of alternatives with one of
+// them current. The current one is solid white, the rest are glass over the
+// sky. Small, because the frame is: the figure is what the frame is for, and
+// the buttons are kept to its edges.
 function control(active: boolean) {
+  const shape = "pointer-events-auto h-6 rounded-full px-2.5 text-[11px]";
   return active
-    ? "pointer-events-auto bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900"
-    : "pointer-events-auto border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white";
+    ? `${shape} bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900`
+    : `${shape} border border-white/20 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white`;
 }
-
-/*
- * How far above the middle of the window the foot of the version column sits,
- * in rem.
- *
- * It is placed against the pose column rather than against itself: that column
- * is centred, so clearing it means clearing half of it, which is its buttons at
- * 2rem each with 0.5rem between them, and then VERSION_GAP on top. Measured off
- * POSES rather than written down, so a fifth pose does not quietly push the
- * column up through this one.
- *
- * Anchoring to the middle of the window rather than stacking above whatever is
- * actually there is the whole point. The pose column is absent on a version
- * with no skeleton, and buttons that moved with it would jump out from under
- * the pointer on the press that made it appear.
- */
-// The clear space between the two columns, in rem. Wider than the 0.5rem that
-// separates buttons within either column, so that the break between them reads
-// as a break rather than as one longer list with an uneven seam.
-const VERSION_GAP = 1.25;
-const VERSION_RISE =
-  (POSES.length * 2 + (POSES.length - 1) * 0.5) / 2 + VERSION_GAP;
 
 // Radians per second: one revolution of the sky roughly every twelve minutes.
 // Slow enough that it is only noticeable by having changed.
@@ -120,61 +73,13 @@ function Sky({ still }: { still: boolean }) {
   });
 
   return (
-    // Tilted, so the band of cloud runs across the page on a slant instead of
-    // sitting level with the top of the window.
+    // Tilted, so the band of cloud runs across the frame on a slant instead of
+    // sitting level with the top of it.
     <group ref={group} rotation={[0.22, 0, 0.14]}>
       <Nebula still={still} />
       <Starfield still={still} />
     </group>
   );
-}
-
-/*
- * Slides the camera's frustum so that the figure, which sits at the origin,
- * projects onto the part of the window its stage gives it rather than into the
- * middle: the right hand half on a wide window. On a narrow one that part is the
- * whole of the first screen, so the slide comes to nothing and this is left
- * doing arithmetic that lands back where it started; it is still the one place
- * that decides where the figure is aimed, and would be needed again by any stage
- * given less than the window.
- *
- * This is a change to the projection, not a move: the figure holds its place on
- * screen however far the camera is orbited around it. Offsetting the orbit
- * target instead would not, because that offset would swing round with the
- * camera and carry the figure across the page with it.
- *
- * It belongs to the canvas rather than to the figure, even though it is the
- * figure it is framing. Left inside the chunk the figure is loaded from, it was
- * applied a second or so after the page opened, and the sky, which is drawn
- * through the same camera, visibly slid a quarter of the window sideways when
- * it arrived.
- */
-function StageFraming({ stage }: { stage: Stage }) {
-  const camera = useThree((state) => state.camera) as PerspectiveCamera;
-  const size = useThree((state) => state.size);
-
-  useLayoutEffect(() => {
-    // The full size is the viewport's own, so nothing is scaled: only the
-    // window onto the frustum moves. Both offsets run against the direction the
-    // figure is being put, because showing a subject to the right of centre, or
-    // below it, means looking at a region that starts left of it, or above it.
-    camera.setViewOffset(
-      size.width,
-      size.height,
-      (0.5 - stage.x) * size.width,
-      (0.5 - stage.y) * size.height,
-      size.width,
-      size.height,
-    );
-    camera.updateProjectionMatrix();
-
-    return () => {
-      camera.clearViewOffset();
-      camera.updateProjectionMatrix();
-    };
-  }, [camera, size, stage]);
-
-  return null;
 }
 
 /*
@@ -201,45 +106,72 @@ function FirstLight({ onLit }: { onLit: () => void }) {
 }
 
 export default function SpaceScene() {
-  const wide = useMediaQuery(WIDE);
   const still = useMediaQuery(REDUCED_MOTION);
 
-  // Which of the two layouts the figure is standing in, and so where on the
-  // window it is framed, how far back the camera has to be to fill that, and
-  // whether there is a page scrolling underneath it.
-  const stage = wide ? WIDE_STAGE : NARROW_STAGE;
+  // Where the camera stands on the first frame, before the canvas has measured
+  // itself. Read once, when the canvas builds its camera; every frame after
+  // that the controls inside the figure's own chunk have it, and correct it
+  // against the real shape of the frame.
+  const start = opening();
 
-  // Where the camera stands on the first frame, before there is a window to
-  // measure it against. Read once, when the canvas builds its camera; every
-  // frame after that the controls inside the figure's own chunk have it, and
-  // correct it against the real shape of the window.
-  const start = opening(stage);
-
-  /*
-   * How much of the figure is left, with the card scrolled part of the way up
-   * over it. Fixed at all of it on the wide layout, where the page is the window
-   * and there is nothing to scroll.
-   *
-   * `standing` is the coarse end of it and is the only part React sees: it goes
-   * false when the figure is entirely gone, which takes it off the canvas so
-   * that a figure nobody can see is not also being drawn every frame. The rest
-   * is written straight to a ref and to the controls' own wrapper, once a frame
-   * at most, because a value that changes with the scroll position is not one to
-   * re-render a scene graph for.
-   */
-  const { veil, overlay, shown: standing } = useBandVeil(!wide);
+  const frame = useRef<HTMLDivElement>(null);
 
   // Whether the canvas has a sky on it yet. Until it does the painted one in
-  // the wrapper behind is what is showing, and this is what crosses from the
-  // one to the other.
+  // the frame behind is what is showing, and this is what crosses from the one
+  // to the other.
   const [lit, setLit] = useState(false);
   const light = useCallback(() => setLit(true), []);
 
-  // The model the page opens on, fetched from here rather than waiting for the
-  // chunk that draws it to be parsed and to ask for it itself. The two are
-  // several megabytes and a few hundred kilobytes over the same connection;
-  // starting them together rather than one after the other is most of a second
-  // off how long the sky stands empty.
+  /*
+   * Whether the frame is on screen at all. The page scrolls past it, and a sky
+   * and a hundred thousand triangles drawn every frame for a box nobody can see
+   * is a laptop fan for nothing, so the render loop is stopped while it is out
+   * of view and picks up where it left off when it comes back.
+   */
+  const [inView, setInView] = useState(true);
+
+  useEffect(() => {
+    const element = frame.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(([entry]) =>
+      setInView(entry.isIntersecting),
+    );
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  /*
+   * The wheel belongs to the page. The frame is a small box on a page that
+   * scrolls, and OrbitControls takes every wheel event over the canvas to zoom
+   * with: left alone, a visitor scrolling down past the introduction would find
+   * the page stop and the figure lurch towards them instead whenever the
+   * pointer happened to cross it.
+   *
+   * So a plain wheel is stopped on its way down to the canvas, in the capture
+   * phase, before the controls ever see it, and since nothing calls
+   * preventDefault on it the page scrolls as it would anywhere else. A pinch on
+   * a trackpad arrives as a wheel with ctrlKey set, and so does a wheel turned
+   * with ctrl held, which is how a browser says "zoom" rather than "scroll":
+   * those are let through, so zooming the figure still works for anyone who
+   * means it.
+   */
+  useEffect(() => {
+    const element = frame.current;
+    if (!element) return;
+
+    const passToPage = (event: WheelEvent) => {
+      if (!event.ctrlKey) event.stopPropagation();
+    };
+    element.addEventListener("wheel", passToPage, { capture: true });
+
+    return () =>
+      element.removeEventListener("wheel", passToPage, { capture: true });
+  }, []);
+
+  // The model the frame opens on, fetched from here rather than waiting for the
+  // chunk that draws it to be parsed and to ask for it itself.
   useEffect(() => {
     warm(FIGURES[0].versions[0].url);
   }, []);
@@ -251,7 +183,7 @@ export default function SpaceScene() {
    * what names a file, and the tab that is lit is worked out from it below.
    * Holding the two separately would mean keeping them in step by hand.
    *
-   * The page opens on the first version of the first figure, which is the
+   * The frame opens on the first version of the first figure, which is the
    * earliest capture and the one every later one is measured against.
    */
   const [version, setVersion] = useState<VersionId>(FIGURES[0].versions[0].id);
@@ -261,9 +193,9 @@ export default function SpaceScene() {
   const figure = figureOf(version);
 
   // Pressing a tab shows that figure's first version. Pressing the tab already
-  // showing does nothing, as it did before there were versions: choosing
-  // between them is what the buttons down the side are for, and a press that
-  // put the figure back to v1 would undo one of them.
+  // showing does nothing: choosing between versions is what the buttons down
+  // the side are for, and a press that put the figure back to v1 would undo one
+  // of them.
   function show(next: Figure) {
     if (next.id !== figure.id) setVersion(next.versions[0].id);
   }
@@ -291,31 +223,18 @@ export default function SpaceScene() {
     setFitId((count) => count + 1);
   }
 
-  /*
-   * The four sets of buttons, built here and placed by whichever layout is up.
-   *
-   * Both layouts offer exactly the same controls and differ only in where they
-   * are put: a wide window has room to hang them off the edges of the figure's
-   * own column, and a narrow one has to fit them into the screen the figure
-   * stands in.
-   * Building the buttons once and arranging them twice is what keeps that a
-   * difference of arrangement rather than two rows of buttons that have to be
-   * kept saying the same thing.
-   */
-
   // Which capture is on stage.
   const tabs = FIGURES.map((option) => (
     <Button
       key={option.id}
       variant="ghost"
-      size="sm"
+      size="xs"
       className={control(option.id === figure.id)}
       aria-pressed={option.id === figure.id}
       onClick={() => show(option)}
-      // Fetched on the way to the press rather than on the press itself. A
-      // pointer arriving on the tab is most of a second of warning, which is
-      // about what a four megabyte model needs. Only the version the press would
-      // land on: the others behind the same tab are warmed by their own buttons.
+      // Fetched on the way to the press rather than on the press itself. Only
+      // the version the press would land on: the others behind the same tab are
+      // warmed by their own buttons.
       onPointerEnter={() => warm(option.versions[0].url)}
       onFocus={() => warm(option.versions[0].url)}
     >
@@ -334,7 +253,7 @@ export default function SpaceScene() {
     <Button
       key={option.id}
       variant="ghost"
-      size="sm"
+      size="xs"
       className={control(option.id === version)}
       aria-pressed={option.id === version}
       onClick={() => setVersion(option.id)}
@@ -350,7 +269,7 @@ export default function SpaceScene() {
     <Button
       key={option.id}
       variant="ghost"
-      size="sm"
+      size="xs"
       className={control(option.id === pose)}
       aria-pressed={option.id === pose}
       onClick={() => setPose(option.id)}
@@ -364,7 +283,7 @@ export default function SpaceScene() {
     <Button
       key={option.id}
       variant="ghost"
-      size="sm"
+      size="xs"
       className={control(option.id === view)}
       // The button says which framing is showing, not just which one the next
       // press would give, so it is a state to announce.
@@ -376,21 +295,19 @@ export default function SpaceScene() {
   ));
 
   return (
-    <div className="relative h-full w-full">
+    <div ref={frame} className="relative h-full w-full">
       <Canvas
         /*
          * The cursor is the only hint that the figure is more than a picture.
          *
          * The touch rules are what stop the figure from swallowing the page.
          * OrbitControls takes every touch on the canvas the moment it is built,
-         * which is right on the wide layout, where the page is the window and
-         * cannot scroll, and a trap on the narrow one, where the figure has the
-         * top of the window and a swipe up from it is how a visitor reaches the
-         * card: a control that eats that leaves them pushing at a page that will
-         * not move. Handing the vertical axis back to the browser there gives the
-         * figure the axis it actually turns on, which is the horizontal one, and
-         * gives the page the one it scrolls on. Two fingers still reach the
-         * controls either way, so pinching to zoom survives it.
+         * and the frame sits on a page that scrolls: a control that eats a swipe
+         * up leaves a visitor on a phone pushing at a page that will not move.
+         * Handing the vertical axis back to the browser gives the figure the
+         * axis it actually turns on, which is the horizontal one, and gives the
+         * page the one it scrolls on. Two fingers still reach the controls, so
+         * pinching to zoom survives it.
          *
          * Reached through a descendant selector and marked important because of
          * what it is overriding and where. This className lands on the wrapper
@@ -399,22 +316,24 @@ export default function SpaceScene() {
          * straight onto the canvas from the controls' constructor, and nothing
          * short of an important rule outranks that.
          */
-        className="cursor-grab [&_canvas]:touch-pan-y! active:cursor-grabbing md:[&_canvas]:touch-none!"
+        className="cursor-grab [&_canvas]:touch-pan-y! active:cursor-grabbing"
         // Held back until there is something on it, then brought up over the
-        // painted sky in the wrapper behind. The two are close enough that this
-        // reads as the sky coming into focus; cutting to the canvas instead is
-        // a visible switch from one picture to another.
+        // painted sky in the frame behind, which reads as the sky coming into
+        // focus rather than one picture cutting to another.
         style={{
           opacity: lit ? 1 : 0,
           transition: "opacity 700ms ease-out",
         }}
+        // Stopped outright while the frame is scrolled out of view, and started
+        // again as it comes back.
+        frameloop={inView ? "always" : "never"}
         // The sky fills every pixel, so there is nothing to composite against
         // and no reason to pay for an alpha channel.
         gl={{ alpha: false, antialias: true }}
-        // Full device pixel ratio over the whole window is four times the
-        // fragments of a half-width canvas, and most of them are sky. Below two
-        // the noise stays smooth and the stars stay round.
-        dpr={[1, 1.75]}
+        // The frame is small, so the full density of a retina display costs
+        // little here and keeps the stars round and the edges of the figure
+        // clean.
+        dpr={[1, 2]}
         camera={{
           fov: FOV,
           position: [0, start.focus + CAMERA_RISE, start.distance],
@@ -431,69 +350,41 @@ export default function SpaceScene() {
 
         <FirstLight onLit={light} />
 
-        <StageFraming stage={stage} />
-
         {/* Suspends twice over: once on the chunk, once on the model inside
-            it. Both resolve into the sky, which is already drawn.
-
-            Taken off the canvas outright once the card has been scrolled far
-            enough up to cover it. The dissolve has already made it invisible by
-            then, but invisible on this page means every fragment of it being
-            discarded rather than not being drawn, so leaving it mounted would
-            hand a phone a hundred thousand triangles and a skeleton to pose for
-            a figure that is no longer on the screen. The model itself stays in
-            the loader's cache, so scrolling back up puts it straight back. */}
-        {standing ? (
-          <Suspense fallback={null}>
-            <FigureRig
-              version={version}
-              pose={pose}
-              view={view}
-              fitId={fitId}
-              still={still}
-              room={stage}
-              veil={veil}
-            />
-          </Suspense>
-        ) : null}
+            it. Both resolve into the sky, which is already drawn. */}
+        <Suspense fallback={null}>
+          <FigureRig
+            version={version}
+            pose={pose}
+            view={view}
+            fitId={fitId}
+            still={still}
+          />
+        </Suspense>
       </Canvas>
 
-      {/*
-        The same four sets of buttons, placed for whichever layout is up.
+      {/* The controls, round the edges of the frame and out of the middle of
+          it, which is where the figure is. Across the top is which figure, and
+          across the bottom how it is being looked at; down the right hand side
+          is the figure itself, which version of it and what it is doing, so the
+          two axes say what they change. Every row passes clicks through except
+          where its buttons are, so a drag that starts beside one still reaches
+          the canvas and turns the figure. */}
+      <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center gap-1.5">
+        {tabs}
+      </div>
 
-        A wide window has the figure's whole column to hang them off, so they go
-        round its edges: across the top and the bottom is which figure and which
-        framing, and down the side is the figure itself, which keeps the two axes
-        saying what they change.
-
-        A narrow one has the figure standing across the whole of the first
-        screen, so they go round the edges of that instead, and the two that were
-        a column down the side become one line: there is no side to run down when
-        the figure is as wide as the page. They are stacked at the foot of the
-        screen rather than spread to its corners so that they stay together and
-        out of the middle, which is where the figure is.
-      */}
-      {wide ? (
-        <>
-          {/* Which iteration is showing, over the figure's column where it is.
-              Above the figure rather than below it, so the two rows read as what
-              is on stage and how it is being looked at, in that order. */}
-          <div
-            className="pointer-events-none absolute top-8 right-0 flex justify-center gap-2"
-            style={{ width: `${COLUMN * 100}%` }}
-          >
-            {tabs}
-          </div>
-
-          {/* Down the right hand edge with the poses, because a version is a
-              property of the figure rather than of the framing, and stacked
-              against that same edge so the two read as one axis. The gap under
-              it is what keeps them from being read as one list: this chooses the
-              model, and the column below chooses what that model is doing. */}
+      {figure.versions.length > 1 || rigged ? (
+        <div className="pointer-events-none absolute top-1/2 right-3 flex -translate-y-1/2 flex-col items-stretch gap-1.5">
+          {/* A version is a property of the figure rather than of the framing,
+              so it sits in the same column as the poses, with a wider gap
+              between the two than within either so the break still reads as a
+              break: this chooses the model, and what follows chooses what that
+              model is doing. Both are absent on a raw scan, which has neither a
+              second version nor a skeleton, and the column goes with them. */}
           {figure.versions.length > 1 ? (
             <div
-              className="pointer-events-none absolute right-8 flex flex-col items-stretch gap-2"
-              style={{ bottom: `calc(50% + ${VERSION_RISE}rem)` }}
+              className="flex flex-col items-stretch gap-1.5"
               role="group"
               aria-label={`${figure.label} version`}
             >
@@ -501,78 +392,25 @@ export default function SpaceScene() {
             </div>
           ) : null}
 
-          {/* Centred on the right hand edge, clear of both of the horizontal
-              rows, and stretched to a common width so it reads as one column
-              rather than as four buttons that happen to be stacked.
+          {figure.versions.length > 1 && rigged ? (
+            <div aria-hidden="true" className="h-2" />
+          ) : null}
 
-              Only for a version with a skeleton under it. Nothing here can pose
-              a photogrammetry scan that has not been rigged, so on one of those
-              the column is absent rather than present and inert, and the version
-              buttons above hold their place regardless so that they do not move
-              on the press that makes the column appear. */}
           {rigged ? (
-            <div className="pointer-events-none absolute top-1/2 right-8 flex -translate-y-1/2 flex-col items-stretch gap-2">
+            <div
+              className="flex flex-col items-stretch gap-1.5"
+              role="group"
+              aria-label="Pose"
+            >
               {poses}
             </div>
           ) : null}
-
-          {/* Over the figure's column, where the figure is. The row spans that
-              column so it passes clicks through everywhere the buttons themselves
-              are not; otherwise it would swallow drags along the whole width of
-              the strip. */}
-          <div
-            className="pointer-events-none absolute right-0 bottom-8 flex justify-center gap-2"
-            style={{ width: `${COLUMN * 100}%` }}
-          >
-            {framings}
-          </div>
-        </>
-      ) : (
-        /* Exactly the figure's own room, which on this layout is the first
-           screen, so that the buttons are inside it rather than over the card
-           below, and everything in it passes clicks through except the buttons.
-
-           Faded out with the figure by the hook that measures the scroll,
-           written straight onto this element rather than through React: it
-           changes with the scroll position, and a row of buttons is not worth a
-           render a frame. A row of buttons for a figure that is no longer there
-           would be a row of buttons floating in the sky. */
-        <div
-          ref={overlay}
-          className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center justify-between px-3 py-4"
-          style={{ height: `${BAND * 100}svh` }}
-        >
-          <div className="flex flex-wrap justify-center gap-2">{tabs}</div>
-
-          <div className="flex flex-col items-center gap-2">
-            {/* Which version and what it is doing, on one line, with a wider gap
-                between them than within either so the break still reads as a
-                break. Both are absent on a raw scan, which has neither a second
-                version nor a skeleton, and the line goes with them. */}
-            {figure.versions.length > 1 || rigged ? (
-              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-                {figure.versions.length > 1 ? (
-                  <div
-                    className="flex gap-2"
-                    role="group"
-                    aria-label={`${figure.label} version`}
-                  >
-                    {versions}
-                  </div>
-                ) : null}
-
-                {rigged ? (
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {poses}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap justify-center gap-2">{framings}</div>
-          </div>
         </div>
-      )}
+      ) : null}
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+        {framings}
+      </div>
     </div>
   );
 }
