@@ -146,7 +146,7 @@ function Section({
 }) {
   return (
     <section id={id} className="py-16 lg:py-24">
-      <div className="mb-10">
+      <div className="mb-10 max-w-2xl">
         <h2 className="font-serif text-4xl leading-tight text-foreground sm:text-5xl">
           {title}
         </h2>
