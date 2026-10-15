@@ -1,79 +1,66 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Bitcoin, Gamepad2, Shuffle } from "lucide-react";
+import Image, { type StaticImageData } from "next/image";
 import * as React from "react";
 
-import { SoundCloudMark, YouTubeMark } from "@/components/marks";
+import maxDontStack from "@/assets/creative/max-dont-stack.png";
+import maxWl from "@/assets/creative/max-wl.png";
+import scubaMax from "@/assets/creative/scuba-max.png";
+import { YouTubeMark } from "@/components/marks";
 
 type Channel = {
+  /** The channel's name, as it is said rather than as it is typed. */
+  name: string;
   handle: string;
-  /** Where it lives, said the way a visitor would say it. */
-  kind: string;
-  /** What the link does when followed, which is the card's last line. */
-  action: string;
   href: string;
-  mark: React.ComponentType<React.ComponentProps<"svg">>;
-  /**
-   * Each mark is sized on its own so none reads as the bigger logo: the wide
-   * SoundCloud mark is set by width, the taller YouTube one by height.
-   */
-  markClassName: string;
-  /** The tile the mark sits on, in the platform's own colour. */
-  tile: string;
+  /** The channel's own profile picture, cropped square from inside its circle. */
+  avatar: StaticImageData;
+  /** What the channel is about, in a word, and a mark that says the same. */
+  topic: string;
+  topicIcon: React.ComponentType<React.ComponentProps<"svg">>;
 };
-
-// Official brand colours: YouTube red, SoundCloud orange.
-const youTubeRed = "#ff0000";
-const soundCloudOrange = "#ff5500";
 
 const channels: Channel[] = [
   {
+    name: "Max Don't Stack",
     handle: "@MaxDontStack",
-    kind: "YouTube channel",
-    action: "Watch on YouTube",
     href: "https://www.youtube.com/@MaxDontStack",
-    mark: YouTubeMark,
-    markClassName: "h-[18px] w-auto translate-x-px",
-    tile: youTubeRed,
+    avatar: maxDontStack,
+    topic: "Crypto",
+    topicIcon: Bitcoin,
   },
   {
-    handle: "@Scuba_Max",
-    kind: "YouTube channel",
-    action: "Watch on YouTube",
-    href: "https://www.youtube.com/@Scuba_Max",
-    mark: YouTubeMark,
-    markClassName: "h-[18px] w-auto translate-x-px",
-    tile: youTubeRed,
-  },
-  {
+    name: "Max_WL",
     handle: "@Max_WL",
-    kind: "YouTube channel",
-    action: "Watch on YouTube",
     href: "https://www.youtube.com/@Max_WL",
-    mark: YouTubeMark,
-    markClassName: "h-[18px] w-auto translate-x-px",
-    tile: youTubeRed,
+    avatar: maxWl,
+    topic: "Random",
+    topicIcon: Shuffle,
   },
   {
-    handle: "@eutonix",
-    kind: "Music on SoundCloud",
-    action: "Listen on SoundCloud",
-    href: "https://soundcloud.com/eutonix",
-    mark: SoundCloudMark,
-    markClassName: "h-auto w-8",
-    tile: soundCloudOrange,
+    name: "Scuba Max",
+    handle: "@Scuba_Max",
+    href: "https://www.youtube.com/@Scuba_Max",
+    avatar: scubaMax,
+    topic: "Gaming",
+    topicIcon: Gamepad2,
   },
 ];
 
+// YouTube's own red, for the badge on each avatar.
+const youTubeRed = "#ff0000";
+
 /**
- * The channels and the music, one card each, four across where there is room
- * and two where there is not. Laid out like the product cards above them,
- * with the platform's mark on its own colour as the tile, so the two groups
- * read as the same kind of thing at different weights.
+ * The YouTube channels, one card each, three across wherever there is room for
+ * three and one under another where there is not. Each leads with the channel's
+ * own profile picture rather than the platform's logo, since the three are on
+ * the same platform and the pictures are what tell them apart; YouTube is a
+ * badge on the corner of each, which is where the platform sits on a profile.
  */
 export function CreativeCards() {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <ul className="grid gap-4 sm:grid-cols-3">
       {channels.map((channel) => {
-        const Mark = channel.mark;
+        const Topic = channel.topicIcon;
 
         return (
           <li key={channel.href}>
@@ -81,15 +68,25 @@ export function CreativeCards() {
               href={channel.href}
               target="_blank"
               rel="noreferrer"
-              aria-label={`${channel.handle}, ${channel.kind}`}
-              className="group flex h-full flex-col rounded-3xl border border-neutral-200 bg-white p-6 transition duration-300 hover:border-neutral-300 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+              aria-label={`${channel.name} (${channel.handle}), a ${channel.topic.toLowerCase()} channel on YouTube`}
+              className="group flex h-full flex-col rounded-3xl border border-neutral-200 bg-white p-5 transition duration-300 hover:border-neutral-300 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none xl:p-6"
             >
               <div className="flex items-start justify-between">
-                <span
-                  className="flex size-12 items-center justify-center rounded-xl text-white"
-                  style={{ backgroundColor: channel.tile }}
-                >
-                  <Mark className={channel.markClassName} />
+                <span className="relative">
+                  <Image
+                    src={channel.avatar}
+                    alt=""
+                    placeholder="blur"
+                    sizes="64px"
+                    className="size-14 rounded-full object-cover ring-1 ring-black/5 xl:size-16"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full text-white ring-2 ring-white"
+                    style={{ backgroundColor: youTubeRed }}
+                  >
+                    <YouTubeMark className="h-2.5 w-auto translate-x-px" />
+                  </span>
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
@@ -97,14 +94,15 @@ export function CreativeCards() {
                 />
               </div>
 
-              <p className="mt-8 text-lg font-semibold text-neutral-900">
-                {channel.handle}
+              <p className="mt-6 text-base leading-snug font-semibold text-neutral-900 xl:text-lg">
+                {channel.name}
               </p>
-              <p className="text-sm text-neutral-500">{channel.kind}</p>
+              <p className="text-sm text-neutral-500">{channel.handle}</p>
 
-              <p className="mt-auto pt-6 text-sm font-medium text-neutral-400 transition-colors group-hover:text-neutral-900">
-                {channel.action}
-              </p>
+              <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
+                <Topic aria-hidden="true" className="size-3.5" />
+                {channel.topic}
+              </span>
             </a>
           </li>
         );

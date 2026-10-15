@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { CreativeCards } from "@/components/creative-cards";
+import { MusicPlayer } from "@/components/music-player";
 import { PortraitSwitch } from "@/components/portrait-switch";
 import { SaasCards } from "@/components/saas-cards";
 import { ServiceCards } from "@/components/service-cards";
@@ -108,9 +109,13 @@ export default function Home() {
           <Section
             id="creative"
             title="Creative"
-            lede="Outside of work, I make videos and music."
+            lede="Outside of work, I make videos about crypto, gaming and anything else, and music as eutonix."
           >
+            <Subheading>Videos</Subheading>
             <CreativeCards />
+
+            <Subheading className="mt-12">Music</Subheading>
+            <MusicPlayer />
           </Section>
         </main>
 
@@ -143,6 +148,25 @@ function Section({
       </div>
       {children}
     </section>
+  );
+}
+
+// A label over one group within a section, where a section holds more than
+// one kind of thing: quieter than the section's own heading, so it reads as a
+// division of it rather than a new one.
+function Subheading({
+  className = "",
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <h3
+      className={`mb-4 text-xs font-semibold tracking-[0.14em] text-neutral-400 uppercase ${className}`}
+    >
+      {children}
+    </h3>
   );
 }
 
