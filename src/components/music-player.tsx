@@ -54,11 +54,14 @@ function Cover({
   track,
   size,
   className = "",
+  children,
 }: {
   track: Track;
   /** The largest the cover is ever shown at, in CSS pixels. */
   size: number;
   className?: string;
+  /** Anything laid over the cover, such as a play button. */
+  children?: ReactNode;
 }) {
   return (
     <span
@@ -71,6 +74,7 @@ function Cover({
         sizes={`${size}px`}
         className="object-cover"
       />
+      {children}
     </span>
   );
 }
@@ -449,7 +453,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                           ? `Pause ${song.title}`
                           : `Play ${song.title}`
                       }
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
+                      className="group/row flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                     >
                       <span className="flex w-5 shrink-0 justify-center text-sm text-faint-foreground tabular-nums">
                         {current && playing ? (
@@ -460,7 +464,26 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                           at + 1
                         )}
                       </span>
-                      <Cover track={song} size={40} className="size-10 rounded-lg" />
+                      {/* What pressing the row does, over the cover while the
+                          pointer is on it or the row has the keyboard's focus.
+                          Only a pointer that can hover shows it, so a tap on a
+                          phone does not leave it stuck on. */}
+                      <Cover
+                        track={song}
+                        size={40}
+                        className="group/cover size-10 rounded-lg"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-0 flex items-center justify-center bg-black/45 text-white opacity-0 transition-opacity group-hover/cover:opacity-100 group-focus-visible/row:opacity-100"
+                        >
+                          {current && playing ? (
+                            <Pause className="size-4 fill-current" />
+                          ) : (
+                            <Play className="size-4 translate-x-px fill-current" />
+                          )}
+                        </span>
+                      </Cover>
                       <span
                         className={`min-w-0 flex-1 truncate text-[15px] font-medium ${current ? "text-foreground" : "text-subtle-foreground"}`}
                       >
