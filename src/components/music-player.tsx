@@ -1,189 +1,245 @@
 "use client";
 
-import { ArrowUpRight, ListMusic, Pause, Play, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  ListMusic,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  X,
+} from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 import eutonix from "@/assets/creative/eutonix.png";
 import { SoundCloudMark } from "@/components/marks";
-import { MUSIC_SOURCE, SOUNDCLOUD_PROFILE } from "@/lib/music";
+import styles from "@/components/music-player.module.css";
+import type { Track } from "@/lib/music";
 
 /*
- * The music: SoundCloud's own player, set into a card in the creative section,
- * and a small bar that follows the visitor down the page once something is
- * playing.
+ * The music: Max's own songs, played from files on this site rather than
+ * through SoundCloud's player, so that the whole of it is drawn here and every
+ * button on it works on a phone. A phone will only start sound from a tap on
+ * the page that is making it; with the audio element on this page rather than
+ * inside someone else's frame, every play button here is that.
  *
- * The player is SoundCloud's rather than one drawn here because of where the
- * first press has to land. A phone will only start sound from a tap on the
- * thing making it, and a tap on this page is not a tap inside SoundCloud's
- * frame: a play button of our own, telling the frame to play, works on a
- * laptop and is silently ignored on an iPhone. So the first play is always a
- * press on SoundCloud's own button, and only once the sound is running does the
- * bar take over pausing and resuming it, which a phone does allow.
+ * One audio element plays everything, and the song it is holding is changed by
+ * hand in the same press that plays it, not after a render: a phone counts a
+ * play as the visitor's only while it is still inside the tap.
  *
- * The bar hears what the player is doing through SoundCloud's widget API, a
- * small script of theirs that talks to the frame. If that script is blocked the
- * player still plays; there is just no bar.
+ * The songs are listed in public/music/tracks.json; see the README beside it.
  */
-
-// The few parts of SoundCloud's widget API used here.
-type Sound = {
-  title?: string;
-  permalink_url?: string;
-  artwork_url?: string | null;
-  user?: { username?: string; avatar_url?: string };
-};
-
-type Progress = { relativePosition?: number };
-
-type Widget = {
-  bind(event: string, listener: (data: Progress) => void): void;
-  unbind(event: string): void;
-  play(): void;
-  pause(): void;
-  getCurrentSound(callback: (sound: Sound | null) => void): void;
-};
-
-type WidgetApi = {
-  Widget: ((iframe: HTMLIFrameElement) => Widget) & {
-    Events: Partial<Record<"PLAY" | "PAUSE" | "FINISH" | "PLAY_PROGRESS", string>>;
-  };
-};
-
-declare global {
-  interface Window {
-    SC?: WidgetApi;
-  }
-}
-
-const WIDGET_API = "https://w.soundcloud.com/player/api.js";
-
-let loading: Promise<WidgetApi> | null = null;
-
-/**
- * Loads the widget API once, however many times it is asked for. A failure is
- * forgotten rather than kept, so a later attempt tries again.
- */
-function loadWidgetApi(): Promise<WidgetApi> {
-  if (window.SC?.Widget) return Promise.resolve(window.SC);
-
-  loading ??= new Promise<WidgetApi>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = WIDGET_API;
-    script.async = true;
-    script.onload = () =>
-      window.SC?.Widget
-        ? resolve(window.SC)
-        : reject(new Error("The SoundCloud widget API did not load."));
-    script.onerror = () => {
-      loading = null;
-      script.remove();
-      reject(new Error("The SoundCloud widget API did not load."));
-    };
-    document.head.appendChild(script);
-  });
-
-  return loading;
-}
-
-/*
- * Whether the link is one track, which the player shows as a single row, or a
- * list of them (a playlist, or a profile or one of its tabs), which it shows
- * with room for the list underneath.
- */
-const LISTS = new Set(["sets", "tracks", "albums", "popular-tracks", "reposts"]);
-
-function isSingleTrack(url: string) {
-  const path = new URL(url).pathname.split("/").filter(Boolean);
-  return path.length === 2 && !LISTS.has(path[1]);
-}
-
-const single = isSingleTrack(MUSIC_SOURCE);
-const PLAYER_HEIGHT = single ? 166 : 380;
 
 const soundCloudOrange = "#ff5500";
 
-/*
- * SoundCloud's classic player, in its own orange, with the parts of it that
- * are about SoundCloud rather than the music turned off: no related tracks
- * after the last one, no comments along the waveform, no buy, share or
- * download buttons.
- */
-const PLAYER_SRC = `https://w.soundcloud.com/player/?${new URLSearchParams({
-  url: MUSIC_SOURCE,
-  color: soundCloudOrange,
-  auto_play: "false",
-  hide_related: "true",
-  show_comments: "false",
-  show_reposts: "false",
-  show_teaser: "false",
-  buying: "false",
-  sharing: "false",
-  download: "false",
-  visual: "false",
-})}`;
+// How far into a song "previous" restarts it rather than going back a song,
+// which is what every music player does.
+const RESTART_AFTER = 3;
 
-/*
- * The artwork SoundCloud hands over is its 100px size, which is soft at twice
- * the 44px it is shown at on a retina screen. Its sizes are named in the
- * address, so the 200px one is asked for instead.
- */
-function artworkOf(sound: Sound | null) {
-  const url = sound?.artwork_url ?? sound?.user?.avatar_url;
-  return url ? url.replace("-large.", "-t200x200.") : null;
+function clock(seconds: number | null | undefined) {
+  if (seconds == null || !Number.isFinite(seconds)) return "-:--";
+  const whole = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
-export function MusicPlayer() {
+/** A song's cover, or the eutonix avatar for a song without one. */
+function Cover({
+  track,
+  size,
+  className = "",
+}: {
+  track: Track;
+  /** The largest the cover is ever shown at, in CSS pixels. */
+  size: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`relative block shrink-0 overflow-hidden bg-neutral-900 ${className}`}
+    >
+      <Image
+        src={track.cover ?? eutonix}
+        alt=""
+        fill
+        sizes={`${size}px`}
+        className="object-cover"
+      />
+    </span>
+  );
+}
+
+// The three bars that stand in for a song's number while it plays.
+function Bars() {
+  return (
+    <span aria-hidden="true" className={styles.bars}>
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
+
+function IconButton({
+  label,
+  onClick,
+  children,
+  className = "",
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`flex shrink-0 items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function MusicPlayer({ tracks }: { tracks: Track[] }) {
   const panel = useRef<HTMLDivElement>(null);
-  const frame = useRef<HTMLIFrameElement>(null);
-  const widget = useRef<Widget | null>(null);
-  const bar = useRef<HTMLSpanElement>(null);
+  const audio = useRef<HTMLAudioElement>(null);
 
-  /*
-   * Whether SoundCloud's player is on the page yet. Not until the card is
-   * within a screen or so of being scrolled to: the player is a page of
-   * SoundCloud's own, with its scripts and cookies, and a visitor who never
-   * scrolls this far should not be loading it. The widget API is fetched first
-   * so it is there to hear the player arrive, and the player goes up once it
-   * has come, or failed to.
-   */
-  const [frameOn, setFrameOn] = useState(false);
+  // Which song the audio element is holding, if any yet. Kept beside the
+  // element rather than in state because it is set in the same press that
+  // plays it, before any render.
+  const loaded = useRef<number | null>(null);
 
-  // Whether the card itself is on screen, in which case the bar is not needed.
-  const [panelInView, setPanelInView] = useState(false);
-
-  // Whether anything has played yet, whether it is playing now, and what it is.
-  const [started, setStarted] = useState(false);
+  // The song on show, whether it is playing, and how far into it.
+  const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [sound, setSound] = useState<Sound | null>(null);
+  const [time, setTime] = useState(0);
 
-  // Whether the visitor has closed the bar. Playing something again opens it.
+  // How long each song is, as the files report it, and null until they have.
+  const [durations, setDurations] = useState<(number | null)[]>(() =>
+    tracks.map(() => null),
+  );
+
+  function setDuration(at: number, seconds: number) {
+    if (!Number.isFinite(seconds)) return;
+    setDurations((current) =>
+      current[at] === seconds
+        ? current
+        : current.map((value, i) => (i === at ? seconds : value)),
+    );
+  }
+
+  // Whether anything has played yet, whether the card is on screen, and
+  // whether the visitor has closed the bar. Playing again opens it.
+  const [started, setStarted] = useState(false);
+  const [panelInView, setPanelInView] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  /*
+   * Plays a song: the one already loaded from where it is, or another from its
+   * start. The source is swapped and play is called in the same breath, inside
+   * whatever press got here, for the reason at the top of this file.
+   */
+  function start(at: number) {
+    const element = audio.current;
+    if (!element || !tracks[at]) return;
+
+    if (loaded.current !== at) {
+      loaded.current = at;
+      element.src = tracks[at].src;
+      setIndex(at);
+      setTime(0);
+    }
+
+    void element.play().catch(() => setPlaying(false));
+  }
+
+  function pause() {
+    audio.current?.pause();
+  }
+
+  function toggle() {
+    if (playing) pause();
+    else start(index);
+  }
+
+  function next() {
+    start((index + 1) % tracks.length);
+  }
+
+  function previous() {
+    const element = audio.current;
+    if (element && loaded.current === index && element.currentTime > RESTART_AFTER) {
+      element.currentTime = 0;
+      setTime(0);
+      if (element.paused) start(index);
+      return;
+    }
+    start((index - 1 + tracks.length) % tracks.length);
+  }
+
+  function seek(seconds: number) {
+    const element = audio.current;
+    if (!element || loaded.current !== index) return;
+    element.currentTime = seconds;
+    setTime(seconds);
+  }
+
+  function close() {
+    pause();
+    setDismissed(true);
+  }
+
+  /*
+   * How long the other songs are, for the list, before any of them is played.
+   * Each is asked for its metadata alone, which is the first few kilobytes of
+   * the file, and only once the card is getting close: nobody at the top of
+   * the page is downloading songs they may never scroll down to.
+   */
   useEffect(() => {
     const element = panel.current;
-    if (!element) return;
+    if (!element || tracks.length === 0) return;
 
-    let cancelled = false;
+    const probes: HTMLAudioElement[] = [];
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         observer.disconnect();
-        loadWidgetApi()
-          .catch(() => null)
-          .finally(() => {
-            if (!cancelled) setFrameOn(true);
-          });
+
+        tracks.forEach((track, at) => {
+          const probe = new Audio();
+          probe.preload = "metadata";
+          probe.onloadedmetadata = () => {
+            setDuration(at, probe.duration);
+            probe.removeAttribute("src");
+            probe.load();
+          };
+          probe.src = track.src;
+          probes.push(probe);
+        });
       },
-      { rootMargin: "1000px 0px" },
+      { rootMargin: "600px 0px" },
     );
     observer.observe(element);
 
     return () => {
-      cancelled = true;
       observer.disconnect();
+      for (const probe of probes) {
+        probe.onloadedmetadata = null;
+        probe.removeAttribute("src");
+        probe.load();
+      }
     };
-  }, []);
+  }, [tracks]);
 
   useEffect(() => {
     const element = panel.current;
@@ -197,66 +253,55 @@ export function MusicPlayer() {
     return () => observer.disconnect();
   }, []);
 
+  /*
+   * The phone's lock screen and the keyboard's media keys, through the Media
+   * Session API: the song, its cover, and play, pause, next and previous. The
+   * handlers are registered once and reach the current versions of the
+   * functions above through a ref, which is refreshed after every render.
+   */
+  const actions = useRef({ start, pause, next, previous, index });
   useEffect(() => {
-    const iframe = frame.current;
-    const api = window.SC;
-    if (!frameOn || !iframe || !api?.Widget) return;
+    actions.current = { start, pause, next, previous, index };
+  });
 
-    const player = api.Widget(iframe);
-    widget.current = player;
+  useEffect(() => {
+    if (!("mediaSession" in navigator) || tracks.length === 0) return;
 
-    const events = api.Widget.Events;
-    const PLAY = events.PLAY ?? "play";
-    const PAUSE = events.PAUSE ?? "pause";
-    const FINISH = events.FINISH ?? "finish";
-    const PROGRESS = events.PLAY_PROGRESS ?? "playProgress";
-
-    player.bind(PLAY, () => {
-      setStarted(true);
-      setPlaying(true);
-      setDismissed(false);
-      // Asked for on every play rather than once, because a playlist moves
-      // on to its next track by playing it.
-      player.getCurrentSound((current) => setSound(current));
-    });
-    player.bind(PAUSE, () => setPlaying(false));
-    player.bind(FINISH, () => setPlaying(false));
-
-    // Several times a second, so it is written straight onto the bar rather
-    // than through React.
-    player.bind(PROGRESS, ({ relativePosition = 0 }) => {
-      if (bar.current) {
-        bar.current.style.transform = `scaleX(${relativePosition})`;
-      }
-    });
+    const session = navigator.mediaSession;
+    const handlers: [MediaSessionAction, () => void][] = [
+      ["play", () => actions.current.start(actions.current.index)],
+      ["pause", () => actions.current.pause()],
+      ["nexttrack", () => actions.current.next()],
+      ["previoustrack", () => actions.current.previous()],
+    ];
+    for (const [action, handler] of handlers) {
+      session.setActionHandler(action, handler);
+    }
 
     return () => {
-      for (const event of [PLAY, PAUSE, FINISH, PROGRESS]) {
-        player.unbind(event);
-      }
-      widget.current = null;
+      for (const [action] of handlers) session.setActionHandler(action, null);
     };
-  }, [frameOn]);
+  }, [tracks.length]);
 
-  function toggle() {
-    const player = widget.current;
-    if (!player) return;
-    if (playing) player.pause();
-    else player.play();
-  }
+  const track = tracks[index];
 
-  function close() {
-    widget.current?.pause();
-    setDismissed(true);
-  }
+  useEffect(() => {
+    if (!started || !track || !("mediaSession" in navigator)) return;
 
-  // The bar is for when the player is out of sight: once something has played,
-  // and the card is scrolled away, and the visitor has not closed it.
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track.title,
+      artist: "eutonix",
+      artwork: [
+        {
+          src: new URL(track.cover ?? eutonix.src, window.location.href).href,
+        },
+      ],
+    });
+  }, [started, track]);
+
+  const duration = durations[index] ?? null;
+  const fill = duration ? Math.min(time / duration, 1) * 100 : 0;
   const barShown = started && !panelInView && !dismissed;
-
-  const title = sound?.title ?? "eutonix";
-  const artist = sound?.user?.username ?? "eutonix";
-  const artwork = artworkOf(sound);
 
   return (
     <>
@@ -283,7 +328,9 @@ export function MusicPlayer() {
             </span>
           </span>
 
-          <div className="min-w-0 flex-1">
+          {/* At least 10rem, so on a phone it is the button that moves onto a
+              line of its own rather than the name that is squeezed to fit. */}
+          <div className="min-w-40 flex-1">
             <p className="text-lg font-semibold text-neutral-900">eutonix</p>
             <p className="text-sm text-neutral-500">
               @eutonix · Music on SoundCloud
@@ -291,10 +338,10 @@ export function MusicPlayer() {
           </div>
 
           <a
-            href={SOUNDCLOUD_PROFILE}
+            href="https://soundcloud.com/eutonix"
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-10 items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 transition hover:border-neutral-300 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="group inline-flex h-10 items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-900 transition hover:border-neutral-300 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none max-sm:w-full"
           >
             Follow on SoundCloud
             <ArrowUpRight
@@ -304,113 +351,240 @@ export function MusicPlayer() {
           </a>
         </div>
 
-        {/* The player's slot, held at the player's height from the start so
-            the page does not jump when it arrives. What is in it until then
-            is a quiet stand-in, which the player paints over. */}
-        <div
-          className="relative border-t border-neutral-200 bg-neutral-50"
-          style={{ height: PLAYER_HEIGHT }}
-        >
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-neutral-300">
-            <SoundCloudMark className="h-auto w-12" />
-            <span className="text-sm text-neutral-400">Loading player</span>
-          </div>
-
-          {frameOn ? (
-            <iframe
-              ref={frame}
-              src={PLAYER_SRC}
-              title="eutonix on SoundCloud"
-              allow="autoplay; encrypted-media"
-              className="absolute inset-0 h-full w-full"
-            />
-          ) : null}
-        </div>
-      </div>
-
-      {/* The bar. Always in the page, so it can fade in and out rather than
-          appear and vanish, and inert while it is hidden so nothing in it can
-          be reached by the keyboard or a screen reader. */}
-      <div
-        role="region"
-        aria-label="Now playing"
-        inert={!barShown}
-        className={`fixed inset-x-3 bottom-3 z-50 transition duration-300 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[23rem] ${barShown ? "opacity-100 motion-safe:translate-y-0" : "pointer-events-none opacity-0 motion-safe:translate-y-3"}`}
-      >
-        <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white/90 shadow-[0_24px_48px_-20px_rgba(20,16,40,0.4)] backdrop-blur-xl">
-          <div className="flex items-center gap-3 p-2.5 pr-2">
-            {artwork ? (
-              // SoundCloud's own artwork, from its own servers and at whatever
-              // size it names, so it is left as a plain image rather than put
-              // through the image optimiser.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={artwork}
-                alt=""
-                className="size-11 shrink-0 rounded-xl object-cover"
+        {track ? (
+          <>
+            {/* The song on show: its cover, its name, the transport and the
+                seek bar. Before anything has played it is the first song,
+                ready to go. */}
+            <div className="flex flex-col gap-5 border-t border-neutral-200 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-6">
+              <Cover
+                track={track}
+                size={128}
+                className="size-28 self-center rounded-2xl shadow-[0_16px_32px_-18px_rgba(20,16,40,0.6)] sm:size-32 sm:self-auto"
               />
-            ) : (
-              <Image
-                src={eutonix}
-                alt=""
-                sizes="44px"
-                className="size-11 shrink-0 rounded-xl object-cover"
-              />
-            )}
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-neutral-900">
-                {title}
-              </p>
-              <p className="truncate text-xs text-neutral-500">{artist}</p>
+              <div className="min-w-0 flex-1">
+                {/* Two lines before it gives up, since a title with a feature
+                    and a "free download" on the end is a long one. */}
+                <p className="line-clamp-2 text-center text-xl leading-snug font-semibold text-neutral-900 sm:text-left">
+                  {track.title}
+                </p>
+                <p className="text-center text-sm text-neutral-500 sm:text-left">
+                  eutonix
+                </p>
+
+                <div className="mt-4 flex items-center justify-center gap-3 sm:justify-start">
+                  <IconButton
+                    label="Previous song"
+                    onClick={previous}
+                    className="size-10 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                  >
+                    <SkipBack aria-hidden="true" className="size-4 fill-current" />
+                  </IconButton>
+                  <IconButton
+                    label={playing ? "Pause" : "Play"}
+                    onClick={toggle}
+                    className="size-12 bg-neutral-900 text-white hover:bg-neutral-700"
+                  >
+                    {playing ? (
+                      <Pause aria-hidden="true" className="size-5 fill-current" />
+                    ) : (
+                      <Play
+                        aria-hidden="true"
+                        className="size-5 translate-x-px fill-current"
+                      />
+                    )}
+                  </IconButton>
+                  <IconButton
+                    label="Next song"
+                    onClick={next}
+                    className="size-10 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                  >
+                    <SkipForward
+                      aria-hidden="true"
+                      className="size-4 fill-current"
+                    />
+                  </IconButton>
+                </div>
+
+                <div className="mt-4 flex items-center gap-3 text-xs text-neutral-500 tabular-nums">
+                  <span className="w-9 text-right">{clock(time)}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={duration ?? 0}
+                    // A second a step, which is what the arrow keys move.
+                    step={1}
+                    value={Math.min(time, duration ?? 0)}
+                    onChange={(event) => seek(Number(event.target.value))}
+                    // Nothing to seek through until a song is loaded, and
+                    // once one is, it is always the one on show.
+                    disabled={!duration || !started}
+                    aria-label={`Seek through ${track.title}`}
+                    aria-valuetext={`${clock(time)} of ${clock(duration)}`}
+                    className={styles.seek}
+                    style={{ "--fill": `${fill}%` } as CSSProperties}
+                  />
+                  <span className="w-9">{clock(duration)}</span>
+                </div>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label={playing ? "Pause" : "Play"}
-              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
-            >
-              {playing ? (
-                <Pause aria-hidden="true" className="size-4 fill-current" />
-              ) : (
-                <Play
-                  aria-hidden="true"
-                  className="size-4 translate-x-px fill-current"
-                />
-              )}
-            </button>
+            {/* Every song, in the order tracks.json lists them. A row plays
+                its song, or pauses it if it is the one playing. */}
+            <ol className="border-t border-neutral-200 p-2">
+              {tracks.map((song, at) => {
+                const current = at === index && started;
 
-            <a
-              href="#music"
-              aria-label="Show the player"
-              title="Show the player"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
-            >
-              <ListMusic aria-hidden="true" className="size-4" />
-            </a>
+                return (
+                  <li
+                    key={song.src}
+                    className={`flex items-center gap-1 rounded-2xl pr-2 transition-colors ${current ? "bg-neutral-100" : "hover:bg-neutral-50"}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => (current ? toggle() : start(at))}
+                      aria-label={
+                        current && playing
+                          ? `Pause ${song.title}`
+                          : `Play ${song.title}`
+                      }
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+                    >
+                      <span className="flex w-5 shrink-0 justify-center text-sm text-neutral-400 tabular-nums">
+                        {current && playing ? (
+                          <span className="text-neutral-900">
+                            <Bars />
+                          </span>
+                        ) : (
+                          at + 1
+                        )}
+                      </span>
+                      <Cover track={song} size={40} className="size-10 rounded-lg" />
+                      <span
+                        className={`min-w-0 flex-1 truncate text-[15px] font-medium ${current ? "text-neutral-900" : "text-neutral-700"}`}
+                      >
+                        {song.title}
+                      </span>
+                      <span className="shrink-0 text-sm text-neutral-400 tabular-nums">
+                        {clock(durations[at])}
+                      </span>
+                    </button>
 
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Stop and close"
-              title="Stop and close"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
-            >
-              <X aria-hidden="true" className="size-4" />
-            </button>
-          </div>
+                    {song.soundcloud ? (
+                      <a
+                        href={song.soundcloud}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open ${song.title} on SoundCloud`}
+                        title="Open on SoundCloud"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-300 transition hover:bg-white hover:text-[#ff5500] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+                      >
+                        <SoundCloudMark className="h-auto w-5" />
+                      </a>
+                    ) : (
+                      <span aria-hidden="true" className="size-9 shrink-0" />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
 
-          {/* How far through the track it is, along the bottom edge. */}
-          <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-neutral-100">
-            <span
-              ref={bar}
-              className="block h-full origin-left"
-              style={{ backgroundColor: soundCloudOrange, transform: "scaleX(0)" }}
+            {/* The one audio element everything plays through. Nothing is
+                fetched for it until the first press, and the source is set
+                by hand when a song is chosen rather than through a prop. */}
+            <audio
+              ref={audio}
+              preload="none"
+              onPlay={() => {
+                setPlaying(true);
+                setStarted(true);
+                setDismissed(false);
+              }}
+              onPause={() => setPlaying(false)}
+              onTimeUpdate={(event) => setTime(event.currentTarget.currentTime)}
+              onDurationChange={(event) =>
+                setDuration(index, event.currentTarget.duration)
+              }
+              onEnded={() => {
+                // On to the next song, and to a stop after the last.
+                if (index < tracks.length - 1) start(index + 1);
+                else setPlaying(false);
+              }}
+              onError={() => setPlaying(false)}
             />
-          </span>
-        </div>
+          </>
+        ) : null}
       </div>
+
+      {/* The bar that follows the visitor down the page once something has
+          played and the card is out of sight. Always in the page, so it can
+          fade in and out, and inert while it is hidden so nothing in it can be
+          reached by the keyboard or a screen reader. */}
+      {track ? (
+        <div
+          role="region"
+          aria-label="Now playing"
+          inert={!barShown}
+          className={`fixed inset-x-3 bottom-3 z-50 transition duration-300 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[23rem] ${barShown ? "opacity-100 motion-safe:translate-y-0" : "pointer-events-none opacity-0 motion-safe:translate-y-3"}`}
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white/90 shadow-[0_24px_48px_-20px_rgba(20,16,40,0.4)] backdrop-blur-xl">
+            <div className="flex items-center gap-3 p-2.5 pr-2">
+              <Cover track={track} size={44} className="size-11 rounded-xl" />
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-neutral-900">
+                  {track.title}
+                </p>
+                <p className="truncate text-xs text-neutral-500">eutonix</p>
+              </div>
+
+              <IconButton
+                label={playing ? "Pause" : "Play"}
+                onClick={toggle}
+                className="size-10 bg-neutral-900 text-white hover:bg-neutral-700"
+              >
+                {playing ? (
+                  <Pause aria-hidden="true" className="size-4 fill-current" />
+                ) : (
+                  <Play
+                    aria-hidden="true"
+                    className="size-4 translate-x-px fill-current"
+                  />
+                )}
+              </IconButton>
+
+              <a
+                href="#music"
+                aria-label="Show the player"
+                title="Show the player"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:outline-none"
+              >
+                <ListMusic aria-hidden="true" className="size-4" />
+              </a>
+
+              <IconButton
+                label="Stop and close"
+                onClick={close}
+                className="size-9 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+              >
+                <X aria-hidden="true" className="size-4" />
+              </IconButton>
+            </div>
+
+            {/* How far through the song it is, along the bottom edge. */}
+            <span
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-0.5 bg-neutral-100"
+            >
+              <span
+                className="block h-full origin-left bg-neutral-900 transition-transform duration-300 ease-linear"
+                style={{ transform: `scaleX(${fill / 100})` }}
+              />
+            </span>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
