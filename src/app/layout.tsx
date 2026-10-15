@@ -44,6 +44,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* Pictures wait for script to fade them up (see FadeImage), so
+            without it they are simply shown. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html:
+              "<style>[data-fade]{opacity:1!important;filter:none!important}</style>",
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <EmDashGuard />

@@ -1,10 +1,11 @@
 import { ArrowUpRight, Bitcoin, Gamepad2, Shuffle } from "lucide-react";
-import Image, { type StaticImageData } from "next/image";
+import type { StaticImageData } from "next/image";
 import * as React from "react";
 
 import maxDontStack from "@/assets/creative/max-dont-stack.png";
 import maxWl from "@/assets/creative/max-wl.png";
 import scubaMax from "@/assets/creative/scuba-max.png";
+import { FadeImage } from "@/components/fade-image";
 import { YouTubeMark } from "@/components/marks";
 
 type Channel = {
@@ -72,11 +73,11 @@ export function CreativeCards() {
               className="group flex h-full flex-col rounded-3xl border border-border bg-card p-5 transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none xl:p-6"
             >
               <div className="flex items-start justify-between">
-                <span className="relative">
-                  <Image
+                {/* A grey disc in the avatar's place for it to fade up over. */}
+                <span className="relative rounded-full bg-muted">
+                  <FadeImage
                     src={channel.avatar}
                     alt=""
-                    placeholder="blur"
                     sizes="64px"
                     className="size-14 rounded-full object-cover ring-1 ring-black/5 xl:size-16"
                   />
