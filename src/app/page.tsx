@@ -13,7 +13,7 @@ import { getTracks } from "@/lib/music";
 import type { SectionId } from "@/lib/sections";
 
 const NAME = "Max Winter-Leinweber";
-const ROLE = "Founder of Scryptic";
+const ROLE = "Creative cultivist";
 
 /*
  * One page, read top to bottom: who Max is, then the work he sells, the
@@ -178,11 +178,8 @@ function Subheading({
 
 function Colophon({ className = "" }: { className?: string }) {
   return (
-    <div className={`text-sm ${className}`}>
-      <p className="text-muted-foreground">Building things on the internet.</p>
-      <p className="mt-1 text-faint-foreground">
-        &copy; {new Date().getFullYear()} {NAME}
-      </p>
-    </div>
+    <p className={`text-sm text-faint-foreground ${className}`}>
+      &copy; {new Date().getFullYear()} {NAME}
+    </p>
   );
 }
