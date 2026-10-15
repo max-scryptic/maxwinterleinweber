@@ -443,7 +443,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                 return (
                   <li
                     key={song.src}
-                    className={`flex items-center gap-1 rounded-2xl pr-2 transition-colors ${current ? "bg-muted" : "hover:bg-muted/50"}`}
+                    className={`group/row flex items-center gap-1 rounded-2xl pr-2 transition-colors ${current ? "bg-muted" : "hover:bg-muted/50"}`}
                   >
                     <button
                       type="button"
@@ -453,7 +453,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                           ? `Pause ${song.title}`
                           : `Play ${song.title}`
                       }
-                      className="group/row flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
+                      className="group/play flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                     >
                       <span className="flex w-5 shrink-0 justify-center text-sm text-faint-foreground tabular-nums">
                         {current && playing ? (
@@ -465,17 +465,17 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                         )}
                       </span>
                       {/* What pressing the row does, over the cover while the
-                          pointer is on it or the row has the keyboard's focus.
-                          Only a pointer that can hover shows it, so a tap on a
-                          phone does not leave it stuck on. */}
+                          pointer is anywhere on the row or the row has the
+                          keyboard's focus. Only a pointer that can hover shows
+                          it, so a tap on a phone does not leave it stuck on. */}
                       <Cover
                         track={song}
                         size={40}
-                        className="group/cover size-10 rounded-lg"
+                        className="size-10 rounded-lg"
                       >
                         <span
                           aria-hidden="true"
-                          className="absolute inset-0 flex items-center justify-center bg-black/45 text-white opacity-0 transition-opacity group-hover/cover:opacity-100 group-focus-visible/row:opacity-100"
+                          className="absolute inset-0 flex items-center justify-center bg-black/45 text-white opacity-0 transition-opacity group-hover/row:opacity-100 group-focus-visible/play:opacity-100"
                         >
                           {current && playing ? (
                             <Pause className="size-4 fill-current" />
