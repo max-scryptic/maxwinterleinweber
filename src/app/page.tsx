@@ -115,7 +115,7 @@ export default function Home() {
           <Section
             id="creative"
             title="Creative"
-            lede="Outside of work, I make videos about crypto, gaming and anything else, and music as eutonix."
+            lede="Outside of work, I make videos about crypto, gaming and anything else, and music under the alias eutonix."
           >
             <Subheading>Videos</Subheading>
             <CreativeCards />
@@ -146,7 +146,7 @@ function Section({
 }) {
   return (
     <section id={id} className="py-16 lg:py-24">
-      <div className="mb-10 max-w-2xl">
+      <div className="mb-10">
         <h2 className="font-serif text-4xl leading-tight text-foreground sm:text-5xl">
           {title}
         </h2>
