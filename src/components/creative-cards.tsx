@@ -103,10 +103,6 @@ export function CreativeCards() {
                 <Topic aria-hidden="true" className="size-3.5" />
                 {channel.topic}
               </span>
-
-              <p className="mt-auto pt-6 text-sm font-medium text-neutral-400 transition-colors group-hover:text-neutral-900">
-                Watch on YouTube
-              </p>
             </a>
           </li>
         );
