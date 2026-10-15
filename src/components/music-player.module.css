@@ -27,8 +27,8 @@
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    var(--color-neutral-900, #171717) var(--fill),
-    var(--color-neutral-200, #e5e5e5) var(--fill)
+    var(--foreground) var(--fill),
+    var(--border) var(--fill)
   );
 }
 
@@ -37,8 +37,8 @@
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    var(--color-neutral-900, #171717) var(--fill),
-    var(--color-neutral-200, #e5e5e5) var(--fill)
+    var(--foreground) var(--fill),
+    var(--border) var(--fill)
   );
 }
 
@@ -48,7 +48,7 @@
   width: var(--thumb);
   margin-top: calc((var(--track) - var(--thumb)) / 2);
   border-radius: 9999px;
-  background: var(--color-neutral-900, #171717);
+  background: var(--foreground);
   transition: transform 150ms;
 }
 
@@ -57,7 +57,7 @@
   width: var(--thumb);
   border: 0;
   border-radius: 9999px;
-  background: var(--color-neutral-900, #171717);
+  background: var(--foreground);
   transition: transform 150ms;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .seek:focus-visible {
-  outline: 2px solid var(--color-neutral-900, #171717);
+  outline: 2px solid var(--foreground);
   outline-offset: 4px;
   border-radius: 9999px;
 }

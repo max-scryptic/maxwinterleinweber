@@ -46,11 +46,13 @@ const FigureRig = lazy(() => import("@/components/figure-stage"));
 // them current. The current one is solid white, the rest are glass over the
 // sky. Small, because the frame is: the figure is what the frame is for, and
 // the buttons are kept to its edges.
+// The sky is dark whichever theme the page is in, so these keep their own
+// colours in both, including over the ghost button's dark mode hover.
 function control(active: boolean) {
   const shape = "pointer-events-auto h-6 rounded-full px-2.5 text-[11px]";
   return active
-    ? `${shape} bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900`
-    : `${shape} border border-white/20 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white`;
+    ? `${shape} bg-white text-neutral-900 hover:bg-white/90 hover:text-neutral-900 dark:hover:bg-white/90`
+    : `${shape} border border-white/20 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white dark:hover:bg-white/20`;
 }
 
 // Radians per second: one revolution of the sky roughly every twelve minutes.

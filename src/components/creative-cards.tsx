@@ -69,7 +69,7 @@ export function CreativeCards() {
               target="_blank"
               rel="noreferrer"
               aria-label={`${channel.name} (${channel.handle}), a ${channel.topic.toLowerCase()} channel on YouTube`}
-              className="group flex h-full flex-col rounded-3xl border border-neutral-200 bg-white p-5 transition duration-300 hover:border-neutral-300 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none xl:p-6"
+              className="group flex h-full flex-col rounded-3xl border border-border bg-card p-5 transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none xl:p-6"
             >
               <div className="flex items-start justify-between">
                 <span className="relative">
@@ -82,7 +82,7 @@ export function CreativeCards() {
                   />
                   <span
                     aria-hidden="true"
-                    className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full text-white ring-2 ring-white"
+                    className="absolute -right-1 -bottom-1 flex size-6 items-center justify-center rounded-full text-white ring-2 ring-card"
                     style={{ backgroundColor: youTubeRed }}
                   >
                     <YouTubeMark className="h-2.5 w-auto translate-x-px" />
@@ -90,16 +90,16 @@ export function CreativeCards() {
                 </span>
                 <ArrowUpRight
                   aria-hidden="true"
-                  className="size-5 text-neutral-300 transition duration-200 group-hover:text-neutral-900"
+                  className="size-5 text-faint-foreground transition duration-200 group-hover:text-foreground"
                 />
               </div>
 
-              <p className="mt-6 text-base leading-snug font-semibold text-neutral-900 xl:text-lg">
+              <p className="mt-6 text-base leading-snug font-semibold text-foreground xl:text-lg">
                 {channel.name}
               </p>
-              <p className="text-sm text-neutral-500">{channel.handle}</p>
+              <p className="text-sm text-muted-foreground">{channel.handle}</p>
 
-              <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">
+              <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-subtle-foreground">
                 <Topic aria-hidden="true" className="size-3.5" />
                 {channel.topic}
               </span>
