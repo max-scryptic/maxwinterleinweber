@@ -8,6 +8,7 @@ import { SaasCards } from "@/components/saas-cards";
 import { ServiceCards } from "@/components/service-cards";
 import { SiteNav } from "@/components/site-nav";
 import { SocialLinks } from "@/components/social-links";
+import { getTracks } from "@/lib/music";
 import type { SectionId } from "@/lib/sections";
 
 const NAME = "Max Winter-Leinweber";
@@ -115,7 +116,7 @@ export default function Home() {
             <CreativeCards />
 
             <Subheading className="mt-12">Music</Subheading>
-            <MusicPlayer />
+            <MusicPlayer tracks={getTracks()} />
           </Section>
         </main>
 

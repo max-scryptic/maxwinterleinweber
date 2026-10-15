@@ -1,0 +1,131 @@
+/*
+ * The seek bar: a native range input, so the keyboard, screen readers and
+ * touch all work as they do on any slider, drawn as a thin line with the
+ * played part in ink and a small round thumb. --fill is how far through the
+ * song it is, as a percentage, and is set on the element by the player.
+ *
+ * Each browser names the parts of a range input differently, and a rule that
+ * names one it does not know is thrown away whole, so the WebKit and Firefox
+ * parts are styled in separate rules rather than listed together.
+ */
+.seek {
+  --track: 4px;
+  --thumb: 12px;
+  appearance: none;
+  background: transparent;
+  height: var(--thumb);
+  width: 100%;
+  cursor: pointer;
+}
+
+.seek:disabled {
+  cursor: default;
+}
+
+.seek::-webkit-slider-runnable-track {
+  height: var(--track);
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--color-neutral-900, #171717) var(--fill),
+    var(--color-neutral-200, #e5e5e5) var(--fill)
+  );
+}
+
+.seek::-moz-range-track {
+  height: var(--track);
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--color-neutral-900, #171717) var(--fill),
+    var(--color-neutral-200, #e5e5e5) var(--fill)
+  );
+}
+
+.seek::-webkit-slider-thumb {
+  appearance: none;
+  height: var(--thumb);
+  width: var(--thumb);
+  margin-top: calc((var(--track) - var(--thumb)) / 2);
+  border-radius: 9999px;
+  background: var(--color-neutral-900, #171717);
+  transition: transform 150ms;
+}
+
+.seek::-moz-range-thumb {
+  height: var(--thumb);
+  width: var(--thumb);
+  border: 0;
+  border-radius: 9999px;
+  background: var(--color-neutral-900, #171717);
+  transition: transform 150ms;
+}
+
+.seek:hover::-webkit-slider-thumb,
+.seek:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
+
+.seek:hover::-moz-range-thumb,
+.seek:focus-visible::-moz-range-thumb {
+  transform: scale(1.25);
+}
+
+.seek:disabled::-webkit-slider-thumb {
+  visibility: hidden;
+}
+
+.seek:disabled::-moz-range-thumb {
+  visibility: hidden;
+}
+
+.seek:focus-visible {
+  outline: 2px solid var(--color-neutral-900, #171717);
+  outline-offset: 4px;
+  border-radius: 9999px;
+}
+
+/*
+ * The bars that stand in for a song's number while it is playing: three of
+ * them, rising and falling out of step. Still under reduced motion, where they
+ * are just a mark that this is the song playing.
+ */
+.bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.bars > span {
+  width: 3px;
+  height: 100%;
+  border-radius: 1px;
+  background: currentColor;
+  transform-origin: bottom;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bars > span {
+    animation: rise 900ms ease-in-out infinite;
+  }
+
+  .bars > span:nth-child(2) {
+    animation-delay: -300ms;
+  }
+
+  .bars > span:nth-child(3) {
+    animation-delay: -600ms;
+  }
+}
+
+@keyframes rise {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
