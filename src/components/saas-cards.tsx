@@ -428,7 +428,7 @@ function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.category}`}
-      className={`group flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white transition duration-300 hover:border-neutral-300 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none ${lead ? "xl:flex-row" : ""}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none ${lead ? "xl:flex-row" : ""}`}
     >
       {/* The product as it looks, cropped from the top, which is where every
           one of these screenshots has its headline. The lead card lays its
@@ -436,7 +436,7 @@ function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
           any narrower and the words are squeezed into a column a few words
           wide, so below that it stands like the others, only wider. */}
       <div
-        className={`relative aspect-[16/10] shrink-0 overflow-hidden border-b border-neutral-200 bg-neutral-100 ${lead ? "xl:w-1/2 xl:border-r xl:border-b-0" : ""}`}
+        className={`relative aspect-[16/10] shrink-0 overflow-hidden border-b border-border bg-muted ${lead ? "xl:w-1/2 xl:border-r xl:border-b-0" : ""}`}
       >
         {build.shot ? (
           <Image
@@ -468,11 +468,11 @@ function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
           </span>
           <span className="min-w-0 flex-1">
             <span
-              className={`block font-semibold text-neutral-900 ${lead ? "text-lg xl:text-2xl" : "text-lg"}`}
+              className={`block font-semibold text-foreground ${lead ? "text-lg xl:text-2xl" : "text-lg"}`}
             >
               {build.name}
             </span>
-            <span className="block text-sm text-neutral-500">
+            <span className="block text-sm text-muted-foreground">
               {build.category}
             </span>
           </span>
@@ -480,18 +480,18 @@ function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
               the card that says it opens somewhere else. */}
           <ArrowUpRight
             aria-hidden="true"
-            className="size-5 shrink-0 self-start text-neutral-300 transition duration-200 group-hover:text-neutral-900"
+            className="size-5 shrink-0 self-start text-faint-foreground transition duration-200 group-hover:text-foreground"
           />
         </div>
 
         <p
-          className={`mt-4 leading-relaxed text-neutral-600 ${lead ? "text-[15px] xl:text-lg" : "text-[15px]"}`}
+          className={`mt-4 leading-relaxed text-subtle-foreground ${lead ? "text-[15px] xl:text-lg" : "text-[15px]"}`}
         >
           {build.summary}
         </p>
 
         <p
-          className={`pt-5 text-sm font-medium text-neutral-400 transition-colors group-hover:text-neutral-900 ${lead ? "xl:mt-0" : "mt-auto"}`}
+          className={`pt-5 text-sm font-medium text-faint-foreground transition-colors group-hover:text-foreground ${lead ? "xl:mt-0" : "mt-auto"}`}
         >
           {build.domain}
         </p>

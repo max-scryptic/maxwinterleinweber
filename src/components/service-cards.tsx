@@ -58,7 +58,7 @@ const facts = [
 
 export function ServiceCards() {
   return (
-    <article className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
+    <article className="overflow-hidden rounded-3xl border border-border bg-card">
       <div className="p-6 sm:p-10">
         <div className="flex items-center gap-4">
           {/* The mark is 21 units across a 24 unit frame, so 55% of the tile
@@ -71,17 +71,17 @@ export function ServiceCards() {
             <ScrypticIcon className="size-[55%]" />
           </span>
           <div>
-            <h3 className="text-xl font-semibold text-neutral-900">Scryptic</h3>
-            <p className="text-sm text-neutral-500">
+            <h3 className="text-xl font-semibold text-foreground">Scryptic</h3>
+            <p className="text-sm text-muted-foreground">
               MVP and app development studio
             </p>
           </div>
         </div>
 
-        <p className="mt-8 max-w-2xl font-serif text-3xl leading-tight text-neutral-900 sm:text-4xl">
+        <p className="mt-8 max-w-2xl font-serif text-3xl leading-tight text-foreground sm:text-4xl">
           From idea to launched app, without hiring a dev team.
         </p>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-600 sm:text-lg">
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-subtle-foreground sm:text-lg">
           I run Scryptic, a small studio that takes founders from a rough idea
           to a live product, with one team from the first call to launch day.
           I also take apps made with no-code and AI builders through to
@@ -91,16 +91,16 @@ export function ServiceCards() {
         {/* The stages, in order, as one line that wraps rather than a list
             that stacks: it is a sequence to be read across, and the arrows
             between the steps are what say so. */}
-        <ol className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-neutral-600">
+        <ol className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-subtle-foreground">
           {stages.map((stage, index) => (
             <li key={stage} className="flex items-center gap-2">
-              <span className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1">
+              <span className="rounded-full border border-border bg-muted/50 px-3 py-1">
                 {stage}
               </span>
               {index < stages.length - 1 ? (
                 <ArrowRight
                   aria-hidden="true"
-                  className="size-3.5 text-neutral-300"
+                  className="size-3.5 text-faint-foreground"
                 />
               ) : null}
             </li>
@@ -110,24 +110,24 @@ export function ServiceCards() {
 
       {/* The numbers, ruled off from the pitch above as a strip of their own,
           and the two ways onward beside them. */}
-      <div className="border-t border-neutral-200 bg-neutral-50/70">
-        <dl className="grid grid-cols-1 divide-y divide-neutral-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      <div className="border-t border-border bg-muted/35">
+        <dl className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {facts.map((fact) => (
             <div key={fact.label} className="px-6 py-5 sm:px-10">
-              <dt className="text-sm text-neutral-500">{fact.label}</dt>
-              <dd className="mt-1 text-lg font-semibold text-neutral-900">
+              <dt className="text-sm text-muted-foreground">{fact.label}</dt>
+              <dd className="mt-1 text-lg font-semibold text-foreground">
                 {fact.value}
               </dd>
             </div>
           ))}
         </dl>
 
-        <div className="flex flex-wrap gap-3 border-t border-neutral-200 px-6 py-6 sm:px-10">
+        <div className="flex flex-wrap gap-3 border-t border-border px-6 py-6 sm:px-10">
           <a
             href={`${SITE}/book-a-call`}
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-11 items-center gap-2 rounded-full bg-neutral-900 px-5 text-sm font-medium text-white transition hover:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
           >
             Book a discovery call
             <ArrowRight
@@ -139,12 +139,12 @@ export function ServiceCards() {
             href={SITE}
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-11 items-center gap-2 rounded-full border border-neutral-200 bg-white px-5 text-sm font-medium text-neutral-900 transition hover:border-neutral-300 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:outline-none"
+            className="group inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
           >
             Visit scryptic.co.uk
             <ArrowUpRight
               aria-hidden="true"
-              className="size-4 text-neutral-400 transition group-hover:text-neutral-900"
+              className="size-4 text-faint-foreground transition group-hover:text-foreground"
             />
           </a>
         </div>

@@ -1,12 +1,28 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark mode is a data-theme attribute on <html> rather than a class, set by the
+   script at the top of the layout before anything is painted. See
+   src/lib/theme.ts for how it is chosen. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/*
+ * The page is a soft grey and everything on it (the cards, the buttons, the
+ * switches) is white, so each one stands off the page rather than melting into
+ * it. Dark mode keeps the same relationship the other way round: a near-black
+ * page with the cards a step lighter.
+ *
+ * The text runs from foreground (headings, names, anything read first) through
+ * subtle (running text) and muted (secondary lines) down to faint (labels,
+ * durations and icons at rest).
+ */
 :root {
+  color-scheme: light;
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.961 0 0);
+  --foreground: oklch(0.205 0 0);
+  --subtle-foreground: oklch(0.439 0 0);
+  --faint-foreground: oklch(0.708 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -38,9 +54,12 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
+[data-theme="dark"] {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --subtle-foreground: oklch(0.83 0 0);
+  --faint-foreground: oklch(0.556 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -84,6 +103,8 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-faint-foreground: var(--faint-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
