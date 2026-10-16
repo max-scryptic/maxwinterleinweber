@@ -28,12 +28,14 @@ import {
   type Transition,
 } from "@/components/figure-particles";
 import {
-  FIGURES,
   HEIGHT,
   HORIZON,
+  OPENING,
   VIEWS,
   framing,
+  opening,
   versionOf,
+  viewOf,
   type VersionId,
   type ViewId,
 } from "@/lib/figure";
@@ -528,9 +530,10 @@ function Controls({
   useLayoutEffect(() => {
     const orbit = new OrbitControls(camera, domElement);
 
-    // The full-body focus, matching where the camera is pointed at mount. The
-    // controls otherwise start aimed at the origin, which is between the feet.
-    orbit.target.set(0, HEIGHT / 2, 0);
+    // The opening framing's focus, matching where the camera is pointed at
+    // mount. The controls otherwise start aimed at the origin, which is between
+    // the feet.
+    orbit.target.set(0, opening().focus, 0);
 
     // Weight behind the drag, so a flick coasts to a stop instead of halting
     // with the pointer. Damping is what makes update() below need a frame loop.
@@ -585,8 +588,7 @@ function Controls({
     // The canvas is the figure's frame and nothing else, so its own shape is the
     // shape the figure is being fitted into.
     const aspect = size.width / size.height;
-    const preset = VIEWS.find((candidate) => candidate.id === view) ?? VIEWS[0];
-    goal.current = framing(preset, aspect, span);
+    goal.current = framing(viewOf(view), aspect, span);
 
     const orbit = controls.current;
     if (!orbit) return;
@@ -730,4 +732,4 @@ export default function FigureRig({
 // in parallel with React mounting it, rather than waiting for the first render.
 // The rest are fetched when a tab or a version button for them is hovered, which
 // is the canvas's job rather than this one's.
-useGLTF.preload(FIGURES[0].versions[0].url);
+useGLTF.preload(versionOf(OPENING).url);

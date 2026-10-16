@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 import portrait from "@/assets/max.png";
 import { FadeImage } from "@/components/fade-image";
-import { ASPECT, FIGURES } from "@/lib/figure";
+import { ASPECT, OPENING, versionOf } from "@/lib/figure";
 import { warm } from "@/lib/warm";
 
 /*
@@ -28,7 +28,7 @@ const SpaceScene = dynamic(() => import("@/components/space-scene"), {
 function prefetch() {
   void import("@/components/space-scene");
   void import("@/components/figure-stage");
-  warm(FIGURES[0].versions[0].url);
+  warm(versionOf(OPENING).url);
 }
 
 // How long the frame takes to change shape, and the photo to fade over the sky

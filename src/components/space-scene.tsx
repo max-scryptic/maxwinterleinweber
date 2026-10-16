@@ -20,6 +20,8 @@ import {
   CAMERA_RISE,
   FIGURES,
   FOV,
+  OPENING,
+  OPENING_VIEW,
   VIEWS,
   figureOf,
   opening,
@@ -175,20 +177,21 @@ export default function SpaceScene() {
   // The model the frame opens on, fetched from here rather than waiting for the
   // chunk that draws it to be parsed and to ask for it itself.
   useEffect(() => {
-    warm(FIGURES[0].versions[0].url);
+    warm(versionOf(OPENING).url);
   }, []);
 
-  const [view, setView] = useState<ViewId>("full");
+  // Opens on the same framing the camera was placed for above.
+  const [view, setView] = useState<ViewId>(OPENING_VIEW);
 
   /*
    * What is on stage, which is a version rather than a figure: a version is
    * what names a file, and the tab that is lit is worked out from it below.
    * Holding the two separately would mean keeping them in step by hand.
    *
-   * The frame opens on the first version of the first figure, which is the
-   * earliest capture and the one every later one is measured against.
+   * The frame opens on OPENING, which is Scan 02 rather than whatever tab
+   * happens to be drawn first.
    */
-  const [version, setVersion] = useState<VersionId>(FIGURES[0].versions[0].id);
+  const [version, setVersion] = useState<VersionId>(OPENING);
 
   // The version showing and the figure it is a version of.
   const shown = versionOf(version);
@@ -212,8 +215,8 @@ export default function SpaceScene() {
 
   // Whether what is on stage has a skeleton to pose. A scan does not until it
   // has been rigged, so the column is not offered rather than offered and
-  // ignored, and that is a property of the version rather than of the tab: two
-  // of scan 02's three are rigged and the one it opens on is not.
+  // ignored, and that is a property of the version rather than of the tab. No
+  // version on the page is rigged at the moment, so the column is never drawn.
   const rigged = shown.rigged;
 
   // Bumped on every press so that pressing the active button re-frames rather
@@ -244,13 +247,8 @@ export default function SpaceScene() {
     </Button>
   ));
 
-  /*
-   * Which version of that capture, for one that has more than one. Labelled by
-   * position: v1 is the capture as it came back and has no skeleton, so the pose
-   * buttons are simply missing under it; v2 and v3 are that mesh rigged, and
-   * pressing between them is what shows the poses running backwards and then
-   * forwards.
-   */
+  // Which version of that capture, for one that has more than one, labelled by
+  // position. No capture has a second take at the moment, so this is not drawn.
   const versions = figure.versions.map((option, index) => (
     <Button
       key={option.id}
