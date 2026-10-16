@@ -1,16 +1,17 @@
 # Models
 
 The tabs above the figure switch between these. They are listed in `FIGURES` in
-`src/lib/figure.ts`, oldest first, and the first entry is what the page opens
-on.
+`src/lib/figure.ts`, oldest first. What the model view opens on is named
+separately, by `OPENING` and `OPENING_VIEW` in the same file, and is Scan 02
+framed from the chest up.
 
 A tab is a capture, not a file. Where the same capture is on the page more than
 once, the takes on it sit behind one tab as its versions, and a row of buttons
-labelled `v1`, `v2`, `v3` appears on the right to choose between them. Scan 02
-is the only multi-version one so far: `scan-02.glb` raw as v1, `scan-03.glb`
-rigged backwards as v2, and `scan-04.glb` rigged properly as v3. They are
-numbered by their order in that tab's `versions` list rather than by anything
-written down.
+labelled `v1`, `v2`, `v3` appears on the right to choose between them, numbered
+by their order in that tab's `versions` list. No tab has more than one at the
+moment. Scan 02 used to carry `scan-03.glb` and `scan-04.glb` as v2 and v3;
+both files are still here, but are no longer listed, so Scan 02 shows only
+`scan-02.glb`, the raw capture.
 
 The column down the right hand side, under those, switches between poses
 instead, and is only there for a model with a skeleton in it. See
@@ -19,8 +20,8 @@ instead, and is only there for a model with a skeleton in it. See
 
 ## scan-01.glb
 
-The first photogrammetry scan, what the page opens on, and the thing every
-later capture is measured against. Captured in Polycam and exported through
+The first photogrammetry scan, and the thing every later capture is measured
+against. Captured in Polycam and exported through
 Blender. Deliberately unretouched: limbs and most of the legs are missing, the
 mesh is torn, and a long shard of jeans hangs below the body.
 
@@ -47,19 +48,19 @@ which brought it to 4.6 MB and 67 MB of VRAM without touching the geometry.
 
 ## scan-02.glb
 
-**Scan 02, v1.** The second scan, and a whole figure this time: arms, legs and
+**Scan 02**, and what the model view opens on. The second scan, and a whole
+figure this time: arms, legs and
 feet all present, so nothing hangs below it and the bounding box holds a person
 rather than a person and a shard. It stands on its own origin at 1.75 m and is
 centred within a couple of centimetres, so it needs no shift or rise; it carries
 a half turn of yaw because it was exported facing away from the camera.
 
 Like scan-01 it has no skeleton and no animation clips, so it stands still,
-which is why v1 is the one version of this tab with no pose column under it.
-This is the capture as it came back, and it stays that way: `scan-03.glb` and
-`scan-04.glb` are the same mesh rigged, and keeping the raw one means the rig can
-be redone, or thrown away, against something that is still the original. It has
-been redone once already, which is what v3 is, and that is the argument for
-keeping this file in one sentence.
+with no pose column beside it. This is the capture as it came back, and it stays
+that way: `scan-03.glb` and `scan-04.glb` are the same mesh rigged, and keeping
+the raw one means the rig can be redone, or thrown away, against something that
+is still the original. It has been redone once already, which is what scan-04
+is, and that is the argument for keeping this file in one sentence.
 
 Exported from Blender at 10.2 MB with a 4096px base colour and normal map.
 Reduced the same way as scan-01:
@@ -73,10 +74,10 @@ which brought it to 3.4 MB with all 96,744 triangles intact.
 
 ## scan-03.glb
 
-**Scan 02, v2.** Not a third capture. It is scan-02's mesh with a skeleton in
-it, which makes it the first scan here that can be posed, and it sits behind the
-same tab as the raw one rather than replacing it so that both are on the page to
-compare.
+**Not on the page.** Formerly Scan 02, v2. Not a third capture. It is
+scan-02's mesh with a skeleton in it, which made it the first scan here that
+could be posed, and it sat behind the same tab as the raw one rather than
+replacing it so that both were on the page to compare.
 
 **It is rigged.** Twenty seven joints on Mixamo's naming, fitted to the mesh and
 weighted by Blender's bone heat solver by `scripts/rig-scan.py`, then rebound in
@@ -125,11 +126,11 @@ error next to two 2048px textures.
 
 ## scan-04.glb
 
-**Scan 02, v3.** Scan-03 done again, on the same mesh, with the half turn that
-was missing from it. Same script, same solver, same twenty seven joints, same
-T-pose rebind, and the same 3.39 MB. The only difference is that this one is the
-way round it always meant to be, which is the difference between the poses
-working and the poses being backwards.
+**Not on the page.** Formerly Scan 02, v3. Scan-03 done again, on the same
+mesh, with the half turn that was missing from it. Same script, same solver,
+same twenty seven joints, same T-pose rebind, and the same 3.39 MB. The only
+difference is that this one is the way round it always meant to be, which is the
+difference between the poses working and the poses being backwards.
 
 What that turn is worth, measured off the two files. In scan-03 the toes reach
 5 to 7 cm behind the ankles, so the figure's front is `-Z` where every pose in
@@ -173,9 +174,9 @@ out of step while Scan 01 and Scan 02 stay aligned.
 A figure moves because something is turning its joints. A model with no joints
 has nothing to turn, and no amount of code at this end invents them: posing a
 photogrammetry scan is a thing that happens to the file, before it ever reaches
-this directory. That is the whole of why the pose column is missing on the two
-raw scans and present on scan 02's v2 and v3, which are one of those scans after
-the thing had happened to it.
+this directory. That is the whole of why the pose column is missing on the raw
+scans, and why it was present on scan-03 and scan-04 while they were listed,
+which are one of those scans after the thing had happened to it.
 
 Given a skeleton, there are two ways to drive it, and the viewer treats them as
 the same kind of thing:

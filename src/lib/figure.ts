@@ -16,14 +16,13 @@ export const HEIGHT = 1.8;
  * The figures the tabs switch between, in the order they were made, each with
  * the versions of it that the buttons down the right hand side switch between.
  *
- * A tab is a capture. A version is one take on that capture, and most of them
- * have exactly one, in which case the version buttons are not drawn at all.
- * Scan 02 has three, because the same mesh is on the page raw, rigged wrongly
- * and rigged again properly, and those are three states of one scan rather than
- * three scans. Keeping all three is the point: a rig is worth having, is not
- * worth losing the untouched capture to, and can be redone when it comes out
- * wrong, which is what v3 is. The buttons are labelled by position, so v1 is
- * whatever is first in the list here. See `public/models/README.md`.
+ * A tab is a capture. A version is one take on that capture, and every capture
+ * here has exactly one at the moment, in which case the version buttons are not
+ * drawn at all. Scan 02's two rigged takes, `scan-03.glb` and `scan-04.glb`,
+ * are kept in `public/models` but are no longer listed here, so the tab shows
+ * the capture as it came back and nothing else. A take added to a capture's
+ * list puts the buttons back, labelled by position, so v1 is whatever is first
+ * in the list. See `public/models/README.md`.
  *
  * Every version is normalised to HEIGHT on load and stood on the plane through
  * the origin, so they can arrive at any size, in any unit and sitting anywhere
@@ -39,9 +38,8 @@ export const HEIGHT = 1.8;
  * half turn, then an 18 degree clockwise nudge to match the other scans
  * visually. Keeping those corrections on the version leaves every model aligned
  * at the same shared turntable angle through every framing. Yaw is measured in
- * radians about the vertical axis. All three versions of scan 02 are the one
- * capture, a clean export centred and standing on its own origin, so none of
- * them needs a shift or a rise.
+ * radians about the vertical axis. Scan 02 is a clean export centred and
+ * standing on its own origin, so it needs no shift or rise.
  *
  * rigged says whether the model has a skeleton inside it, which is what decides
  * whether the pose buttons are offered for it at all. It is stated here rather
@@ -51,13 +49,14 @@ export const HEIGHT = 1.8;
  * buttons that do not do anything: the figure itself reads the real skeleton and
  * is not fooled by this.
  *
- * It is false for the raw scans, and that is not an oversight.
- * Photogrammetry produces a single mesh and no bones, and a mesh with no bones
- * cannot be posed by any amount of code at this end; scan-01 has no limbs to rig
- * either. Scan 02's v2 and v3 are its own mesh after `scripts/rig-scan.py`,
- * which is where their skeletons came from.
+ * It is false for every scan here, and that is not an oversight. They are all
+ * raw captures, and photogrammetry produces a single mesh and no bones, and a
+ * mesh with no bones cannot be posed by any amount of code at this end; scan-01
+ * has no limbs to rig either. A version rigged by `scripts/rig-scan.py` would
+ * set it, and bring the pose buttons with it.
  *
- * The first figure is what the page opens on, and its first version with it.
+ * The order here is the order the tabs are drawn in, and is not what the page
+ * opens on: that is OPENING, below.
  */
 export const FIGURES = [
   {
@@ -78,10 +77,8 @@ export const FIGURES = [
     id: "scan-02",
     label: "Scan 02",
     versions: [
-      // v1: the capture as it came back, with no skeleton in it and so no poses
-      // offered for it. Turned here, because it was captured back to the camera,
-      // where the two rigged versions are not: rigging is the moment to turn the
-      // export round instead. That is what v3 does, and what v2 only claimed to.
+      // The capture as it came back, with no skeleton in it and so no poses
+      // offered for it. Turned here, because it was captured back to the camera.
       {
         id: "scan-02",
         url: "/models/scan-02.glb",
@@ -89,32 +86,6 @@ export const FIGURES = [
         rise: 0,
         yaw: Math.PI,
         rigged: false,
-      },
-      // v2: that mesh rigged, and posed backwards for it. No yaw, and this one
-      // is wrong. Rigging was meant to be the moment the export was turned
-      // round, and the half turn that would have done it was dropped without a
-      // word by the rigger, so mesh and skeleton both came out still facing
-      // away. It is left standing exactly as it came back: this is the version
-      // that shows what that costs, and v3 is the same capture with the turn
-      // actually applied.
-      {
-        id: "scan-03",
-        url: "/models/scan-03.glb",
-        shift: 0,
-        rise: 0,
-        yaw: 0,
-        rigged: true,
-      },
-      // v3: the same rig, facing the way it always meant to. No yaw, and this
-      // one means it. The rig, the mesh and the poses now agree about which way
-      // the figure faces, which is the whole of what v2 got wrong.
-      {
-        id: "scan-04",
-        url: "/models/scan-04.glb",
-        shift: 0,
-        rise: 0,
-        yaw: 0,
-        rigged: true,
       },
     ],
   },
@@ -138,6 +109,14 @@ export type Figure = (typeof FIGURES)[number];
 export type FigureId = Figure["id"];
 export type Version = Figure["versions"][number];
 export type VersionId = Version["id"];
+
+/*
+ * The version the model view opens on, and so the one fetched ahead of the
+ * press that asks for it. Scan 02, because it is the one whole figure of the
+ * three. Named here rather than taken from the top of FIGURES, which would mean
+ * reordering the tabs to change it.
+ */
+export const OPENING: VersionId = "scan-02";
 
 /**
  * The version on stage, and the figure whose tab it belongs to. What is
@@ -230,6 +209,16 @@ export const VIEWS = [
 export type View = (typeof VIEWS)[number];
 export type ViewId = View["id"];
 
+// The framing the model view opens on: from the chest up, which is close
+// enough to read the scan as a face rather than a silhouette.
+export const OPENING_VIEW: ViewId = "torso";
+
+// The view a button names, falling back to the first for the same reason
+// versionOf does.
+export function viewOf(id: ViewId): View {
+  return VIEWS.find((view) => view.id === id) ?? VIEWS[0];
+}
+
 /*
  * Where the camera has to be to fit one of those bands. The vertical field of
  * view is fixed, so the distance that fits the band's height is fixed too; the
@@ -262,6 +251,9 @@ export function framing(view: View, aspect: number, span = 0) {
  * The framing the canvas opens on, before it has measured itself, and how far
  * the camera is tilted down at it.
  *
+ * That is OPENING_VIEW, and the controls are handed the same one as their first
+ * view, so they find the camera already where they would have eased it to.
+ *
  * The aspect is the one the frame is drawn at. It only has to be close enough
  * not to be seen jumping: the first frame after mount corrects it against the
  * canvas's real size. At this shape it is the height that decides the distance
@@ -275,7 +267,7 @@ export function framing(view: View, aspect: number, span = 0) {
  * controls are going to hold means there is nothing to correct.
  */
 export function opening(aspect = ASPECT) {
-  const fit = framing(VIEWS[0], aspect);
+  const fit = framing(viewOf(OPENING_VIEW), aspect);
 
   return {
     focus: fit.focus,
