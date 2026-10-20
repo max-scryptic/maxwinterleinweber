@@ -35,25 +35,16 @@ function ScrypticIcon(props: React.ComponentProps<"svg">) {
 }
 
 /*
- * The studio's own words, from its site: the one service it sells, the stages
- * every build goes through, and the three numbers a founder asks about first.
- * Kept here as the studio states them, so this card cannot promise something
- * the studio's own pages do not.
+ * The studio's own words, from its site: the one service it sells and the
+ * three numbers a founder asks about first. Kept here as the studio states
+ * them, so this card cannot promise something the studio's own pages do not.
  */
 const SITE = "https://www.scryptic.co.uk";
-
-const stages = [
-  "Discovery call",
-  "Development",
-  "Iteration",
-  "Launch",
-  "Handover",
-];
 
 const facts = [
   { label: "Development sprint", value: "2 or 3 weeks" },
   { label: "Demos", value: "Every Friday" },
-  { label: "Fixed price", value: "From £10,000 + VAT" },
+  { label: "Fixed price", value: "From £10,000" },
 ];
 
 export function ServiceCards() {
@@ -82,31 +73,10 @@ export function ServiceCards() {
           From idea to MVP, without hiring a dev team.
         </p>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-subtle-foreground sm:text-lg">
-          I run Scryptic, a small studio building web apps and SaaS products
-          for UK founders. One fixed-price sprint takes you from idea to a
-          launched product, with production code and every account in your
-          name. I also take apps made with Lovable, Bubble and other builders
-          through to production.
+          I run Scryptic, a small studio building web apps for UK founders.
+          One fixed-price sprint takes you from idea to launch, with the code
+          and every account in your name.
         </p>
-
-        {/* The stages, in order, as one line that wraps rather than a list
-            that stacks: it is a sequence to be read across, and the arrows
-            between the steps are what say so. */}
-        <ol className="mt-8 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-subtle-foreground">
-          {stages.map((stage, index) => (
-            <li key={stage} className="flex items-center gap-2">
-              <span className="rounded-full border border-border bg-muted/50 px-3 py-1">
-                {stage}
-              </span>
-              {index < stages.length - 1 ? (
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-3.5 text-faint-foreground"
-                />
-              ) : null}
-            </li>
-          ))}
-        </ol>
       </div>
 
       {/* The numbers, ruled off from the pitch above as a strip of their own,
