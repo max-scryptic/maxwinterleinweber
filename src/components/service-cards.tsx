@@ -49,7 +49,7 @@ const facts = [
 
 export function ServiceCards() {
   return (
-    <article className="overflow-hidden rounded-3xl border border-border bg-card">
+    <article className="overflow-hidden rounded-[0.75rem] border border-border bg-card">
       <div className="p-6 sm:p-10">
         <div className="flex items-center gap-4">
           {/* The mark is 21 units across a 24 unit frame, so 55% of the tile
