@@ -43,17 +43,17 @@ function ScrypticIcon(props: React.ComponentProps<"svg">) {
 const SITE = "https://www.scryptic.co.uk";
 
 const stages = [
-  "Discovery",
-  "Design",
+  "Discovery call",
   "Development",
-  "Deployment",
+  "Iteration",
   "Launch",
+  "Handover",
 ];
 
 const facts = [
-  { label: "Typical build", value: "One to two months" },
-  { label: "Progress reviews", value: "Every Friday" },
-  { label: "Builds from", value: "£10,000" },
+  { label: "Development sprint", value: "2 or 3 weeks" },
+  { label: "Demos", value: "Every Friday" },
+  { label: "Fixed price", value: "From £10,000 + VAT" },
 ];
 
 export function ServiceCards() {
@@ -73,19 +73,20 @@ export function ServiceCards() {
           <div>
             <h3 className="text-xl font-semibold text-foreground">Scryptic</h3>
             <p className="text-sm text-muted-foreground">
-              MVP and app development studio
+              MVP and app development studio in Brighton
             </p>
           </div>
         </div>
 
         <p className="mt-8 max-w-2xl font-serif text-3xl leading-tight text-foreground sm:text-4xl">
-          From idea to launched app, without hiring a dev team.
+          From idea to MVP, without hiring a dev team.
         </p>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-subtle-foreground sm:text-lg">
-          I run Scryptic, a small studio that takes founders from a rough idea
-          to a live product, with one team from the first call to launch day.
-          I also take apps made with no-code and AI builders through to
-          production.
+          I run Scryptic, a small studio building web apps and SaaS products
+          for UK founders. One fixed-price sprint takes you from idea to a
+          launched product, with production code and every account in your
+          name. I also take apps made with Lovable, Bubble and other builders
+          through to production.
         </p>
 
         {/* The stages, in order, as one line that wraps rather than a list
