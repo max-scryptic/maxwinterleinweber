@@ -429,7 +429,7 @@ function BuildCard({ build, lead }: { build: Build; lead: boolean }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${build.name}: ${build.category}`}
-      className={`group flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none ${lead ? "xl:flex-row" : ""}`}
+      className={`group flex h-full flex-col overflow-hidden rounded-[0.75rem] border border-border bg-card transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none ${lead ? "xl:flex-row" : ""}`}
     >
       {/* The product as it looks, cropped from the top, which is where every
           one of these screenshots has its headline. The lead card lays its

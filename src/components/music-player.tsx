@@ -315,7 +315,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
       <div
         id="music"
         ref={panel}
-        className="scroll-mt-8 overflow-hidden rounded-3xl border border-border bg-card"
+        className="scroll-mt-8 overflow-hidden rounded-[0.75rem] border border-border bg-card"
       >
         <div className="flex flex-wrap items-center gap-4 p-5 sm:p-6">
           <span className="relative shrink-0 rounded-full bg-muted">
