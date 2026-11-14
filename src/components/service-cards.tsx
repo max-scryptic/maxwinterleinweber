@@ -49,14 +49,14 @@ const facts = [
 
 export function ServiceCards() {
   return (
-    <article className="overflow-hidden rounded-[0.75rem] border border-border bg-card">
+    <article className="overflow-hidden rounded-[0.25rem] border border-border bg-card">
       <div className="p-6 sm:p-10">
         <div className="flex items-center gap-4">
           {/* The mark is 21 units across a 24 unit frame, so 55% of the tile
               puts it at about half the tile's width, which is the clear space
               the brand's own avatars give it. */}
           <span
-            className="flex size-14 shrink-0 items-center justify-center rounded-2xl text-white"
+            className="flex size-14 shrink-0 items-center justify-center rounded-[0.375rem] text-white"
             style={{ backgroundColor: scrypticLapis }}
           >
             <ScrypticIcon className="size-[55%]" />
@@ -98,7 +98,7 @@ export function ServiceCards() {
             href={`${SITE}/book-a-call`}
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
+            className="group inline-flex h-11 items-center gap-2 rounded-[0.25rem] bg-primary px-5 text-sm font-medium text-primary-foreground transition hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
           >
             Book a discovery call
             <ArrowRight
@@ -110,7 +110,7 @@ export function ServiceCards() {
             href={SITE}
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
+            className="group inline-flex h-11 items-center gap-2 rounded-[0.25rem] border border-border bg-card px-5 text-sm font-medium text-foreground transition hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none"
           >
             Visit scryptic.co.uk
             <ArrowUpRight

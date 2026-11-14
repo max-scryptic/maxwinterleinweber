@@ -315,7 +315,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
       <div
         id="music"
         ref={panel}
-        className="scroll-mt-8 overflow-hidden rounded-[0.75rem] border border-border bg-card"
+        className="scroll-mt-8 overflow-hidden rounded-[0.25rem] border border-border bg-card"
       >
         <div className="flex flex-wrap items-center gap-4 p-5 sm:p-6">
           <span className="relative shrink-0 rounded-full bg-muted">
@@ -347,7 +347,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
             href="https://soundcloud.com/eutonix"
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-medium text-foreground transition hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none max-sm:w-full"
+            className="group inline-flex h-10 items-center justify-center gap-2 rounded-[0.25rem] border border-border bg-card px-4 text-sm font-medium text-foreground transition hover:border-foreground/20 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card focus-visible:outline-none max-sm:w-full"
           >
             Follow on SoundCloud
             <ArrowUpRight
@@ -366,7 +366,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
               <Cover
                 track={track}
                 size={128}
-                className="size-28 self-center rounded-2xl shadow-[0_16px_32px_-18px_rgba(20,16,40,0.6)] sm:size-32 sm:self-auto"
+                className="size-28 self-center rounded-[0.25rem] shadow-[0_16px_32px_-18px_rgba(20,16,40,0.6)] sm:size-32 sm:self-auto"
               />
 
               <div className="min-w-0 flex-1">
@@ -445,7 +445,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                 return (
                   <li
                     key={song.src}
-                    className={`group/row flex items-center gap-1 rounded-2xl pr-2 transition-colors ${current ? "bg-muted" : "hover:bg-muted/50"}`}
+                    className={`group/row flex items-center gap-1 rounded-[0.25rem] pr-2 transition-colors ${current ? "bg-muted" : "hover:bg-muted/50"}`}
                   >
                     <button
                       type="button"
@@ -455,7 +455,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                           ? `Pause ${song.title}`
                           : `Play ${song.title}`
                       }
-                      className="group/play flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
+                      className="group/play flex min-w-0 flex-1 items-center gap-3 rounded-[0.25rem] py-2 pl-3 text-left focus-visible:ring-2 focus-visible:ring-foreground focus-visible:outline-none"
                     >
                       <span className="flex w-5 shrink-0 justify-center text-sm text-faint-foreground tabular-nums">
                         {current && playing ? (
@@ -473,7 +473,7 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
                       <Cover
                         track={song}
                         size={40}
-                        className="size-10 rounded-lg"
+                        className="size-10 rounded-[0.1875rem]"
                       >
                         <span
                           aria-hidden="true"
@@ -553,9 +553,9 @@ export function MusicPlayer({ tracks }: { tracks: Track[] }) {
           inert={!barShown}
           className={`fixed inset-x-3 bottom-3 z-50 transition duration-300 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[23rem] ${barShown ? "opacity-100 motion-safe:translate-y-0" : "pointer-events-none opacity-0 motion-safe:translate-y-3"}`}
         >
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card/90 shadow-[0_24px_48px_-20px_rgba(20,16,40,0.4)] backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-[0.25rem] border border-border bg-card/90 shadow-[0_24px_48px_-20px_rgba(20,16,40,0.4)] backdrop-blur-xl">
             <div className="flex items-center gap-3 p-2.5 pr-2">
-              <Cover track={track} size={44} className="size-11 rounded-xl" />
+              <Cover track={track} size={44} className="size-11 rounded-[0.1875rem]" />
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">
