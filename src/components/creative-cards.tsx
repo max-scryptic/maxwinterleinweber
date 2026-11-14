@@ -70,7 +70,7 @@ export function CreativeCards() {
               target="_blank"
               rel="noreferrer"
               aria-label={`${channel.name} (${channel.handle}), a ${channel.topic.toLowerCase()} channel on YouTube`}
-              className="group flex h-full flex-col rounded-[0.75rem] border border-border bg-card p-5 transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none xl:p-6"
+              className="group flex h-full flex-col rounded-[0.25rem] border border-border bg-card p-5 transition duration-300 hover:border-foreground/20 hover:shadow-[0_24px_48px_-28px_rgba(20,16,40,0.35)] focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none xl:p-6"
             >
               <div className="flex items-start justify-between">
                 {/* A grey disc in the avatar's place for it to fade up over. */}
@@ -100,7 +100,7 @@ export function CreativeCards() {
               </p>
               <p className="text-sm text-muted-foreground">{channel.handle}</p>
 
-              <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-subtle-foreground">
+              <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-[0.1875rem] bg-muted px-2.5 py-1 text-xs font-medium text-subtle-foreground">
                 <Topic aria-hidden="true" className="size-3.5" />
                 {channel.topic}
               </span>

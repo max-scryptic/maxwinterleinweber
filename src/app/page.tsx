@@ -84,7 +84,7 @@ export default function Home() {
 
                 <a
                   href="#services"
-                  className="group mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-6 text-base font-medium text-primary-foreground transition hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+                  className="group mt-8 inline-flex h-12 items-center gap-2 rounded-[0.25rem] bg-primary px-6 text-base font-medium text-primary-foreground transition hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
                 >
                   View my work
                   <ArrowRight
