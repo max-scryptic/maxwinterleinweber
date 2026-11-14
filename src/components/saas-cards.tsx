@@ -3,6 +3,7 @@ import { Press_Start_2P } from "next/font/google";
 import type { StaticImageData } from "next/image";
 import * as React from "react";
 
+import getOutOfBedShot from "@/assets/work/get-out-of-bed.webp";
 import prettyMetricsShot from "@/assets/work/prettymetrics.webp";
 import reelEstateShot from "@/assets/work/reelestate.webp";
 import untilThenShot from "@/assets/work/until-then.webp";
@@ -264,6 +265,62 @@ function ReelEstateIcon(props: React.ComponentProps<"svg">) {
 }
 
 /*
+ * The Get Out Of Bed mark: the sleepy sun peeking out from under the covers,
+ * the app's own launcher icon. Same paths as its foreground drawable, which
+ * tools/brand_mark.py generates on Android's 108 unit adaptive icon grid, and
+ * scaled about the same pivot. A launcher shows only the middle 72 units of
+ * that grid, so the view box is cropped to them and the tile keeps the clear
+ * space the icon has on a phone's home screen.
+ *
+ * Its colours are hardcoded for the reason the others' are: the tangerine
+ * behind it, the sun, the ink and the duvet are the app's fixed brand colours.
+ */
+
+const getOutOfBedTangerine = "#e85d2a";
+const getOutOfBedSun = "#f6b73c";
+const getOutOfBedInk = "#2b2118";
+const getOutOfBedDuvet = "#f3eadf";
+
+// The sun's eight soft lobes, traced in the generator rather than by hand.
+const getOutOfBedSunPath =
+  "M74.07,49.5L73.98,50.29L73.71,51.05L73.29,51.78L72.75,52.47L72.14,53.11L71.52,53.71L70.92,54.27L70.38,54.82L69.95,55.39L69.64,55.98L69.44,56.62L69.35,57.32L69.33,58.09L69.36,58.91L69.38,59.78L69.36,60.66L69.25,61.53L69.03,62.34L68.68,63.07L68.19,63.69L67.57,64.18L66.84,64.53L66.03,64.75L65.16,64.86L64.28,64.88L63.41,64.86L62.59,64.83L61.82,64.85L61.12,64.94L60.48,65.14L59.89,65.45L59.32,65.88L58.77,66.42L58.21,67.02L57.61,67.64L56.97,68.25L56.28,68.79L55.55,69.21L54.79,69.48L54,69.57L53.21,69.48L52.45,69.21L51.72,68.79L51.03,68.25L50.39,67.64L49.79,67.02L49.23,66.42L48.68,65.88L48.11,65.45L47.52,65.14L46.88,64.94L46.18,64.85L45.41,64.83L44.59,64.86L43.72,64.88L42.84,64.86L41.97,64.75L41.16,64.53L40.43,64.18L39.81,63.69L39.32,63.07L38.97,62.34L38.75,61.53L38.64,60.66L38.62,59.78L38.64,58.91L38.67,58.09L38.65,57.32L38.56,56.62L38.36,55.98L38.05,55.39L37.62,54.82L37.08,54.27L36.48,53.71L35.86,53.11L35.25,52.47L34.71,51.78L34.29,51.05L34.02,50.29L33.93,49.5L34.02,48.71L34.29,47.95L34.71,47.22L35.25,46.53L35.86,45.89L36.48,45.29L37.08,44.73L37.62,44.18L38.05,43.61L38.36,43.02L38.56,42.38L38.65,41.68L38.67,40.91L38.64,40.09L38.62,39.22L38.64,38.34L38.75,37.47L38.97,36.66L39.32,35.93L39.81,35.31L40.43,34.82L41.16,34.47L41.97,34.25L42.84,34.14L43.72,34.12L44.59,34.14L45.41,34.17L46.18,34.15L46.88,34.06L47.52,33.86L48.11,33.55L48.68,33.12L49.23,32.58L49.79,31.98L50.39,31.36L51.03,30.75L51.72,30.21L52.45,29.79L53.21,29.52L54,29.43L54.79,29.52L55.55,29.79L56.28,30.21L56.97,30.75L57.61,31.36L58.21,31.98L58.77,32.58L59.32,33.12L59.89,33.55L60.48,33.86L61.12,34.06L61.82,34.15L62.59,34.17L63.41,34.14L64.28,34.12L65.16,34.14L66.03,34.25L66.84,34.47L67.57,34.82L68.19,35.31L68.68,35.93L69.03,36.66L69.25,37.47L69.36,38.34L69.38,39.22L69.36,40.09L69.33,40.91L69.35,41.68L69.44,42.38L69.64,43.02L69.95,43.61L70.38,44.18L70.92,44.73L71.52,45.29L72.14,45.89L72.75,46.53L73.29,47.22L73.71,47.95L73.98,48.71Z";
+
+function GetOutOfBedIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg viewBox="18 18 72 72" fill="none" aria-hidden="true" {...props}>
+      <rect x="18" y="18" width="72" height="72" fill={getOutOfBedTangerine} />
+      {/* The launcher's own 1.08 scale about (54, 55), written out as a
+          matrix: scale, then shift the pivot back to where it was. */}
+      <g transform="matrix(1.08 0 0 1.08 -4.32 -4.4)">
+        <path d={getOutOfBedSunPath} fill={getOutOfBedSun} />
+        <g fill={getOutOfBedInk}>
+          <ellipse cx="47.4" cy="45.5" rx="2.3" ry="3.3" />
+          <ellipse cx="60.6" cy="45.5" rx="2.3" ry="3.3" />
+        </g>
+        <g fill="#ffffff">
+          <circle cx="48.2" cy="44.2" r="0.75" />
+          <circle cx="61.4" cy="44.2" r="0.75" />
+        </g>
+        {/* The covers, pushed up where the sun is underneath, with a white
+            hem along the top and the sun's two hands holding on to it. */}
+        <path
+          d="M28,66C28,62 30,60.5 33,60Q54,52 75,60C78,60.5 80,62 80,66V69A9,9 0 0,1 71,78H37A9,9 0 0,1 28,69Z"
+          fill={getOutOfBedDuvet}
+        />
+        <path
+          d="M28,66C28,62 30,60.5 33,60Q54,52 75,60C78,60.5 80,62 80,66L80,68.5Q54,60.5 28,68.5Z"
+          fill="#ffffff"
+        />
+        <g fill={getOutOfBedSun}>
+          <ellipse cx="42.5" cy="57.8" rx="4.6" ry="3.3" />
+          <ellipse cx="65.5" cy="57.8" rx="4.6" ry="3.3" />
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+/*
  * The Marketing Arena's own arcade face, for the one build that has no
  * screenshot to show: its preview is drawn instead, in the app's colours and
  * lettering, so it sits among the others as a picture of the product rather
@@ -402,20 +459,40 @@ const builds: Build[] = [
     tileClassName: "",
     tileStyle: { backgroundColor: reelEstateDark, color: reelEstateCoral },
   },
+  {
+    name: "Get Out Of Bed",
+    category: "Alarm clock for Android",
+    summary:
+      "An alarm clock with no snooze button. It keeps ringing until you finish a mission: a sum, a shake, a typed phrase or a photo of another room.",
+    href: "https://getoutofbed.app",
+    domain: "getoutofbed.app",
+    shot: getOutOfBedShot,
+    icon: GetOutOfBedIcon,
+    // The whole tile: the mark brings its own tangerine and the launcher's
+    // clear space with it.
+    iconClassName: "size-full",
+    tileClassName: "overflow-hidden",
+  },
 ];
 
 export function SaasCards() {
+  // Two to a row. An odd number of cards in a grid of two leaves one over, so
+  // when there is one over it is made the lead, across the top of both and
+  // laid on its side, rather than left hanging at the bottom. An even number
+  // fills every row and needs no lead.
+  const hasLead = builds.length % 2 === 1;
+
   return (
-    // Two to a row, with the first build across the top of both and laid on
-    // its side: it is the one the list opens on, and five cards in a grid of
-    // two leave one over, so the odd one out is made the lead rather than left
-    // hanging at the bottom.
     <ul className="grid gap-6 md:grid-cols-2">
-      {builds.map((build, index) => (
-        <li key={build.href} className={index === 0 ? "md:col-span-2" : ""}>
-          <BuildCard build={build} lead={index === 0} />
-        </li>
-      ))}
+      {builds.map((build, index) => {
+        const lead = hasLead && index === 0;
+
+        return (
+          <li key={build.href} className={lead ? "md:col-span-2" : ""}>
+            <BuildCard build={build} lead={lead} />
+          </li>
+        );
+      })}
     </ul>
   );
 }
