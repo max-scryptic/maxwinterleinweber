@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { CreativeCards } from "@/components/creative-cards";
+import { GitHubActivity } from "@/components/github-activity";
 import { MusicPlayer } from "@/components/music-player";
 import { PortraitSwitch } from "@/components/portrait-switch";
 import { SaasCards } from "@/components/saas-cards";
@@ -16,8 +17,9 @@ const NAME = "Max Winter-Leinweber";
 const ROLE = "Chronic creator";
 
 /*
- * One page, read top to bottom: who Max is, then the work he sells, the
- * products he has built, and what he makes outside of both.
+ * One page, read top to bottom: who Max is, how much he has been shipping,
+ * then the work he sells, the products he has built, and what he makes outside
+ * of both.
  *
  * From lg up the name and the list of sections stand in a column down the left
  * that stays put while the page scrolls past it, so where you are and how to
@@ -95,6 +97,14 @@ export default function Home() {
               </div>
             </div>
           </section>
+
+          <Section
+            id="activity"
+            title="On GitHub"
+            lede="What I've been building lately, day by day."
+          >
+            <GitHubActivity />
+          </Section>
 
           <Section
             id="services"
