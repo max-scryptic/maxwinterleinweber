@@ -64,7 +64,7 @@ export function ServiceCards() {
           <div>
             <h3 className="text-xl font-semibold text-foreground">Scryptic</h3>
             <p className="text-sm text-muted-foreground">
-              Web and mobile app development studio in Brighton
+              Software development studio in Brighton
             </p>
           </div>
         </div>

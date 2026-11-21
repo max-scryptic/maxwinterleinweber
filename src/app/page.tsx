@@ -96,7 +96,7 @@ export default function Home() {
           <Section
             id="activity"
             title="Recent activity"
-            lede="What I've been building lately, day by day."
+            lede="What I've been building lately, day by day. Mostly from the couch."
           >
             <GitHubActivity />
           </Section>
