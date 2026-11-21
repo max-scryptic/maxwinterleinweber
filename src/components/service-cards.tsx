@@ -43,7 +43,7 @@ const SITE = "https://www.scryptic.co.uk";
 
 const facts = [
   { label: "Development sprint", value: "2 or 3 weeks" },
-  { label: "Demos", value: "Every Friday" },
+  { label: "Platforms", value: "Web, iOS and Android" },
   { label: "Fixed price", value: "From £10,000" },
 ];
 
