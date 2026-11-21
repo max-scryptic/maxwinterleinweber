@@ -120,7 +120,7 @@ export default function Home() {
           <Section
             id="creative"
             title="Creative"
-            lede="My other creative endeavours."
+            lede="My other endeavours."
           >
             <Subheading>Videos</Subheading>
             <CreativeCards />
