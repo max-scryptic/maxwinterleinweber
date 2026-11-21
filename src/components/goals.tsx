@@ -1,3 +1,4 @@
+import { Piano } from "lucide-react";
 import Image from "next/image";
 
 import grandPiano from "@/assets/goals/grand-piano.jpg";
@@ -15,14 +16,24 @@ import grandPiano from "@/assets/goals/grand-piano.jpg";
  */
 const TARGET = 250_000;
 
-// Where things stand. Below zero means there is debt to clear first.
+// Where the count started: £80,000 of debt to clear before saving begins.
+const START = -80_000;
+
+// Where things stand now. Move this as the debt is paid and the savings grow.
 const CURRENT = -80_000;
+
+// What one block of the bar is worth.
+const BLOCK = 10_000;
 
 const gbp = new Intl.NumberFormat("en-GB", {
   style: "currency",
   currency: "GBP",
   maximumFractionDigits: 0,
 });
+
+// Short form for the markers under the bar: -£80k, £0, £250k.
+const short = (value: number) =>
+  `${value < 0 ? "-" : ""}£${Math.abs(value) / 1000}${value === 0 ? "" : "k"}`;
 
 export function Goals() {
   return (
@@ -33,67 +44,95 @@ export function Goals() {
         sizes="(min-width: 768px) 36rem, 100vw"
         className="w-full rounded-[0.25rem] border border-border"
       />
-      <Progress current={CURRENT} target={TARGET} />
+      <Progress start={START} current={CURRENT} target={TARGET} />
     </div>
   );
 }
 
 /**
- * How far along the saving is. The bar runs from wherever the count starts,
- * which is below zero while there is debt, up to the target. Any debt is drawn
- * in red up to a mark at zero, and savings fill from that mark towards the
- * end, so a negative balance reads as ground still to make up rather than as
- * an empty bar.
+ * The saving as an XP bar: a row of blocks, each worth BLOCK, running from the
+ * starting debt up to the piano at the end. Ground made since the start is
+ * gold, debt still owed is red and what is left to save is empty, and a line
+ * through the bar marks £0, where the debt is cleared and the saving starts.
  */
-function Progress({ current, target }: { current: number; target: number }) {
-  const start = Math.min(current, 0);
-  const span = target - start;
-  const at = (value: number) => `${((value - start) / span) * 100}%`;
+function Progress({
+  start,
+  current,
+  target,
+}: {
+  start: number;
+  current: number;
+  target: number;
+}) {
+  const count = Math.ceil((target - start) / BLOCK);
+  const blocks = Array.from({ length: count }, (_, i) => {
+    const from = start + i * BLOCK;
+    const to = from + BLOCK;
+    if (to <= current) return "bg-amber-500";
+    if (from < 0) return "bg-destructive";
+    return "bg-foreground/10";
+  });
 
-  const percent = Math.round((current / target) * 100);
+  /*
+   * Where £0 falls, measured to the middle of the gap between two blocks.
+   * Blocks share the row's width less the gaps, so every block plus its gap is
+   * (width + gap) / count wide, and the k-th gap is centred one half-gap
+   * before k of those.
+   */
+  const zero = `calc(${-start / BLOCK / count} * (100% + 4px) - 2px)`;
 
   return (
-    <div className="mt-8">
-      <div className="flex items-baseline justify-between gap-4">
-        <p className="text-lg text-foreground">
+    <div className="mt-8 font-mono text-xs tracking-wider uppercase">
+      <div className="mb-3 flex items-baseline justify-between gap-4">
+        <h3 className="font-sans font-semibold tracking-[0.14em] text-faint-foreground">
+          Current progress
+        </h3>
+        <p className="text-muted-foreground tabular-nums">
           <span
-            className={`font-semibold tabular-nums ${current < 0 ? "text-destructive" : ""}`}
+            className={current < 0 ? "text-destructive" : "text-foreground"}
           >
             {gbp.format(current)}
           </span>{" "}
-          <span className="text-muted-foreground">of {gbp.format(target)}</span>
+          / {gbp.format(target)}
         </p>
-        <p className="text-sm text-muted-foreground tabular-nums">{percent}%</p>
       </div>
 
       <div
         role="img"
-        aria-label={`Progress: ${gbp.format(current)} of ${gbp.format(target)}`}
-        className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-foreground/10"
+        aria-label={`Current progress: ${gbp.format(current)} of ${gbp.format(target)}`}
       >
-        {current < 0 && (
-          <div
-            className="absolute inset-y-0 left-0 bg-destructive"
-            style={{ width: at(0) }}
+        <div className="flex items-center gap-2">
+          <div className="relative flex h-5 flex-1 gap-1">
+            {blocks.map((fill, i) => (
+              <div key={i} className={`flex-1 rounded-[2px] ${fill}`} />
+            ))}
+            {start < 0 && (
+              <div
+                className="absolute -top-1.5 -bottom-2.5 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
+                style={{ left: zero }}
+              />
+            )}
+          </div>
+          <Piano
+            aria-hidden="true"
+            className="size-5 shrink-0 text-amber-500"
           />
-        )}
-        {current > 0 && (
-          <div
-            className="absolute inset-y-0 left-0 bg-primary"
-            style={{ width: at(Math.min(current, target)) }}
-          />
-        )}
-      </div>
-
-      {current < 0 && (
-        <div className="relative mt-2 h-5 text-xs text-faint-foreground tabular-nums">
-          <span className="absolute left-0">{gbp.format(start)}</span>
-          <span className="absolute -translate-x-1/2" style={{ left: at(0) }}>
-            {gbp.format(0)}
-          </span>
-          <span className="absolute right-0">{gbp.format(target)}</span>
         </div>
-      )}
+
+        {/* Kept clear of the piano, so £250k sits under the last block. */}
+        <div className="relative mt-3.5 mr-7 h-4 text-muted-foreground normal-case tabular-nums">
+          <span className="absolute left-0">{short(start)}</span>
+          {start < 0 && (
+            <span
+              className="absolute -translate-x-1/2 font-semibold text-foreground"
+              style={{ left: zero }}
+            >
+              £0
+            </span>
+          )}
+          <span className="absolute right-0">{short(target)}</span>
+        </div>
+      </div>
     </div>
   );
 }
