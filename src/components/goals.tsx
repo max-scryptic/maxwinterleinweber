@@ -51,8 +51,8 @@ export function Goals() {
 /**
  * The saving as an XP bar: a row of blocks, each worth BLOCK, running from the
  * starting debt up to the price of the piano. Ground made since the start is
- * gold, debt still owed is red and what is left to save is empty, and a line
- * through the bar marks £0, where the debt is cleared and the saving starts.
+ * gold, debt still owed is red and what is left to save is empty. A marker
+ * under the bar shows £0, where the debt is cleared and the saving starts.
  */
 function Progress({
   start,
@@ -100,25 +100,16 @@ function Progress({
         role="img"
         aria-label={`Current progress: ${gbp.format(current)} of ${gbp.format(target)}`}
       >
-        <div className="relative flex h-5 gap-1">
+        <div className="flex h-5 gap-1">
           {blocks.map((fill, i) => (
             <div key={i} className={`flex-1 rounded-[2px] ${fill}`} />
           ))}
-          {start < 0 && (
-            <div
-              className="absolute inset-y-0 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
-              style={{ left: zero }}
-            />
-          )}
         </div>
 
-        <div className="relative mt-3.5 h-4 text-muted-foreground normal-case tabular-nums">
+        <div className="relative mt-2 h-4 text-muted-foreground normal-case tabular-nums">
           <span className="absolute left-0">{short(start)}</span>
           {start < 0 && (
-            <span
-              className="absolute -translate-x-1/2 font-semibold text-foreground"
-              style={{ left: zero }}
-            >
+            <span className="absolute -translate-x-1/2" style={{ left: zero }}>
               £0
             </span>
           )}
