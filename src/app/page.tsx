@@ -126,7 +126,11 @@ export default function Home() {
             <MusicPlayer tracks={getTracks()} />
           </Section>
 
-          <Section id="goals" title="Goals" lede="What I'm working towards.">
+          <Section
+            id="goals"
+            title="Goals"
+            lede="What will be obtained in the future."
+          >
             <Goals />
           </Section>
         </main>
