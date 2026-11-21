@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { CreativeCards } from "@/components/creative-cards";
 import { GitHubActivity } from "@/components/github-activity";
+import { Goals } from "@/components/goals";
 import { MusicPlayer } from "@/components/music-player";
 import { PortraitSwitch } from "@/components/portrait-switch";
 import { SaasCards } from "@/components/saas-cards";
@@ -117,16 +118,16 @@ export default function Home() {
             <SaasCards />
           </Section>
 
-          <Section
-            id="creative"
-            title="Creative"
-            lede="My other endeavours."
-          >
+          <Section id="creative" title="Creative" lede="My other endeavours.">
             <Subheading>Videos</Subheading>
             <CreativeCards />
 
             <Subheading className="mt-12">Music</Subheading>
             <MusicPlayer tracks={getTracks()} />
+          </Section>
+
+          <Section id="goals" title="Goals" lede="What I'm working towards.">
+            <Goals />
           </Section>
         </main>
 
