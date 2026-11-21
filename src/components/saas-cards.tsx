@@ -433,9 +433,9 @@ const builds: Build[] = [
   },
   {
     name: "UntilThen",
-    category: "Scheduled messages",
+    category: "Event time capsules",
     summary:
-      "Write a letter or record a voice or video message today, and have it emailed to the people you choose on a date you set, even years from now.",
+      "Time capsules for weddings, birthdays and other big days: guests leave letters, voice and video messages, all opened on a date you set, even years from now. Or schedule a message of your own to anyone you choose.",
     href: "https://www.until-then.cc",
     domain: "until-then.cc",
     shot: untilThenShot,
