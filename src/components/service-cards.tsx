@@ -64,7 +64,7 @@ export function ServiceCards() {
           <div>
             <h3 className="text-xl font-semibold text-foreground">Scryptic</h3>
             <p className="text-sm text-muted-foreground">
-              MVP and app development studio in Brighton
+              Web and mobile app development studio in Brighton
             </p>
           </div>
         </div>
@@ -73,9 +73,10 @@ export function ServiceCards() {
           From idea to MVP, without hiring a dev team.
         </p>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-subtle-foreground sm:text-lg">
-          I run Scryptic, a small studio building web apps for UK founders.
-          One fixed-price sprint takes you from idea to launch, with the code
-          and every account in your name.
+          I run Scryptic, a small studio building web and mobile apps for UK
+          founders. One fixed-price sprint takes you from idea to launch, with
+          the code and every account in your name. Already have an app? I
+          migrate existing products onto a new stack too.
         </p>
       </div>
 
