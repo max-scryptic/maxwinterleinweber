@@ -106,7 +106,7 @@ function Progress({
           ))}
           {start < 0 && (
             <div
-              className="absolute -top-1.5 -bottom-2.5 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
+              className="absolute inset-y-0 w-0.5 -translate-x-1/2 rounded-full bg-foreground"
               style={{ left: zero }}
             />
           )}
