@@ -73,13 +73,8 @@ export default function Home() {
                   Hey, I&apos;m <em>Max</em>
                 </h1>
                 <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-subtle-foreground md:mx-0 md:text-xl">
-                  Full-stack developer and founder of{" "}
-                  <strong className="font-semibold text-foreground">
-                    Scryptic
-                  </strong>
-                  . I&apos;ve spent five years building software for enterprise
-                  clients and startups, and I ship my own SaaS products along
-                  the way.
+                  Indie hacker, former electronic music producer, occasional
+                  YouTuber.
                 </p>
 
                 <SocialLinks className="mt-8 justify-center md:justify-start" />
