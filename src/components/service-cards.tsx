@@ -74,9 +74,8 @@ export function ServiceCards() {
         </p>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-subtle-foreground sm:text-lg">
           I run Scryptic, a small studio building web and mobile apps for UK
-          founders. One fixed-price sprint takes you from idea to launch, with
-          the code and every account in your name. Already have an app? I
-          migrate existing products onto a new stack too.
+          founders. Already have an app? I migrate existing products onto a
+          new stack too.
         </p>
       </div>
 
