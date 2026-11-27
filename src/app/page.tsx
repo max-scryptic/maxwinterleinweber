@@ -94,31 +94,19 @@ export default function Home() {
             </div>
           </section>
 
-          <Section
-            id="activity"
-            title="Recent activity"
-            lede="What I've been building lately, day by day. Mostly from the couch."
-          >
+          <Section id="activity" title="Recent activity">
             <GitHubActivity />
           </Section>
 
-          <Section
-            id="services"
-            title="Professional services"
-            lede="I build apps for founders through my studio."
-          >
+          <Section id="services" title="Professional services">
             <ServiceCards />
           </Section>
 
-          <Section
-            id="projects"
-            title="SaaS projects"
-            lede="Products I've designed, built and run myself."
-          >
+          <Section id="projects" title="SaaS projects">
             <SaasCards />
           </Section>
 
-          <Section id="creative" title="Creative" lede="My other endeavours.">
+          <Section id="creative" title="Creative">
             <Subheading>Videos</Subheading>
             <CreativeCards />
 
@@ -126,11 +114,7 @@ export default function Home() {
             <MusicPlayer tracks={getTracks()} />
           </Section>
 
-          <Section
-            id="goals"
-            title="Goals"
-            lede="What will be obtained in the future."
-          >
+          <Section id="goals" title="Goals">
             <Goals />
           </Section>
         </main>
@@ -146,22 +130,17 @@ export default function Home() {
 function Section({
   id,
   title,
-  lede,
   children,
 }: {
   id: SectionId;
   title: string;
-  lede: string;
   children: ReactNode;
 }) {
   return (
     <section id={id} className="py-16 lg:py-24">
-      <div className="mb-10 max-w-2xl">
-        <h2 className="font-serif text-4xl leading-tight text-foreground sm:text-5xl">
-          {title}
-        </h2>
-        <p className="mt-3 text-lg text-muted-foreground">{lede}</p>
-      </div>
+      <h2 className="mb-10 max-w-2xl font-serif text-4xl leading-tight text-foreground sm:text-5xl">
+        {title}
+      </h2>
       {children}
     </section>
   );
